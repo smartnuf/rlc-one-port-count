@@ -1,62 +1,120 @@
 # Computation notes
 
-## Object counted
+This document separates the current legacy computation from the intended reduced
+computation.
 
-The counted object is an isomorphism class of connected undirected two-terminal multigraphs.  The terminal pair is unordered.  Internal nodes are unlabelled.  Self-loops are excluded.  Parallel branches are allowed and are represented as component-count bundles on edges of a simple support graph.
+## Legacy computation currently implemented
 
-For the main run the component budget is:
+The current source counts isomorphism classes of connected undirected
+two-terminal multigraphs by:
 
-- `R <= 3`
-- `L + C <= 5`
+1. enumerating connected unlabelled simple support graphs;
+2. choosing unordered terminal-pair representatives;
+3. rejecting terminal pairs whose support edges are not all on simple
+   terminal-to-terminal paths;
+4. assigning non-empty component-count bundles to support edges;
+5. quotienting those assignments by terminal-set-preserving automorphisms using
+   Burnside's lemma.
 
-Therefore the largest possible number of physical branches is eight, and the largest possible number of simple support edges is also eight.
+In legacy `lc` mode, a support-edge bundle is `(r, l, c)` with arbitrary
+non-negative counts subject to the global budget. Thus the legacy model counts
+`R||R` separately from `R`.
 
-## Support graph enumeration
+Legacy results are recorded in `docs/results.md`.
 
-The code enumerates connected unlabelled simple graphs level by level by support-edge count.  From a graph at level `m - 1`, candidates at level `m` are made by either:
+## Reduced computation target
 
-1. adding a new leaf vertex joined to one existing vertex, or
-2. adding a missing edge between two existing vertices.
+The intended next model counts reduced two-terminal RLC topology classes. See
+`docs/model_decisions.md` for the full contract.
 
-This generates all connected simple graphs.  Duplicates are removed using NetworkX isomorphism checks in buckets keyed by cheap invariants such as node count, edge count, degree sequence, and triangle count.
+The main changes are:
 
-## Terminal relevance test
+- simple primitive bundles only: `R`, `L`, `C`, `R||L`, `R||C`, `L||C`,
+  `R||L||C`;
+- no generated duplicate primitive parallel branches such as `R||R`;
+- local series spans commute;
+- duplicate primitive singleton factors merge in both series and parallel
+  compositions;
+- duplicate compound subnetworks do not merge.
 
-For every unordered node pair `(s, t)`, the code enumerates all simple paths from `s` to `t` and records the support edges used by those paths.  The terminal pair is retained only if the path-edge cover equals the full support-edge set.
+The reduced model should be implemented in stages.
 
-This deliberately excludes branches that occur only in a terminal-to-terminal walk that repeats a vertex.  Such branches are not on any simple path and should not be part of the driving-point one-port core.
+## Stage 1: support graph census
 
-## Quotienting terminal choices
+Before changing component assignment, implement a support-only census:
 
-For each simple support graph, valid terminal pairs are quotiented by the automorphism group of the unterminalled support graph.  This gives one representative for each distinct two-terminal support topology.
+1. enumerate basic connected unlabelled simple support graphs;
+2. enumerate unordered two-terminal labellings of each basic graph;
+3. reject terminal-irrelevant terminal labellings;
+4. report counts by support-edge number.
 
-For `R <= 3, reactive <= 5`, there are 383 two-terminal support topologies:
+For `max_edges = 8`, expected counts are:
 
-| Support edges | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | Total |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Count | 1 | 1 | 2 | 4 | 10 | 27 | 80 | 258 | 383 |
+| Support edges | Basic connected unlabelled graphs | Unordered two-terminal labelings | Terminal-relevant two-terminal graphs |
+|---:|---:|---:|---:|
+| 1 | 1 | 1 | 1 |
+| 2 | 1 | 2 | 1 |
+| 3 | 3 | 7 | 2 |
+| 4 | 5 | 21 | 4 |
+| 5 | 12 | 73 | 10 |
+| 6 | 30 | 255 | 27 |
+| 7 | 79 | 946 | 80 |
+| 8 | 227 | 3,618 | 258 |
+| **Total** | **358** | **4,923** | **383** |
 
-## Bundle assignment and Burnside's lemma
+A terminal-irrelevant graph is rejected as a whole. It is not pruned into a
+smaller accepted graph.
 
-Each support edge receives a non-empty bundle:
+## Stage 2: simple bundle assignment
 
-- in generic mode: `(r, x)`;
-- in L/C mode: `(r, l, c)`.
+After support graph census is stable, assign only simple primitive bundles:
 
-The total budget is applied after summing all support-edge bundles.
+```text
+R
+L
+C
+R||L
+R||C
+L||C
+R||L||C
+```
 
-For each two-terminal support graph, the relevant group is the automorphism group preserving the terminal set.  Terminal swapping is allowed.  The group induces permutations of the support edges.
+For `R <= 3, L+C <= 5`, the raw assignment leaf bound before isomorphism or
+reduced-signature merging is **1,166,714**.
 
-Burnside's lemma is then used to count bundle assignments up to this group action.  For an edge permutation, assignments fixed by that permutation must be constant on each cycle of the permutation.  The implementation performs a small dynamic-programming count over the cycle lengths and component budgets.
+This is small enough to permit straightforward enumeration for the first reduced
+implementation.
 
-## Reference result
+## Stage 3: reduced signatures
 
-For `R <= 3, L + C <= 5`, with L and C distinct:
+The final reduced count should use canonical signatures rather than raw graph
+assignment counts.
 
-- exactly `R = 3`: 1,268,282;
-- at most `R = 3`: 1,408,796.
+At minimum, the signature layer must satisfy:
 
-For `R <= 3, X <= 5`, with all reactive elements treated as a generic `X`:
+```text
+R--L == L--R
+R--L--C == C--R--L
+R--R--L == R--L
+R||R == R
+L||L == L
+C||C == C
+R||L != R--L
+(R--L)||C != R||L||C
+(R--L)||(R--L) != R--L
+(R||L)--(R||L) != R||L
+```
 
-- exactly `R = 3`: 51,736;
-- at most `R = 3`: 57,945.
+A series span is local. It can be an arm inside a parallel network and does not
+need to lie on every simple terminal-to-terminal path.
+
+## What the reduced computation should not do
+
+Do not implement general electrical equivalence as part of this phase. In
+particular, do not collapse networks via:
+
+- Y-Delta transformations;
+- bridge-balance simplifications;
+- Foster/Cauer equivalence;
+- duality;
+- algebraic equality of rational impedances.
