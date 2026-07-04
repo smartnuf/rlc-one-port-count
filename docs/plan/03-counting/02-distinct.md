@@ -31,10 +31,10 @@ Use the reduced-model staging from the normative model docs:
    is a non-empty subset of `{R, L, C}` between the same two support nodes.
 5. Canonicalise assigned supports under internal node renaming and terminal-pair
    reversal.
-6. Apply the documented local primitive series/parallel reductions: primitive
-   singleton factors commute within local series spans or parallel bundles, and
-   duplicate primitive singleton factors merge, while duplicate compound
-   subnetworks do not merge merely because they are repeated.
+6. Apply the documented local series/parallel reduction rules: operands
+   commute within local series spans and parallel bundles, duplicate primitive
+   singleton factors merge, and duplicate compound subnetworks do not merge
+   merely because they are repeated.
 7. Record or discuss stronger equivalences such as Y-Delta/Delta-Y transforms,
    duality, bridge-balance special cases, Foster/Cauer transformations, or
    rational impedance identity as possible later refinements. Do not silently
