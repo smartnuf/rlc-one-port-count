@@ -94,39 +94,56 @@ For `max_edges = 8`, the expected census is:
 
 ## Use
 
-Create and activate a virtual environment locally:
+This repository deliberately uses an explicit local virtual environment for all
+commands. Do not rely on `source .venv/bin/activate` persisting between shells.
+
+Create or refresh the environment:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate       # Linux/macOS
-# .venv\Scripts\Activate.ps1    # Windows PowerShell
-python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
+make install
 ```
 
 Run the tests:
 
 ```bash
-pytest
+make test
 ```
 
-Run the current legacy count:
+Run the support-census smoke check and current legacy count:
 
 ```bash
-rlc-oneport-count --mode lc --max-r 3 --max-reactive 5
+make check
 ```
 
-Or without installing the console script:
+The equivalent explicit commands are:
 
 ```bash
-python -m rlc_oneport_count --mode lc --max-r 3 --max-reactive 5
+python3 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip setuptools wheel
+.venv/bin/python -m pip install -e ".[dev]"
+.venv/bin/python -m pytest -q
+.venv/bin/python -m rlc_oneport_count supports --max-edges 8
+.venv/bin/python -m rlc_oneport_count --mode lc --max-r 3 --max-reactive 5
 ```
 
-JSON output is also available:
+The installed console script can also be run explicitly from the venv:
 
 ```bash
-rlc-oneport-count --mode lc --format json
+.venv/bin/rlc-oneport-count --mode lc --max-r 3 --max-reactive 5
 ```
+
+## Codex Cloud scripts
+
+Repository-local Codex setup scripts are provided in `.codex/`:
+
+```bash
+bash .codex/setup.sh
+bash .codex/maintenance.sh
+```
+
+Point the Codex Cloud environment setup command at `bash .codex/setup.sh` and,
+if using a cached environment, the maintenance command at
+`bash .codex/maintenance.sh`.
 
 ## Repository note
 
