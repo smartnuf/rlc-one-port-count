@@ -60,9 +60,9 @@ current project direction. The current implementation uses NetworkX only.
 These validate the current source as it stands:
 
 ```bash
-pytest
-python -m rlc_oneport_count --mode lc --max-r 3 --max-reactive 5
-python -m rlc_oneport_count --mode generic --max-r 3 --max-reactive 5
+.venv/bin/python -m pytest
+.venv/bin/python -m rlc_oneport_count --mode lc --max-r 3 --max-reactive 5
+.venv/bin/python -m rlc_oneport_count --mode generic --max-r 3 --max-reactive 5
 ```
 
 Legacy reference totals:
@@ -113,6 +113,14 @@ For `max_edges=8`, the expected census is:
 | 7 | 79 | 946 | 80 |
 | 8 | 227 | 3,618 | 258 |
 | **Total** | **358** | **4,923** | **383** |
+
+#### Validation commands
+
+```bash
+.venv/bin/python -m pytest -q
+.venv/bin/python -m rlc_oneport_count supports --max-edges 8
+.venv/bin/python -m rlc_oneport_count --mode lc --max-r 3 --max-reactive 5
+```
 
 ### Phase 2: simple bundle assignment
 
