@@ -1,9 +1,72 @@
 # RLC one-port topology counter
 
-This repository counts small connected two-terminal RLC one-port topology classes.
-It was created around the case:
+This repository enumerates, catalogues, and counts small connected two-terminal
+RLC one-port topology classes. It was created around the case:
 
 > **R <= 3, L + C <= 5**, with inductors and capacitors treated as distinct component types.
+
+## Motivation
+
+Classical network synthesis asks an inverse question: given a prescribed
+driving-point immittance, what passive network topologies can realise it? For
+RLC one-ports this links graph topology, component type, positive-real rational
+functions, and minimal realisation. Even for low-degree functions, the difficult
+question is often not merely whether a realisation exists, but which finite set
+of network forms must be considered before claims about minimality,
+sufficiency, or necessity are credible.
+
+This repository is therefore concerned with **catalogues**, not just totals.
+Counts are valuable because they act as reproducible checksums for a catalogue,
+but the catalogue itself is the useful object: it can be inspected, searched,
+rendered, compared with historical lists, converted to descriptors, tested for
+its immittance, and grouped into equivalence classes or generator sets.
+
+The immediate historical benchmark is the Ladenheim catalogue of RLC one-port
+networks with no more than two reactive elements and no more than three
+resistors. In the terminology used here, that comparison slice is:
+
+```text
+R <= 3
+L + C <= 2
+R + L + C <= 5
+```
+
+The literature around Ladenheim, Kalman, Morelli, Hughes, and Smith motivates a
+deliberately enumerative approach. Morelli's reworking of the Ladenheim problem
+distinguishes an unabridged set of 148 candidate networks, the canonical
+108-network Ladenheim catalogue, and a further grouping into 62 equivalence
+classes. That separation is important for this project: different notions of
+"distinct" produce different valid catalogues.
+
+The project will therefore keep the following ideas separate:
+
+- **counting**: producing totals for a specified class;
+- **enumeration**: generating every candidate object in that class;
+- **cataloguing**: storing stable representatives, identifiers, metadata, and
+  outputs;
+- **reduced-topology distinctness**: quotienting by graph isomorphism, terminal
+  reversal, and documented local reductions;
+- **genericity and rejection rules**: excluding forms that are trivial,
+  degenerate, or non-generic under a stated criterion;
+- **equivalence classes**: grouping catalogued networks under named
+  transformations or immittance equivalence;
+- **generator sets**: finding smaller sets from which larger families can be
+  produced.
+
+Several natural sufficiency questions are intentionally treated as open
+investigations here. In particular, this repository should not assume that any
+of the following are already known to realise every biquadratic immittance:
+
+```text
+R <= 2, L + C <= 5
+R <= 5, L + C <= 3
+series-parallel networks with R + L + C <= 8
+```
+
+Those bounds are useful named slices for exploration, comparison, and
+regression testing, but their sufficiency or insufficiency must be established
+by documented arguments or counterexamples, not by assumption.
+
 
 ## Status
 
@@ -151,6 +214,26 @@ bash .codex/maintenance.sh
 Point the Codex Cloud environment setup command at `bash .codex/setup.sh` and,
 if using a cached environment, the maintenance command at
 `bash .codex/maintenance.sh`.
+
+## Background references
+
+The immediate bibliography to document more fully is:
+
+- Edward L. Ladenheim, *A Synthesis of Biquadratic Impedances*, Master's
+  thesis, Polytechnic Institute of Brooklyn, 1948.
+- R. E. Kalman, work on minimal realisation and the role of complete
+  enumeration in understanding low-degree passive-network synthesis problems.
+- Alessandro Morelli, *Realisation of Positive-Real Functions by Electrical
+  Networks*, PhD thesis, University of Cambridge, 2017.
+- T. H. Hughes, A. Morelli, and M. C. Smith, "Electrical network synthesis: A
+  survey of recent work", in *Emerging Applications of Control and Systems
+  Theory*, Springer, 2018.
+- T. H. Hughes, "Why RLC realizations of certain impedances need many more
+  energy storage elements than expected", 2017.
+
+These references should be expanded into a dedicated literature note before the
+project relies on any detailed catalogue or sufficiency claim.
+
 
 ## Repository note
 
