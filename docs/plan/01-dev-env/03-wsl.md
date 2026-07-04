@@ -24,6 +24,6 @@ cd <local-repo>
 
 ## Done means
 
-- WSL2 Ubuntu is usable for rlc_one_port_count development.
+- WSL2 Ubuntu is usable for rlc-oneport-count development.
 - The repository is cloned.
 - System packages are installed only as OS-level prerequisites.

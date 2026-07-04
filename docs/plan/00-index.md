@@ -1,4 +1,4 @@
-# rlc_one_port_count plan index
+# rlc-oneport-count plan index
 
 This is the top-level plan index. Keep this file short: it should show task structure, status, and links to detail files. Put substantive task descriptions in the linked files.
 
