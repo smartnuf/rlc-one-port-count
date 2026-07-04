@@ -30,27 +30,60 @@ update the code to the documented model or explicitly mark the old behaviour as
 
 Use Python 3.11 or newer.
 
-Recommended local setup:
+This repository uses an explicit local virtual environment at `.venv`. Do not
+rely on `source .venv/bin/activate` persisting between shell sessions. In Codex
+Cloud, setup scripts and task commands may run in separate shells, so plain
+`python`, `python -m pytest`, and `pytest` can accidentally use the non-venv
+interpreter.
+
+Preferred setup and validation commands:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate       # Linux/macOS
-# .venv\Scripts\Activate.ps1    # Windows PowerShell
-python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
-pytest
+make install
+make test
+make check
 ```
+
+Equivalent explicit commands:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip setuptools wheel
+.venv/bin/python -m pip install -e ".[dev]"
+.venv/bin/python -m pytest -q
+.venv/bin/python -m rlc_oneport_count supports --max-edges 8
+.venv/bin/python -m rlc_oneport_count --mode lc --max-r 3 --max-reactive 5
+```
+
+Do not run these ambiguous commands in Codex tasks:
+
+```bash
+pytest
+python -m pytest
+python -m pip install -e ".[dev]"
+```
+
+If dependencies are missing, do not install them into the system interpreter.
+Use `.venv/bin/python -m pip ...` or rerun the Codex setup script.
 
 Do not commit `.venv/`, `__pycache__/`, build artefacts, or generated archives.
 
 ## Codex cloud expectations
 
-A Codex cloud environment should need only:
+A Codex Cloud environment should run the repository scripts:
 
-1. a Python 3.11+ runtime;
-2. network access for `pip install -e ".[dev]"` unless dependencies are cached;
-3. enough CPU for NetworkX isomorphism checks on graphs with at most eight
-   support edges.
+```bash
+bash .codex/setup.sh
+bash .codex/maintenance.sh
+```
+
+The setup script creates `.venv`, installs the package and dev dependencies into
+that venv, appends a guarded activation stanza to `~/.bashrc`, and runs the test
+suite through `.venv/bin/python`.
+
+The maintenance script reuses `.venv` in cached environments, refreshes the
+editable install without fetching dependencies, and runs the same venv-explicit
+checks.
 
 No external graph-generation binaries such as nauty/Traces are required for the
 current project direction. The current implementation uses NetworkX only.
@@ -60,7 +93,14 @@ current project direction. The current implementation uses NetworkX only.
 These validate the current source as it stands:
 
 ```bash
-.venv/bin/python -m pytest
+make check
+```
+
+or explicitly:
+
+```bash
+.venv/bin/python -m pytest -q
+.venv/bin/python -m rlc_oneport_count supports --max-edges 8
 .venv/bin/python -m rlc_oneport_count --mode lc --max-r 3 --max-reactive 5
 .venv/bin/python -m rlc_oneport_count --mode generic --max-r 3 --max-reactive 5
 ```
@@ -117,9 +157,8 @@ For `max_edges=8`, the expected census is:
 #### Validation commands
 
 ```bash
-.venv/bin/python -m pytest -q
-.venv/bin/python -m rlc_oneport_count supports --max-edges 8
-.venv/bin/python -m rlc_oneport_count --mode lc --max-r 3 --max-reactive 5
+make test
+make check
 ```
 
 ### Phase 2: simple bundle assignment
