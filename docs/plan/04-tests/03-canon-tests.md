@@ -8,8 +8,8 @@ Ensure duplicate rejection and descriptor production are trustworthy.
 
 ## Tasks
 
-- Test terminal-preserving graph isomorphism.
-- Test edge-colour preservation.
+- Test canonicalisation under internal node renaming and terminal-pair reversal.
+- Test simple primitive bundle-label preservation.
 - Test series/parallel normalisation where applicable.
 - Test bridge/non-series-parallel examples separately.
 - Test that descriptor output is stable.

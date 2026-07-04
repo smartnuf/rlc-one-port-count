@@ -20,13 +20,29 @@ Define exactly what is being counted before generating counts.
 
 ## Working approach
 
-Start with a conservative staged definition:
+Use the reduced-model staging from the normative model docs:
 
-1. Generate connected two-terminal multigraph candidates.
-2. Colour edges as R, L, or C.
-3. Canonicalise under terminal-preserving graph isomorphism with edge colours.
-4. Apply explicit rejection rules for disconnected, dangling, shorted, or trivially reducible forms.
-5. Separately record stronger equivalences discovered by impedance identity or known network transformations.
+1. Enumerate connected, loopless, simple, unlabelled support graphs.
+2. Choose unordered terminal pairs up to support-graph automorphism. Terminal
+   reversal does not create a new topology.
+3. Reject terminal-irrelevant two-terminal support graphs as whole objects; do
+   not prune dangling branches or pendant blobs into smaller accepted graphs.
+4. Assign simple primitive R/L/C bundles under the component budgets. Each bundle
+   is a non-empty subset of `{R, L, C}` between the same two support nodes.
+5. Canonicalise assigned supports under internal node renaming and terminal-pair
+   reversal.
+6. Apply the documented local primitive series/parallel reductions: primitive
+   singleton factors commute within local series spans or parallel bundles, and
+   duplicate primitive singleton factors merge, while duplicate compound
+   subnetworks do not merge merely because they are repeated.
+7. Record or discuss stronger equivalences such as Y-Delta/Delta-Y transforms,
+   duality, bridge-balance special cases, Foster/Cauer transformations, or
+   rational impedance identity as possible later refinements. Do not silently
+   collapse them in the current reduced-model counting contract unless a later
+   phase explicitly opts in.
+
+The reduced model is therefore a canonical reduced-topology count, not a full
+solver for general electrical equivalence.
 
 ## Done means
 
