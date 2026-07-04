@@ -11,12 +11,12 @@ requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Andy Ackland / ChatGPT" }]
 dependencies = [
-  "networkx>=3.2",
+  "networkx",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=8",
+  "pytest",
 ]
 
 [project.scripts]

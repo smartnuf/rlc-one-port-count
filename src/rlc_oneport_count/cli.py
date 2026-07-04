@@ -5,8 +5,9 @@ from __future__ import annotations
 import argparse
 import json
 from dataclasses import asdict
+from typing import Any
 
-from .core import count_networks, support_census
+from .core import CountResult, SupportCensusResult, count_networks, support_census
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -72,6 +73,28 @@ def _add_count_arguments(
     )
 
 
+def _support_census_json(result: SupportCensusResult) -> dict[str, Any]:
+    """Return support-census data including computed totals for JSON output."""
+
+    payload = asdict(result)
+    payload.update(
+        {
+            "basic_total": result.basic_total,
+            "terminal_labelings_total": result.terminal_labelings_total,
+            "relevant_total": result.relevant_total,
+        }
+    )
+    return payload
+
+
+def _count_json(result: CountResult) -> dict[str, Any]:
+    """Return legacy count data including computed totals for JSON output."""
+
+    payload = asdict(result)
+    payload["total"] = result.total
+    return payload
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
 
@@ -81,7 +104,7 @@ def main(argv: list[str] | None = None) -> int:
         max_edges = getattr(args, "max_edges", 8)
         result = support_census(max_edges=max_edges)
         if output_format == "json":
-            print(json.dumps(asdict(result), indent=2, sort_keys=True))
+            print(json.dumps(_support_census_json(result), indent=2, sort_keys=True))
         else:
             print(f"Support census: max_edges <= {result.max_edges}")
             print(
@@ -106,7 +129,7 @@ def main(argv: list[str] | None = None) -> int:
     result = count_networks(max_r=max_r, max_reactive=max_reactive, mode=mode)
 
     if output_format == "json":
-        print(json.dumps(asdict(result), indent=2, sort_keys=True))
+        print(json.dumps(_count_json(result), indent=2, sort_keys=True))
     else:
         reactive_label = "L+C" if mode == "lc" else "X"
         print(f"Mode: {mode}  (reactive column is {reactive_label})")
