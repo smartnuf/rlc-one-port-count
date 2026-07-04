@@ -1,15 +1,17 @@
 PYTHON ?= python3
 VENV_PYTHON := .venv/bin/python
 
-.PHONY: install ensure-venv test supports legacy-count legacy-generic check print-env clean
+.PHONY: setup install ensure-venv test supports legacy-count legacy-generic check print-env clean
 
-install:
+setup:
 	$(PYTHON) -m venv .venv
 	$(VENV_PYTHON) -m pip install --upgrade pip setuptools wheel
 	$(VENV_PYTHON) -m pip install -e ".[dev]"
 
+install: setup
+
 ensure-venv:
-	@test -x $(VENV_PYTHON) || (echo "Missing $(VENV_PYTHON). Run 'make install' first." >&2; exit 1)
+	@test -x $(VENV_PYTHON) || (echo "Missing $(VENV_PYTHON). Run 'make setup' first." >&2; exit 1)
 
 test: ensure-venv
 	$(VENV_PYTHON) -m pytest -q

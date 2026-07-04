@@ -1,4 +1,4 @@
-# 01-dev-env / 04 — Run `make install` and `make test`
+# 01-dev-env / 04 — Run `make setup` and `make test`
 
 Status: `done`
 
@@ -8,7 +8,7 @@ Prove that the Makefile development path works end to end in WSL2/Linux.
 
 ## Tasks
 
-1. Run `make install` from a clean checkout.
+1. Run `make setup` from a clean checkout.
 2. Confirm `.venv` is created.
 3. Confirm dependencies are installed into `.venv`.
 4. Run `make test`.
@@ -25,6 +25,6 @@ make test
 
 ## Done means
 
-- `make install` completes successfully.
+- `make setup` completes successfully.
 - `make test` runs tests through `.venv`.
 - Any remaining failures are genuine code/test failures, not environment failures.

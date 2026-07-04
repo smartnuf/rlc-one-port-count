@@ -100,8 +100,10 @@ commands. Do not rely on `source .venv/bin/activate` persisting between shells.
 Create or refresh the environment:
 
 ```bash
-make install
+make setup
 ```
+
+`make install` remains available temporarily as a compatibility alias.
 
 Run the tests:
 

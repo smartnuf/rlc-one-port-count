@@ -39,7 +39,7 @@ interpreter.
 Preferred setup and validation commands:
 
 ```bash
-make install
+make setup
 make test
 make check
 ```

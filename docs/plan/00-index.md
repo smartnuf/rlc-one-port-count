@@ -9,7 +9,7 @@ Status key: `done`, `doing`, `todo`, `blocked`, `later`.
 - `done` [Fix Makefile syntax](01-dev-env/01-make.md)
 - `done` [Make Codex use `.venv` explicitly](01-dev-env/02-codex-venv.md)
 - `done` [Validate WSL2 Ubuntu path](01-dev-env/03-wsl.md)
-- `done` [Run `make install` and `make test`](01-dev-env/04-make-setup-test.md)
+- `done` [Run `make setup` and `make test`](01-dev-env/04-make-setup-test.md)
 - `todo` [Create Windows/Linux scripts under `scripts/`](01-dev-env/05-scripts.md)
 - `todo` [Keep Makefile, scripts, README, and AGENTS.md aligned](01-dev-env/06-contract.md)
 

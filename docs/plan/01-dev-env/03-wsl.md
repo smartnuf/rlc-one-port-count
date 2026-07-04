@@ -11,7 +11,7 @@ Use a fresh WSL2 Ubuntu instance on the ARM Windows laptop as the first clean Li
 - Install base tools: Git, Make, Python, venv support, pip.
 - Clone the repository cleanly.
 - Confirm that no project dependency has been installed into system Python.
-- Use this environment to run `make install and `make test`.
+- Use this environment to run `make setup` and `make test`.
 
 ## Suggested commands
 
