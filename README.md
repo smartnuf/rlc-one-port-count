@@ -111,7 +111,7 @@ Run the tests:
 make test
 ```
 
-Run the support-census smoke check and current legacy count:
+Run the support-census smoke check and current legacy counts:
 
 ```bash
 make check
@@ -126,7 +126,12 @@ python3 -m venv .venv
 .venv/bin/python -m pytest -q
 .venv/bin/python -m rlc_oneport_count supports --max-edges 8
 .venv/bin/python -m rlc_oneport_count --mode lc --max-r 3 --max-reactive 5
+.venv/bin/python -m rlc_oneport_count --mode generic --max-r 3 --max-reactive 5
 ```
+
+`make check` includes `legacy-generic` only while generic-X support remains present.
+A future generic-removal PR should remove that target from `make check` together
+with `--mode generic` and the matching documentation/results entries.
 
 The installed console script can also be run explicitly from the venv:
 

@@ -25,7 +25,7 @@ legacy-count: ensure-venv
 legacy-generic: ensure-venv
 	$(VENV_PYTHON) -m rlc_oneport_count --mode generic --max-r 3 --max-reactive 5
 
-check: test supports legacy-count
+check: test supports legacy-count legacy-generic
 
 print-env: ensure-venv
 	$(VENV_PYTHON) -c 'import sys, networkx, pytest, rlc_oneport_count; print("python", sys.executable); print("networkx", networkx.__version__); print("pytest", pytest.__version__); print("rlc_oneport_count", rlc_oneport_count.__file__)'
