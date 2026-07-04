@@ -90,7 +90,9 @@ current project direction. The current implementation uses NetworkX only.
 
 ## Current legacy validation commands
 
-These validate the current source as it stands:
+These validate the current source as it stands. `make check` is the full
+currently documented explicit legacy validation and runs `test`, `supports`,
+`legacy-count`, and `legacy-generic`:
 
 ```bash
 make check
@@ -110,8 +112,11 @@ Legacy reference totals:
 - `mode=lc`: total `1,408,796`; exactly `R=3` total `1,268,282`.
 - `mode=generic`: total `57,945`; exactly `R=3` total `51,736`.
 
-When the reduced model is implemented, tests and docs should be updated together
-and these figures should be labelled legacy.
+`legacy-generic` is included in `make check` only while generic-X support
+remains present. A future generic-removal PR should remove `legacy-generic` from
+`make check` together with `--mode generic` and the matching documentation/results
+entries. When the reduced model is implemented, tests and docs should be updated
+together and these figures should be labelled legacy.
 
 ## Near-term implementation sequence
 
