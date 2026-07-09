@@ -1,7 +1,7 @@
 # Support graph enumeration plan
 
-This document defines the first implementation milestone for the reduced RLC
-one-port counter.
+This document defines the first implementation milestone for RICE, the reduced RLC
+one-port enumerator.
 
 The goal is to enumerate and classify basic two-terminal support graphs before
 assigning components. This gives the later component-assignment and reduced
@@ -177,13 +177,13 @@ Add a command or option that reports the support census without running the full
 component count. Possible shapes:
 
 ```bash
-python -m rlc_oneport_count supports --max-edges 8
+python -m rice supports --max-edges 8
 ```
 
 or:
 
 ```bash
-python -m rlc_oneport_count census --max-r 3 --max-reactive 5
+python -m rice census --max-r 3 --max-reactive 5
 ```
 
 The exact CLI shape is less important than making the stage inspectable and

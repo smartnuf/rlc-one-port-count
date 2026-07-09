@@ -1,4 +1,4 @@
-from rlc_oneport_count import count_networks
+from rice import count_networks
 
 
 def test_generic_reactive_counts_match_reference_table():

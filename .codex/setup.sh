@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 cd "${CODEX_REPO_DIR:-$PWD}"
 
-echo "Codex setup for rlc-one-port-count"
+echo "Codex setup for rice"
 echo "Repository: $(pwd)"
 
 if command -v python3.12 >/dev/null 2>&1; then
@@ -34,8 +34,8 @@ PY
 # activation stanza for interactive convenience, but do not rely on it; repo
 # docs and Makefile use .venv/bin/python explicitly.
 BASHRC="$HOME/.bashrc"
-MARKER_BEGIN="# >>> rlc-one-port-count codex venv >>>"
-MARKER_END="# <<< rlc-one-port-count codex venv <<<"
+MARKER_BEGIN="# >>> rice codex venv >>>"
+MARKER_END="# <<< rice codex venv <<<"
 if ! grep -Fq "$MARKER_BEGIN" "$BASHRC" 2>/dev/null; then
     {
         echo ""
@@ -52,11 +52,11 @@ echo "Environment smoke test:"
 import sys
 import networkx
 import pytest
-import rlc_oneport_count
+import rice
 print("python", sys.executable)
 print("networkx", networkx.__version__)
 print("pytest", pytest.__version__)
-print("rlc_oneport_count", rlc_oneport_count.__file__)
+print("rice", rice.__file__)
 PY
 
 .venv/bin/python -m pytest -q

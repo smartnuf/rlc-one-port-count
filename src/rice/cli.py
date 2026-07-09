@@ -1,4 +1,4 @@
-"""Command line interface for rlc-oneport-count."""
+"""Command line interface for rice."""
 
 from __future__ import annotations
 
@@ -12,8 +12,8 @@ from .core import CountResult, SupportCensusResult, count_networks, support_cens
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="rlc-oneport-count",
-        description="Count small two-terminal RLC one-port network topology classes.",
+        prog="rice",
+        description="RICE — Resistor-Inductor-Capacitor Enumerator for small two-terminal RLC one-port topology classes.",
     )
     subparsers = parser.add_subparsers(dest="command")
 

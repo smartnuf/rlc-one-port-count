@@ -4,19 +4,19 @@ Status: `todo`
 
 ## Goal
 
-Plan a README motivation update explaining why enumerating small RLC networks matters for rlc-one-port-count and for network theory. Do not update `README.md` in this task unless a later implementation task explicitly calls for it.
+Plan a README motivation update explaining why enumerating small RLC networks matters for rice and for network theory. Do not update `README.md` in this task unless a later implementation task explicitly calls for it.
 
 ## Draft motivation
 
 Enumerating finite classes of RLC one-port networks is useful because it turns vague questions about possible circuit forms into reproducible catalogues. A catalogue can be searched, counted, compared with known results, and used to test hypotheses about realisability and minimality.
 
-For rlc-one-port-count specifically, enumeration can help to:
+For rice specifically, enumeration can help to:
 
 - test whether the descriptor language covers the intended classes of networks;
 - discover duplicate descriptors that describe equivalent networks;
 - build canonicalisation rules from evidence rather than guesswork;
 - generate golden examples for impedance calculation and simplification tests;
-- compare rlc-one-port-count output with historical catalogues;
+- compare rice output with historical catalogues;
 - explore where series-parallel forms cease to be enough and bridge-like primitives become necessary;
 - support future claims about completeness, expressiveness, and minimal realisations.
 

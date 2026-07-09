@@ -61,8 +61,8 @@ python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip setuptools wheel
 .venv/bin/python -m pip install -e ".[dev]"
 .venv/bin/python -m pytest -q
-.venv/bin/python -m rlc_oneport_count supports --max-edges 8
-.venv/bin/python -m rlc_oneport_count --mode lc --max-r 3 --max-reactive 5
+.venv/bin/python -m rice supports --max-edges 8
+.venv/bin/python -m rice --mode lc --max-r 3 --max-reactive 5
 ```
 
 Do not run these ambiguous commands in Codex tasks:
@@ -112,9 +112,9 @@ or explicitly:
 
 ```bash
 .venv/bin/python -m pytest -q
-.venv/bin/python -m rlc_oneport_count supports --max-edges 8
-.venv/bin/python -m rlc_oneport_count --mode lc --max-r 3 --max-reactive 5
-.venv/bin/python -m rlc_oneport_count --mode generic --max-r 3 --max-reactive 5
+.venv/bin/python -m rice supports --max-edges 8
+.venv/bin/python -m rice --mode lc --max-r 3 --max-reactive 5
+.venv/bin/python -m rice --mode generic --max-r 3 --max-reactive 5
 ```
 
 Legacy reference totals:

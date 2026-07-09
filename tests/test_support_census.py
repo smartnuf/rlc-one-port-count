@@ -1,6 +1,6 @@
 import networkx as nx
 
-from rlc_oneport_count.core import (
+from rice.core import (
     automorphisms,
     is_two_terminal_relevant,
     support_census,

@@ -4,7 +4,7 @@ Status: `todo`
 
 ## Goal
 
-Avoid overstating what rlc-one-port-count proves.
+Avoid overstating what rice proves.
 
 ## Open questions
 

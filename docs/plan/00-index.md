@@ -1,4 +1,4 @@
-# rlc-oneport-count plan index
+# rice plan index
 
 Status key: `done`, `doing`, `todo`, `blocked`, `later`.
 

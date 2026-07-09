@@ -18,11 +18,11 @@ def pytest_sessionstart(session):  # type: ignore[no-untyped-def]
     `ModuleNotFoundError: No module named 'networkx'`.
 
     When `.venv` exists, require tests to be run with that venv. Set
-    `RLC_ONEPORT_ALLOW_NON_VENV=1` to opt out deliberately, for example in a
+    `RICE_ALLOW_NON_VENV=1` to opt out deliberately, for example in a
     separate tox/nox/CI environment that manages dependencies another way.
     """
 
-    if os.environ.get("RLC_ONEPORT_ALLOW_NON_VENV") == "1":
+    if os.environ.get("RICE_ALLOW_NON_VENV") == "1":
         return
 
     repo_root = Path(__file__).resolve().parents[1]
@@ -45,5 +45,5 @@ def pytest_sessionstart(session):  # type: ignore[no-untyped-def]
             f"Current sys.prefix: {sys.prefix}\n"
             f"Expected sys.prefix: {expected_prefix}\n"
             "\n"
-            "To override intentionally, set RLC_ONEPORT_ALLOW_NON_VENV=1."
+            "To override intentionally, set RICE_ALLOW_NON_VENV=1."
         )

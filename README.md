@@ -1,7 +1,7 @@
-# RLC one-port topology counter
+# RICE — Resistor-Inductor-Capacitor Enumerator
 
-This repository enumerates, catalogues, and counts small connected two-terminal
-RLC one-port topology classes. It was created around the case:
+RICE — Resistor-Inductor-Capacitor Enumerator — enumerates, catalogues,
+and counts small connected two-terminal RLC one-port topology classes. It was created around the case:
 
 > **R <= 3, L + C <= 5**, with inductors and capacitors treated as distinct component types.
 
@@ -187,19 +187,26 @@ python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip setuptools wheel
 .venv/bin/python -m pip install -e ".[dev]"
 .venv/bin/python -m pytest -q
-.venv/bin/python -m rlc_oneport_count supports --max-edges 8
-.venv/bin/python -m rlc_oneport_count --mode lc --max-r 3 --max-reactive 5
-.venv/bin/python -m rlc_oneport_count --mode generic --max-r 3 --max-reactive 5
+.venv/bin/python -m rice supports --max-edges 8
+.venv/bin/python -m rice --mode lc --max-r 3 --max-reactive 5
+.venv/bin/python -m rice --mode generic --max-r 3 --max-reactive 5
 ```
 
 `make check` includes `legacy-generic` only while generic-X support remains present.
 A future generic-removal PR should remove that target from `make check` together
 with `--mode generic` and the matching documentation/results entries.
 
-The installed console script can also be run explicitly from the venv:
+The primary installed console script can also be run explicitly from the venv:
 
 ```bash
-.venv/bin/rlc-oneport-count --mode lc --max-r 3 --max-reactive 5
+.venv/bin/rice --mode lc --max-r 3 --max-reactive 5
+```
+
+A transitional backwards-compatible console alias is retained for existing
+automation, but new commands should prefer `rice`:
+
+```bash
+.venv/bin/rlc-oneport-count --help
 ```
 
 ## Codex Cloud scripts

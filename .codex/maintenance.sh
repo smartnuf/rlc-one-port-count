@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 cd "${CODEX_REPO_DIR:-$PWD}"
 
-echo "Codex maintenance for rlc-one-port-count"
+echo "Codex maintenance for rice"
 echo "Repository: $(pwd)"
 
 if [ ! -x .venv/bin/python ]; then
@@ -22,11 +22,11 @@ echo "Environment smoke test:"
 import sys
 import networkx
 import pytest
-import rlc_oneport_count
+import rice
 print("python", sys.executable)
 print("networkx", networkx.__version__)
 print("pytest", pytest.__version__)
-print("rlc_oneport_count", rlc_oneport_count.__file__)
+print("rice", rice.__file__)
 PY
 
 .venv/bin/python -m pytest -q
