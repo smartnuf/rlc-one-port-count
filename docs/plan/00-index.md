@@ -1,6 +1,6 @@
 # rice plan index
 
-Status key: `done`, `doing`, `todo`, `blocked`, `later`.
+Status key: `done`, `prog`, `todo`, `blocked`, `later`.
 
 ## 00 — Plan records and literature alignment
 
@@ -26,8 +26,8 @@ Status key: `done`, `doing`, `todo`, `blocked`, `later`.
 
 ## 03 — Catalogue model and distinctness
 
-- `todo` [Define catalogue object model](03-counting/02-distinct.md)
-- `todo` [Define enumeration scope](03-counting/03-scope.md)
+- `prog` [Define catalogue object model](03-counting/02-distinct.md)
+- `prog` [Define enumeration scope](03-counting/03-scope.md)
 - `todo` [Define small explicit catalogue slice](03-counting/04-small-slice.md)
 - `todo` [Define Ladenheim comparison slice](03-counting/05-ladenheim.md)
 - `todo` [Define full current project slice](03-counting/06-full-counts.md)
@@ -61,18 +61,18 @@ Status key: `done`, `doing`, `todo`, `blocked`, `later`.
 
 ## 07 — Test coverage
 
-- `todo` [Set up test strategy for catalogue enumeration](07-tests/01-strategy.md)
-- `todo` [Add golden count tests](07-tests/02-golden-counts.md)
+- `prog` [Set up test strategy for catalogue enumeration](07-tests/01-strategy.md)
+- `prog` [Add golden count tests](07-tests/02-golden-counts.md)
 - `todo` [Add distinctness and reduction tests](07-tests/03-canon-tests.md)
 - `todo` [Add cleanup regression tests](07-tests/04-cleanup-tests.md)
-- `todo` [Add CI-friendly validation commands](07-tests/05-ci.md)
+- `prog` [Add CI-friendly validation commands](07-tests/05-ci.md)
 
 ## 08 — Documentation
 
 - `todo` [Document developer workflow](08-docs/01-dev-workflow.md)
-- `todo` [Document counting methodology](08-docs/02-count-method.md)
+- `prog` [Document counting methodology](08-docs/02-count-method.md)
 - `todo` [Document catalogue comparisons and references](08-docs/03-catalogues.md)
-- `todo` [Document known limits and open questions](08-docs/04-open.md)
+- `prog` [Document known limits and open questions](08-docs/04-open.md)
 
 ## 09 — Later named features
 

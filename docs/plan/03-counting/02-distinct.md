@@ -1,6 +1,6 @@
 # 03-counting / 02 — Define “distinct network” precisely
 
-Status: `todo`
+Status: `prog`
 
 ## Goal
 
@@ -49,3 +49,23 @@ solver for general electrical equivalence.
 - The definition is written down before counts are treated as meaningful.
 - Count tables state which equivalence relation they use.
 - Tests encode the definition.
+
+## Progress notes
+
+- Current implementation has completed the support-only portion of the staged
+  reduced model: connected unlabelled simple support graphs, unordered terminal
+  pair orbits, and terminal-relevance filtering are implemented in `rice.core`
+  and exposed through `rice supports`.
+- The legacy `count_networks` path is explicitly labelled legacy and still uses
+  multiset component-count bundles. Simple primitive bundle assignment,
+  assigned-support canonicalisation, and reduced signatures remain unimplemented,
+  so the overall distinct-network task is still `prog` rather than `done`.
+
+## Near-term next steps
+
+1. Add the phase-2 simple bundle-assignment layer using only `R`, `L`, `C`,
+   `R||L`, `R||C`, `L||C`, and `R||L||C` on terminal-relevant supports.
+2. Validate the raw leaf-assignment totals from the normative docs before any
+   signature merging.
+3. Only after that, add reduced canonical signatures and the documented boundary
+   tests for local series/parallel reductions.

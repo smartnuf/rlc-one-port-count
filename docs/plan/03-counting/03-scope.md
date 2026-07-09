@@ -1,6 +1,6 @@
 # 03-counting / 03 — Set enumeration scope: `R <= 3`, `L+C <= 5`
 
-Status: `todo`
+Status: `prog`
 
 ## Goal
 
@@ -47,3 +47,20 @@ N = 5: (5,0), (4,1), (3,2), (2,3), (1,4), (0,5)
 - The code accepts the scope as independent bounds on `R` and `L+C`.
 - Count tables clearly label rows/columns as `R` and `L+C`.
 - Tests cover boundary values, especially `R=3` and `L+C=5`.
+
+## Progress notes
+
+- The CLI and legacy count path accept independent `--max-r` and
+  `--max-reactive` bounds and label the reactive column as `L+C` in `lc` mode.
+- `make check` currently validates the full legacy `R <= 3`, `L+C <= 5` path,
+  but these totals are legacy multiset-bundle counts, not final reduced-model
+  counts.
+- The support-census command validates support-edge counts through
+  `max_edges=8`, which is the support bound for the current full scope.
+
+## Near-term next steps
+
+1. Keep the independent `R` and `L+C` budget interface when adding phase-2 bundle
+   assignments.
+2. Decide how degenerate rows or columns should be reported in reduced-model
+   output tables before replacing the legacy totals.

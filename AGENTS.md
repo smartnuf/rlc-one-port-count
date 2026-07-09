@@ -36,6 +36,18 @@ for that group. For example, `## 00 — ...` lists only files under
 `docs/plan/08-docs/`. If a task belongs in a different group, rename or move the
 file and update the index rather than cross-linking it from the wrong group.
 
+## Plan record maintenance
+
+Agents should keep the plan records current as implementation changes are made.
+Before substantive changes, check the relevant plan documents under
+`docs/plan/00-index.md` and `docs/plan/*/*`; most task prompts will reference a
+specific plan document. After substantive changes, update the relevant plan
+status and notes: use `todo` for unstarted work, `prog` for in-progress or
+partially completed work, and `done` only when the work is implemented, tested,
+and documented sufficiently. Not every task is intended to move an item to
+`done`. Add concise progress notes against the relevant plan document, and
+expand near-term plan steps as the implementation path becomes clearer.
+
 ## Development environment
 
 Use Python 3.11 or newer.
