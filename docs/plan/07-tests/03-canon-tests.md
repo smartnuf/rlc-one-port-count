@@ -24,4 +24,10 @@ Ensure duplicate rejection and descriptor production are trustworthy.
 ## Progress notes
 
 - Added focused phase-3 assigned-support canonicalisation tests covering single-edge supports, terminal-path reversal, asymmetric terminal-labelled supports, exclusion of automorphisms that do not preserve the terminal set, explicit terminal-swapping automorphisms, budget accounting over edge cycles, and brute-force cross-checks for small supports.
-- Local series/parallel normalisation and descriptor-output tests remain future work.
+- Added focused local series/parallel reduction tests for primitive duplicate
+  merging, compound duplicate preservation, terminal reversal, internal node
+  renaming, series arms inside parallel networks, repeated reduction,
+  non-series-parallel bridge/core stability, non-collision examples, mixed-type
+  hashable node labels on the reduced-signature validation path, and malformed
+  or terminal-irrelevant input rejection. Descriptor-output and full census
+  integration tests remain future work.

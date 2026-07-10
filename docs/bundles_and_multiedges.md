@@ -232,5 +232,6 @@ The current implementation is staged:
   `rice labelings`: it quotients the simple-bundle assignments by
   automorphisms of each terminal-relevant support that preserve the unordered
   terminal pair, including terminal reversal.
-- Local series spans and recursive reduced signatures are still future work.
-  Future phases should add them as described in `docs/model_decisions.md`.
+- Local series spans and recursive reduced signatures now have focused machinery
+  for individual assigned two-terminal networks. Full enumeration and merging of
+  phase-3 orbit representatives by reduced signature remains future work.

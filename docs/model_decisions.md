@@ -246,8 +246,10 @@ counting contract.
 1. Implement support-graph census and terminal-relevance filtering.
 2. Implement simple primitive bundle assignment only.
 3. Implement canonical reduced signatures with local series and parallel
-   reductions.
-4. Only then recompute final reduced-topology counts.
+   reductions for individual assigned networks. This machinery is now present as
+   a focused API, but is not yet wired into a full census.
+4. Only then integrate phase-3 orbit representatives, merge by reduced
+   signature, and recompute final reduced-topology counts.
 
 The first phase should produce diagnostic counts before any component labels are
 assigned. See `docs/support_graph_enumeration.md`.

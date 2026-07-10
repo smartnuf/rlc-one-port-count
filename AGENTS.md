@@ -74,6 +74,8 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -e ".[dev]"
 .venv/bin/python -m pytest -q
 .venv/bin/python -m rice supports --max-edges 8
+.venv/bin/python -m rice bundles --max-r 3 --max-reactive 5
+.venv/bin/python -m rice labelings --max-r 3 --max-reactive 5
 .venv/bin/python -m rice --mode lc --max-r 3 --max-reactive 5
 ```
 
@@ -129,8 +131,8 @@ current project direction. The current implementation uses NetworkX only.
 ## Current legacy validation commands
 
 These validate the current source as it stands. `make check` is the full
-currently documented explicit legacy validation and runs `test`, `supports`,
-`legacy-count`, and `legacy-generic`:
+currently documented validation and runs `test`, `supports`, `bundles`,
+`labelings`, `legacy-count`, and `legacy-generic`:
 
 ```bash
 make check
@@ -141,6 +143,8 @@ or explicitly:
 ```bash
 .venv/bin/python -m pytest -q
 .venv/bin/python -m rice supports --max-edges 8
+.venv/bin/python -m rice bundles --max-r 3 --max-reactive 5
+.venv/bin/python -m rice labelings --max-r 3 --max-reactive 5
 .venv/bin/python -m rice --mode lc --max-r 3 --max-reactive 5
 .venv/bin/python -m rice --mode generic --max-r 3 --max-reactive 5
 ```
@@ -158,8 +162,10 @@ together and these figures should be labelled legacy.
 
 ## Near-term implementation sequence
 
-Do not start by implementing full reduced signatures. First add a support-census
-layer that can be reviewed independently.
+The support, bundle, and assigned-support labeling stages are implemented.
+Current reduced-signature work should stay focused on local per-network
+canonicalisation before adding full standard-slice signature enumeration and
+merging.
 
 ### Phase 1: support graph census
 
@@ -237,10 +243,21 @@ isomorphism/signature merging is:
 | 8 | 258 | 1,792 | 462,336 |
 | **Total** | **383** | — | **1,166,714** |
 
-### Phase 3: reduced signatures
+### Phase 3: assigned-support bundle-labeling orbits
 
-Only after phase 1 and phase 2 are tested, implement canonical reduced topology
-signatures.
+Phase 3 is implemented as `rice labelings`. It removes assigned-support
+isomorphism only: simple-bundle assignments are quotiented by support
+automorphisms that preserve the unordered terminal pair, including terminal
+reversal. For `R <= 3, L+C <= 5`, this preserves `1,166,714` raw leaves and
+reports `830,094` canonical bundle-labeling orbits. This is not the final
+reduced-topology count.
+
+### Current reduced-signature stage
+
+After phase 3, the code adds canonical reduced-topology signatures for
+individual assigned two-terminal networks by applying the documented local
+series and parallel rules. Full signature enumeration and merging across the
+standard slice remains a later stage.
 
 Required boundary tests:
 

@@ -5,8 +5,10 @@ simple support graphs, unordered terminal-pair orbits, and terminal-relevant
 two-terminal supports. Phase 2 adds a raw simple-bundle assignment census over
 those supports; series spans and reduced signatures are intentionally outside
 that census. Phase 3 quotients those assigned supports by support
-automorphisms preserving the unordered terminal pair, without applying local
-series/parallel reductions.
+automorphisms preserving the unordered terminal pair. The module also exposes
+focused per-network local reduction and canonical reduced-signature helpers;
+full standard-slice signature enumeration and merging is intentionally not yet
+implemented.
 
 The older :func:`count_networks` entry point remains as a legacy
 multiset-bundle counter.  It assigns non-empty component-count bundles to
@@ -18,7 +20,7 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from itertools import combinations
+from itertools import combinations, permutations
 from typing import DefaultDict, Iterable, Literal
 
 import networkx as nx
@@ -136,6 +138,225 @@ class BundleLabelingCensusResult:
         return sum(self.canonical_labeling_orbits_by_edges.values())
 
 
+PrimitiveName = Literal["R", "L", "C"]
+FactorKind = Literal["primitive", "series", "parallel"]
+
+
+@dataclass(frozen=True, order=True)
+class ReducedFactor:
+    """Immutable recursive factor used by reduced-topology signatures."""
+
+    kind: FactorKind
+    value: PrimitiveName | tuple["ReducedFactor", ...]
+
+    def stable_key(self) -> tuple[object, ...]:
+        if self.kind == "primitive":
+            return ("0", self.value)
+        return (
+            "1" if self.kind == "series" else "2",
+            tuple(operand.stable_key() for operand in self.operands),
+        )
+
+    @property
+    def operands(self) -> tuple["ReducedFactor", ...]:
+        if self.kind == "primitive":
+            raise TypeError("primitive factors do not have operands")
+        assert isinstance(self.value, tuple)
+        return self.value
+
+    def stable_string(self) -> str:
+        if self.kind == "primitive":
+            assert isinstance(self.value, str)
+            return self.value
+        joiner = "--" if self.kind == "series" else "||"
+        pieces = []
+        for operand in self.operands:
+            text = operand.stable_string()
+            if operand.kind != "primitive":
+                text = f"({text})"
+            pieces.append(text)
+        return joiner.join(pieces)
+
+
+@dataclass(frozen=True, order=True)
+class ReducedSignature:
+    """Canonical reduced-topology signature for one assigned two-terminal graph."""
+
+    serialization: tuple[tuple[int, int, ReducedFactor], ...]
+
+    def stable_string(self) -> str:
+        return ";".join(f"{u}-{v}:{factor.stable_string()}" for u, v, factor in self.serialization)
+
+
+def primitive_factor(name: str) -> ReducedFactor:
+    if name not in {"R", "L", "C"}:
+        raise ValueError(f"unknown primitive factor {name!r}")
+    return ReducedFactor("primitive", name)  # type: ignore[arg-type]
+
+
+def _normalise_composition(kind: Literal["series", "parallel"], factors: Iterable[ReducedFactor]) -> ReducedFactor:
+    operands: list[ReducedFactor] = []
+    primitive_seen: set[PrimitiveName] = set()
+    for factor in factors:
+        if factor.kind == kind:
+            children = factor.operands
+        else:
+            children = (factor,)
+        for child in children:
+            if child.kind == "primitive":
+                assert isinstance(child.value, str)
+                if child.value in primitive_seen:
+                    continue
+                primitive_seen.add(child.value)  # type: ignore[arg-type]
+            operands.append(child)
+    if not operands:
+        raise ValueError(f"{kind} composition requires at least one factor")
+    operands.sort(key=lambda factor: factor.stable_key())
+    if len(operands) == 1:
+        return operands[0]
+    return ReducedFactor(kind, tuple(operands))
+
+
+def normalise_series_factor(factors: Iterable[ReducedFactor]) -> ReducedFactor:
+    """Return an unordered, flattened series factor with primitive duplicates merged."""
+
+    return _normalise_composition("series", factors)
+
+
+def normalise_parallel_factor(factors: Iterable[ReducedFactor]) -> ReducedFactor:
+    """Return an unordered, flattened parallel factor with primitive duplicates merged."""
+
+    return _normalise_composition("parallel", factors)
+
+
+def factor_from_simple_primitive_bundle(bundle: str | SimplePrimitiveBundle | ReducedFactor) -> ReducedFactor:
+    """Convert one generated simple primitive bundle label to its initial factor."""
+
+    if isinstance(bundle, ReducedFactor):
+        return bundle
+    label = bundle.label if isinstance(bundle, SimplePrimitiveBundle) else bundle
+    pieces = tuple(part.strip() for part in label.split("||"))
+    if not pieces or any(piece not in {"R", "L", "C"} for piece in pieces):
+        raise ValueError(f"unknown simple primitive bundle {label!r}")
+    factors = [primitive_factor(piece) for piece in pieces]
+    return normalise_parallel_factor(factors) if len(factors) > 1 else factors[0]
+
+
+def _edge_key(edge: tuple[object, object]) -> frozenset[object]:
+    u, v = edge
+    return frozenset((u, v))
+
+
+def _validate_assigned_support(
+    graph: nx.Graph,
+    terminals: tuple[object, object],
+    edge_assignments: dict[tuple[object, object], str | SimplePrimitiveBundle | ReducedFactor],
+) -> None:
+    if len(terminals) != 2 or terminals[0] == terminals[1]:
+        raise ValueError("terminals must be two distinct nodes")
+    if terminals[0] not in graph or terminals[1] not in graph:
+        raise ValueError("both terminals must be graph nodes")
+    if graph.is_multigraph():
+        raise ValueError("assigned support graph must be simple, not a multigraph")
+    if any(u == v for u, v in graph.edges()):
+        raise ValueError("self-loops are not valid support edges")
+    if not nx.is_connected(graph):
+        raise ValueError("assigned support graph must be connected")
+    graph_edges = {_edge_key(edge) for edge in graph.edges()}
+    assignment_edges = {_edge_key(edge) for edge in edge_assignments}
+    missing = graph_edges - assignment_edges
+    extra = assignment_edges - graph_edges
+    if missing:
+        raise ValueError(f"missing assignments for support edges: {missing!r}")
+    if extra:
+        raise ValueError(f"assignments include non-support edges: {extra!r}")
+    if not is_two_terminal_relevant(graph, terminals[0], terminals[1]):
+        raise ValueError("assigned support graph is not terminal-relevant")
+
+
+def _merge_parallel_edges(graph: nx.MultiGraph) -> bool:
+    changed = False
+    for u, v in list(combinations(list(graph.nodes()), 2)):
+        data = graph.get_edge_data(u, v, default={})
+        if len(data) <= 1:
+            continue
+        merged = normalise_parallel_factor(edge_data["factor"] for edge_data in data.values())
+        graph.remove_edges_from((u, v, key) for key in list(data))
+        graph.add_edge(u, v, factor=merged)
+        changed = True
+    return changed
+
+
+def _suppress_one_series_node(graph: nx.MultiGraph, terminals: frozenset[object]) -> bool:
+    for node in sorted(graph.nodes(), key=repr):
+        if node in terminals or graph.degree(node) != 2:
+            continue
+        incident = list(graph.edges(node, keys=True, data=True))
+        if len(incident) != 2:
+            continue
+        (u1, v1, k1, d1), (u2, v2, k2, d2) = incident
+        other1 = v1 if u1 == node else u1
+        other2 = v2 if u2 == node else u2
+        if other1 == other2:
+            continue
+        combined = normalise_series_factor([d1["factor"], d2["factor"]])
+        graph.remove_edge(u1, v1, k1)
+        graph.remove_edge(u2, v2, k2)
+        graph.remove_node(node)
+        graph.add_edge(other1, other2, factor=combined)
+        return True
+    return False
+
+
+def _reduced_factor_multigraph(
+    graph: nx.Graph,
+    terminals: tuple[object, object],
+    edge_assignments: dict[tuple[object, object], str | SimplePrimitiveBundle | ReducedFactor],
+) -> nx.MultiGraph:
+    _validate_assigned_support(graph, terminals, edge_assignments)
+    reduced = nx.MultiGraph()
+    reduced.add_nodes_from(graph.nodes())
+    assignments = {_edge_key(edge): value for edge, value in edge_assignments.items()}
+    for edge in graph.edges():
+        u, v = edge
+        reduced.add_edge(u, v, factor=factor_from_simple_primitive_bundle(assignments[_edge_key(edge)]))
+
+    terminal_set = frozenset(terminals)
+    while True:
+        changed = _merge_parallel_edges(reduced)
+        changed = _suppress_one_series_node(reduced, terminal_set) or changed
+        if not changed:
+            break
+    return reduced
+
+
+def canonical_reduced_signature(
+    graph: nx.Graph,
+    terminals: tuple[object, object],
+    edge_assignments: dict[tuple[object, object], str | SimplePrimitiveBundle | ReducedFactor],
+) -> ReducedSignature:
+    """Reduce one assigned two-terminal support and return its canonical signature."""
+
+    reduced = _reduced_factor_multigraph(graph, terminals, edge_assignments)
+    source, target = terminals
+    internal_nodes = [node for node in reduced.nodes() if node not in {source, target}]
+    best: tuple[tuple[int, int, ReducedFactor], ...] | None = None
+    for oriented in ((source, target), (target, source)):
+        for perm in permutations(internal_nodes):
+            mapping = {oriented[0]: 0, oriented[1]: 1}
+            mapping.update({node: index + 2 for index, node in enumerate(perm)})
+            serialized = tuple(
+                sorted(
+                    (min(mapping[u], mapping[v]), max(mapping[u], mapping[v]), data["factor"])
+                    for u, v, data in reduced.edges(data=True)
+                )
+            )
+            if best is None or serialized < best:
+                best = serialized
+    assert best is not None
+    return ReducedSignature(best)
+
+
 @dataclass(frozen=True)
 class CountResult:
     """Legacy component-bundle result returned by :func:`count_networks`.
@@ -248,17 +469,17 @@ def automorphisms(graph: nx.Graph) -> list[dict[int, int]]:
     return list(iso.GraphMatcher(graph, graph).isomorphisms_iter())
 
 
-def simple_path_edge_cover(graph: nx.Graph, source: int, target: int) -> set[tuple[int, int]]:
+def simple_path_edge_cover(graph: nx.Graph, source: object, target: object) -> set[frozenset[object]]:
     """Return the support edges lying on at least one simple source-target path."""
 
-    used: set[tuple[int, int]] = set()
+    used: set[frozenset[object]] = set()
     for path in nx.all_simple_paths(graph, source, target, cutoff=graph.number_of_nodes() - 1):
         for u, v in zip(path, path[1:]):
-            used.add(tuple(sorted((u, v))))
+            used.add(frozenset((u, v)))
     return used
 
 
-def is_two_terminal_relevant(graph: nx.Graph, source: int, target: int) -> bool:
+def is_two_terminal_relevant(graph: nx.Graph, source: object, target: object) -> bool:
     """Check whether every support edge lies on a simple terminal-terminal path.
 
     This removes dangling appendages and other branches that are not part of the
@@ -268,7 +489,7 @@ def is_two_terminal_relevant(graph: nx.Graph, source: int, target: int) -> bool:
     walks.
     """
 
-    all_edges = {tuple(sorted(edge)) for edge in graph.edges()}
+    all_edges = {frozenset(edge) for edge in graph.edges()}
     return simple_path_edge_cover(graph, source, target) == all_edges
 
 

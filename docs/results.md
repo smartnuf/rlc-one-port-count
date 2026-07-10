@@ -120,4 +120,7 @@ For `R <= 3, L+C <= 5`, the phase-3 assigned-support count is:
 | **Total** | **383** | **1,166,714** | **830,094** |
 
 This **830,094** total is a phase-3 assigned-support orbit count, not the final
-reduced-topology count.
+reduced-topology count. The code now also has local reduction and canonical
+reduced-signature machinery for individual assigned two-terminal networks, but
+no command currently enumerates the full standard slice, merges phase-3 orbits
+by those signatures, or claims a final reduced-topology total.

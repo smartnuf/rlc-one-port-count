@@ -92,7 +92,7 @@ Implemented reduced-model stages now include `rice supports` for phase 1
 terminal-relevant supports, `rice bundles` for phase 2 raw simple-bundle
 assignment leaves, and `rice labelings` for phase 3 canonical bundle-labeling
 orbits under internal-node renaming and reversal of the unordered terminal pair.
-Local series-span reductions and recursive reduced signatures remain future work.
+Local series-span reductions and recursive reduced signatures are available as a focused API for individual assigned networks; full signature enumeration and merging remain future work.
 
 ## Current legacy results
 
@@ -274,4 +274,4 @@ documentation, and `pyproject.toml`; recreate `.venv` in each development
 environment.
 
 
-The `labelings` command reports phase-3 canonical bundle-labeling orbits. It preserves the phase-2 raw leaf total and additionally quotients assignments by automorphisms of each terminal-relevant support that preserve the unordered terminal pair, including automorphisms that swap the terminals. For `R <= 3, L+C <= 5`, the standard slice has **1,166,714** raw leaves and **830,094** canonical bundle-labeling orbits. This is still not a final reduced-topology count: local series-span reductions and recursive reduced signatures remain deliberately deferred.
+The `labelings` command reports phase-3 canonical bundle-labeling orbits. It preserves the phase-2 raw leaf total and additionally quotients assignments by automorphisms of each terminal-relevant support that preserve the unordered terminal pair, including automorphisms that swap the terminals. For `R <= 3, L+C <= 5`, the standard slice has **1,166,714** raw leaves and **830,094** canonical bundle-labeling orbits. This is still not a final reduced-topology count: local series-span reductions and recursive reduced signatures are now available only as a focused per-network API, while full standard-slice signature enumeration and merging remain deliberately deferred.
