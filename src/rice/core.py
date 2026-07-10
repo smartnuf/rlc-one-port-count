@@ -144,7 +144,12 @@ FactorKind = Literal["primitive", "series", "parallel"]
 
 @dataclass(frozen=True, order=True)
 class ReducedFactor:
-    """Immutable recursive factor used by reduced-topology signatures."""
+    """Immutable recursive factor used by reduced-topology signatures.
+
+    Public helpers that accept ``ReducedFactor`` instances validate and
+    normalise caller-supplied values before using them in signatures. Directly
+    constructing this dataclass does not itself canonicalise the payload.
+    """
 
     kind: FactorKind
     value: PrimitiveName | tuple["ReducedFactor", ...]
@@ -217,6 +222,39 @@ def _normalise_composition(kind: Literal["series", "parallel"], factors: Iterabl
     return ReducedFactor(kind, tuple(operands))
 
 
+def normalise_reduced_factor(factor: ReducedFactor) -> ReducedFactor:
+    """Validate and canonicalise a caller-supplied reduced factor.
+
+    Compositions are recursively normalised, nested compositions of the same
+    kind are flattened, operands are sorted by :meth:`ReducedFactor.stable_key`,
+    duplicate primitive singleton operands are merged, and one-operand
+    compositions collapse to that operand. Repeated equal compound operands are
+    intentionally preserved because the reduced-topology model does not merge
+    repeated subnetwork arms.
+    """
+
+    if not isinstance(factor, ReducedFactor):
+        raise ValueError(f"expected ReducedFactor, got {type(factor).__name__}")
+    if factor.kind == "primitive":
+        if factor.value not in {"R", "L", "C"}:
+            raise ValueError(f"malformed primitive factor value {factor.value!r}")
+        return primitive_factor(factor.value)
+    if factor.kind not in {"series", "parallel"}:
+        raise ValueError(f"unknown reduced factor kind {factor.kind!r}")
+    if not isinstance(factor.value, tuple):
+        raise ValueError(f"{factor.kind} factor value must be a tuple of operands")
+    if not factor.value:
+        raise ValueError(f"{factor.kind} composition requires at least one factor")
+    normalised_operands = []
+    for operand in factor.value:
+        if not isinstance(operand, ReducedFactor):
+            raise ValueError(f"{factor.kind} operands must be ReducedFactor instances")
+        normalised_operands.append(normalise_reduced_factor(operand))
+    if factor.kind == "series":
+        return normalise_series_factor(normalised_operands)
+    return normalise_parallel_factor(normalised_operands)
+
+
 def normalise_series_factor(factors: Iterable[ReducedFactor]) -> ReducedFactor:
     """Return an unordered, flattened series factor with primitive duplicates merged."""
 
@@ -230,10 +268,16 @@ def normalise_parallel_factor(factors: Iterable[ReducedFactor]) -> ReducedFactor
 
 
 def factor_from_simple_primitive_bundle(bundle: str | SimplePrimitiveBundle | ReducedFactor) -> ReducedFactor:
-    """Convert one generated simple primitive bundle label to its initial factor."""
+    """Convert one bundle/factor input to a validated canonical factor.
+
+    String and :class:`SimplePrimitiveBundle` inputs are parsed as simple
+    primitive bundle labels. Caller-supplied :class:`ReducedFactor` inputs are
+    recursively validated and normalised through the same canonicalisation
+    route used by parsed bundles.
+    """
 
     if isinstance(bundle, ReducedFactor):
-        return bundle
+        return normalise_reduced_factor(bundle)
     label = bundle.label if isinstance(bundle, SimplePrimitiveBundle) else bundle
     pieces = tuple(part.strip() for part in label.split("||"))
     if not pieces or any(piece not in {"R", "L", "C"} for piece in pieces):
@@ -263,7 +307,15 @@ def _validate_assigned_support(
     if not nx.is_connected(graph):
         raise ValueError("assigned support graph must be connected")
     graph_edges = {_edge_key(edge) for edge in graph.edges()}
-    assignment_edges = {_edge_key(edge) for edge in edge_assignments}
+    assignment_edges: set[frozenset[object]] = set()
+    duplicate_edges: set[frozenset[object]] = set()
+    for edge in edge_assignments:
+        key = _edge_key(edge)
+        if key in assignment_edges:
+            duplicate_edges.add(key)
+        assignment_edges.add(key)
+    if duplicate_edges:
+        raise ValueError(f"duplicate or ambiguous assignments for undirected support edge(s): {duplicate_edges!r}")
     missing = graph_edges - assignment_edges
     extra = assignment_edges - graph_edges
     if missing:
