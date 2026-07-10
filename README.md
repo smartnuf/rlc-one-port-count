@@ -189,7 +189,7 @@ python3 -m venv .venv
 .venv/bin/python -m pytest -q
 .venv/bin/python -m rice supports --max-edges 8
 .venv/bin/python -m rice supports --max-r 3 --max-reactive 5
-.venv/bin/python -m rice bundles --max-r 3 --max-reactive 5 --max-edges 8
+.venv/bin/python -m rice bundles --max-r 3 --max-reactive 5
 .venv/bin/python -m rice --mode lc --max-r 3 --max-reactive 5
 .venv/bin/python -m rice --mode generic --max-r 3 --max-reactive 5
 ```
@@ -204,7 +204,7 @@ Subcommand options go after the subcommand:
 ```bash
 .venv/bin/rice supports --max-edges 8
 .venv/bin/rice supports --max-r 3 --max-reactive 5
-.venv/bin/rice bundles --max-r 3 --max-reactive 5 --max-edges 8
+.venv/bin/rice bundles --max-r 3 --max-reactive 5
 .venv/bin/rice count --mode lc --max-r 3 --max-reactive 5
 ```
 
@@ -216,7 +216,10 @@ The legacy no-subcommand count form is retained for compatibility only:
 
 The `bundles` command reports raw phase-2 simple primitive bundle-assignment
 leaves before support-automorphism quotienting or reduced-signature merging; it
-is not a final reduced-topology count.
+is not a final reduced-topology count. Its normal interface derives the support
+edge bound as `max_edges = max_r + max_reactive`. An optional `--max-edges` flag
+may be supplied after `bundles` only for debugging/truncation, and values greater
+than the derived component-budget bound are rejected.
 
 Do not put support-census options before `supports`; for example,
 `.venv/bin/rice --max-edges 8 supports` is not valid. Count-budget options

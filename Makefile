@@ -20,7 +20,7 @@ supports: ensure-venv
 	$(VENV_PYTHON) -m rice supports --max-edges 8
 
 bundles: ensure-venv
-	$(VENV_PYTHON) -m rice bundles --max-r 3 --max-reactive 5 --max-edges 8
+	$(VENV_PYTHON) -m rice bundles --max-r 3 --max-reactive 5
 
 legacy-count: ensure-venv
 	$(VENV_PYTHON) -m rice --mode lc --max-r 3 --max-reactive 5

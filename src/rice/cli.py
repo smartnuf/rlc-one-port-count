@@ -85,7 +85,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--max-edges",
         type=int,
         default=argparse.SUPPRESS,
-        help="maximum support-edge count, default: max_r + max_reactive",
+        help="optional debugging/truncation support-edge count; default: max_r + max_reactive; cannot exceed that derived bound",
     )
     bundles_parser.add_argument(
         "--format",
@@ -254,6 +254,8 @@ def main(argv: list[str] | None = None) -> int:
         max_r = getattr(args, "max_r", 3)
         max_reactive = getattr(args, "max_reactive", 5)
         max_edges = getattr(args, "max_edges", None)
+        if max_edges is not None and max_edges > max_r + max_reactive:
+            parser.error("bundles --max-edges cannot exceed --max-r + --max-reactive")
         result = simple_bundle_assignment_census(
             max_r=max_r, max_reactive=max_reactive, max_edges=max_edges
         )

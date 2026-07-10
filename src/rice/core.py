@@ -467,9 +467,12 @@ def simple_bundle_assignment_census(
 
     if max_r < 0 or max_reactive < 0:
         raise ValueError("component limits must be non-negative")
-    resolved_max_edges = max_r + max_reactive if max_edges is None else max_edges
+    natural_max_edges = max_r + max_reactive
+    resolved_max_edges = natural_max_edges if max_edges is None else max_edges
     if resolved_max_edges < 1:
         raise ValueError("max_edges must be at least 1")
+    if resolved_max_edges > natural_max_edges:
+        raise ValueError("max_edges cannot exceed max_r + max_reactive")
 
     supports = support_census(max_edges=resolved_max_edges).relevant_by_edges
     assignments = simple_bundle_assignment_count_by_edge_count(

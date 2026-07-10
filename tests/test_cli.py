@@ -72,7 +72,7 @@ def test_top_level_help_does_not_show_support_or_count_options_as_global():
 
 
 def test_bundles_subcommand_outputs_phase_2_census(capsys):
-    assert main(["bundles", "--max-r", "3", "--max-reactive", "5", "--max-edges", "8"]) == 0
+    assert main(["bundles", "--max-r", "3", "--max-reactive", "5"]) == 0
 
     output = capsys.readouterr().out
 
@@ -81,7 +81,7 @@ def test_bundles_subcommand_outputs_phase_2_census(capsys):
 
 
 def test_bundles_json_output(capsys):
-    assert main(["bundles", "--format", "json", "--max-edges", "8"]) == 0
+    assert main(["bundles", "--format", "json"]) == 0
 
     output = json.loads(capsys.readouterr().out)
 
@@ -98,6 +98,22 @@ def test_bundles_json_output(capsys):
     assert output["leaf_assignments_total"] == 1166714
 
 
+def test_bundles_max_edges_can_truncate_for_debugging(capsys):
+    assert main(["bundles", "--max-r", "3", "--max-reactive", "5", "--max-edges", "7"]) == 0
+
+    output = capsys.readouterr().out
+
+    assert "Simple-bundle assignment census: R <= 3, L+C <= 5, max_edges <= 7" in output
+
+
+def test_bundles_max_edges_cannot_exceed_derived_budget(capsys):
+    with pytest.raises(SystemExit) as excinfo:
+        main(["bundles", "--max-r", "3", "--max-reactive", "5", "--max-edges", "9"])
+
+    assert excinfo.value.code == 2
+    assert "cannot exceed" in capsys.readouterr().err
+
+
 def test_bundles_subcommand_help_shows_bundle_options():
     result = subprocess.run(
         [sys.executable, "-m", "rice", "bundles", "--help"],
@@ -109,6 +125,7 @@ def test_bundles_subcommand_help_shows_bundle_options():
     assert "--max-r" in result.stdout
     assert "--max-reactive" in result.stdout
     assert "--max-edges" in result.stdout
+    assert "debugging/truncation" in result.stdout
 
 
 def test_count_subcommand_help_shows_count_options():

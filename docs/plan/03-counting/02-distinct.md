@@ -60,8 +60,8 @@ solver for general electrical equivalence.
   multiset component-count bundles.
 - Phase-2 raw simple primitive bundle assignment is implemented in `rice.core`
   and exposed through `rice bundles`, using only `R`, `L`, `C`, `R||L`,
-  `R||C`, `L||C`, and `R||L||C`. The `R <= 3`, `L+C <= 5`, `max_edges=8`
-  leaf total is tested as `1,166,714`.
+  `R||C`, `L||C`, and `R||L||C`. The normal `R <= 3`, `L+C <= 5` interface derives `max_edges=8`
+  and the leaf total is tested as `1,166,714`.
 - Assigned-support canonicalisation and reduced signatures remain unimplemented,
   so the overall distinct-network task is still `prog` rather than `done`.
 

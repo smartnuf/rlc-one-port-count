@@ -89,8 +89,7 @@ L||C
 R||L||C
 ```
 
-For `R <= 3, L+C <= 5`, the raw assignment leaf bound before isomorphism or
-reduced-signature merging is **1,166,714**.
+For `R <= 3, L+C <= 5`, run `.venv/bin/python -m rice bundles --max-r 3 --max-reactive 5`. The command derives `max_edges = max_r + max_reactive`; optional `--max-edges` is only for debugging/truncation and cannot exceed that derived bound. The raw assignment leaf bound before isomorphism or reduced-signature merging is **1,166,714**.
 
 This is small enough to permit straightforward enumeration for the first reduced
 implementation.

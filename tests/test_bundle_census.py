@@ -1,3 +1,5 @@
+import pytest
+
 from rice.core import (
     SIMPLE_PRIMITIVE_BUNDLES,
     simple_bundle_assignment_census,
@@ -50,9 +52,22 @@ def test_assignment_counts_per_support_match_phase_2_reference():
 
 
 def test_simple_bundle_assignment_census_matches_phase_2_reference():
-    result = simple_bundle_assignment_census(max_r=3, max_reactive=5, max_edges=8)
+    result = simple_bundle_assignment_census(max_r=3, max_reactive=5)
 
+    assert result.max_edges == 8
     assert result.assignments_per_support_by_edges == EXPECTED_ASSIGNMENTS_PER_SUPPORT
     assert result.leaf_assignments_by_edges == EXPECTED_LEAVES
     assert result.relevant_supports_total == 383
     assert result.leaf_assignments_total == 1166714
+
+
+def test_simple_bundle_assignment_census_allows_truncated_max_edges():
+    result = simple_bundle_assignment_census(max_r=3, max_reactive=5, max_edges=7)
+
+    assert result.max_edges == 7
+    assert result.leaf_assignments_total == sum(EXPECTED_LEAVES[i] for i in range(1, 8))
+
+
+def test_simple_bundle_assignment_census_rejects_max_edges_above_budget():
+    with pytest.raises(ValueError, match="cannot exceed"):
+        simple_bundle_assignment_census(max_r=3, max_reactive=5, max_edges=9)
