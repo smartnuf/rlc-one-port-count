@@ -19,7 +19,7 @@ Status key: `done`, `prog`, `todo`, `blocked`, `later`.
 
 ## 02 — Cleanup and simplification
 
-- `todo` [Review current implementation before deletion](02-cleanup/01-review.md)
+- `done` [Review current implementation before deletion](02-cleanup/01-review.md)
 - `todo` [Remove legacy implementation](02-cleanup/02-legacy.md)
 - `todo` [Remove generic `X` implementation, tests, and docs](02-cleanup/03-generic-x.md)
 - `todo` [Update examples, imports, and public surface](02-cleanup/04-public-api.md)
