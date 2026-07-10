@@ -1,10 +1,10 @@
 # 00-records / 03 — Update README motivation for enumeration
 
-Status: `todo`
+Status: `prog`
 
 ## Goal
 
-Plan a README motivation update explaining why enumerating small RLC networks matters for rice and for network theory. Do not update `README.md` in this task unless a later implementation task explicitly calls for it.
+Plan and maintain a README motivation note explaining why enumerating small RLC networks matters for rice and for network theory.
 
 ## Draft motivation
 
@@ -25,3 +25,12 @@ For rice specifically, enumeration can help to:
 - The repository has a clear plan for a README motivation note.
 - The note distinguishes practical software motivation from mathematical claims.
 - Any historical catalogue comparisons are cited in the documentation.
+
+
+## Progress notes
+
+- `README.md` now has a motivation section that explains reproducible catalogues,
+  descriptor testing, canonicalisation evidence, golden examples, and careful
+  separation from stronger mathematical claims.
+- This remains `prog` until historical catalogue comparisons and any stronger
+  claims are cited in dedicated documentation.

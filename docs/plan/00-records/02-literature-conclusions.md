@@ -1,6 +1,6 @@
 # 00-records / 02 — Record literature conclusions from deep research
 
-Status: `todo`
+Status: `prog`
 
 ## Goal
 
@@ -48,3 +48,12 @@ R + L + C <= 5
 - Final user-facing documentation still receives proper source citations before
   making historical claims.
 - Open sufficiency questions remain labelled as open investigations.
+
+
+## Progress notes
+
+- Current model and README text preserve the key distinction between raw staged
+  census outputs, reduced-topology distinctness, and stronger future immittance
+  equivalence.
+- This remains `prog` because final user-facing historical/literature claims
+  still need proper citations before being promoted beyond planning context.

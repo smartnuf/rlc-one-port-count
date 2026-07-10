@@ -22,15 +22,16 @@ Use stable generated counts to detect accidental changes.
 ## Progress notes
 
 - Golden tests now exist for the phase-1 support-census table through
-  `max_edges=8` and for the current legacy `lc` and `generic` count tables.
+  `max_edges=8`, the phase-2 raw simple-bundle assignment table and
+  `1,166,714` leaf total, and the current legacy `lc` and `generic` count
+  tables.
 - These tests are in source form rather than stored external machine-readable
   artefacts, and reduced-model small-slice/Ladenheim golden outputs have not yet
   been generated.
 
 ## Near-term next steps
 
-1. Add golden tests for phase-2 raw simple-bundle leaf assignments.
-2. Create a documented update process before moving generated reduced-model
+1. Create a documented update process before moving generated reduced-model
    counts into data files.
-3. Add small-slice and Ladenheim-slice golden counts only after the reduced
+2. Add small-slice and Ladenheim-slice golden counts only after the reduced
    distinctness contract is implemented enough to make those counts meaningful.

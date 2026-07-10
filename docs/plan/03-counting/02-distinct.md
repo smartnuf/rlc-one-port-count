@@ -57,15 +57,19 @@ solver for general electrical equivalence.
   pair orbits, and terminal-relevance filtering are implemented in `rice.core`
   and exposed through `rice supports`.
 - The legacy `count_networks` path is explicitly labelled legacy and still uses
-  multiset component-count bundles. Simple primitive bundle assignment,
-  assigned-support canonicalisation, and reduced signatures remain unimplemented,
+  multiset component-count bundles.
+- Phase-2 raw simple primitive bundle assignment is implemented in `rice.core`
+  and exposed through `rice bundles`, using only `R`, `L`, `C`, `R||L`,
+  `R||C`, `L||C`, and `R||L||C`. The normal `R <= 3`, `L+C <= 5` interface derives `max_edges=8`
+  and the leaf total is tested as `1,166,714`.
+- Assigned-support canonicalisation and reduced signatures remain unimplemented,
   so the overall distinct-network task is still `prog` rather than `done`.
 
 ## Near-term next steps
 
-1. Add the phase-2 simple bundle-assignment layer using only `R`, `L`, `C`,
-   `R||L`, `R||C`, `L||C`, and `R||L||C` on terminal-relevant supports.
-2. Validate the raw leaf-assignment totals from the normative docs before any
-   signature merging.
-3. Only after that, add reduced canonical signatures and the documented boundary
+1. Add assigned-support canonicalisation under internal node renaming and
+   terminal reversal.
+2. Only after that, add reduced canonical signatures and the documented boundary
    tests for local series/parallel reductions.
+3. Keep the phase-2 raw leaf-assignment totals as regression tests while adding
+   signature merging.

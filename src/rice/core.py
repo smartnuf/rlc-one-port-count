@@ -2,8 +2,9 @@
 
 The reduced-model work starts with a support-only census: connected unlabelled
 simple support graphs, unordered terminal-pair orbits, and terminal-relevant
-two-terminal supports.  Component assignment, simple bundles, series spans, and
-reduced signatures are intentionally outside that phase-1 census.
+two-terminal supports. Phase 2 adds a raw simple-bundle assignment census over
+those supports; series spans and reduced signatures are intentionally outside
+that census.
 
 The older :func:`count_networks` entry point remains as a legacy
 multiset-bundle counter.  It assigns non-empty component-count bundles to
@@ -52,6 +53,53 @@ class SupportCensusResult:
     @property
     def relevant_total(self) -> int:
         return sum(self.relevant_by_edges.values())
+
+
+@dataclass(frozen=True)
+class SimplePrimitiveBundle:
+    """A reduced-model primitive bundle label and its component-budget weight."""
+
+    label: str
+    r_count: int
+    reactive_count: int
+
+
+SIMPLE_PRIMITIVE_BUNDLES: tuple[SimplePrimitiveBundle, ...] = (
+    SimplePrimitiveBundle("R", 1, 0),
+    SimplePrimitiveBundle("L", 0, 1),
+    SimplePrimitiveBundle("C", 0, 1),
+    SimplePrimitiveBundle("R||L", 1, 1),
+    SimplePrimitiveBundle("R||C", 1, 1),
+    SimplePrimitiveBundle("L||C", 0, 2),
+    SimplePrimitiveBundle("R||L||C", 1, 2),
+)
+
+
+@dataclass(frozen=True)
+class BundleAssignmentCensusResult:
+    """Raw phase-2 simple-bundle assignment census.
+
+    ``assignments_per_support_by_edges`` counts assignments of the seven
+    reduced-model primitive bundle labels to a single support with that many
+    edges, subject only to the global ``R`` and ``L+C`` budgets. These are raw
+    leaves: no quotienting by support automorphisms and no reduced-signature
+    merging has been applied.
+    """
+
+    max_r: int
+    max_reactive: int
+    max_edges: int
+    relevant_supports_by_edges: dict[int, int]
+    assignments_per_support_by_edges: dict[int, int]
+    leaf_assignments_by_edges: dict[int, int]
+
+    @property
+    def relevant_supports_total(self) -> int:
+        return sum(self.relevant_supports_by_edges.values())
+
+    @property
+    def leaf_assignments_total(self) -> int:
+        return sum(self.leaf_assignments_by_edges.values())
 
 
 @dataclass(frozen=True)
@@ -382,6 +430,66 @@ def support_census(max_edges: int = 8) -> SupportCensusResult:
         basic_by_edges=basic_by_edges,
         terminal_labelings_by_edges=terminal_labelings_by_edges,
         relevant_by_edges=relevant_by_edges,
+    )
+
+
+def simple_bundle_assignment_count_by_edge_count(
+    max_edges: int, max_r: int = 3, max_reactive: int = 5
+) -> dict[int, int]:
+    """Count raw simple-bundle assignments for one support of each edge count."""
+
+    if max_edges < 1:
+        raise ValueError("max_edges must be at least 1")
+    if max_r < 0 or max_reactive < 0:
+        raise ValueError("component limits must be non-negative")
+
+    dp: dict[tuple[int, int], int] = {(0, 0): 1}
+    counts_by_edges: dict[int, int] = {}
+
+    for edge_count in range(1, max_edges + 1):
+        next_dp: DefaultDict[tuple[int, int], int] = defaultdict(int)
+        for (old_r, old_x), count in dp.items():
+            for bundle in SIMPLE_PRIMITIVE_BUNDLES:
+                new_r = old_r + bundle.r_count
+                new_x = old_x + bundle.reactive_count
+                if new_r <= max_r and new_x <= max_reactive:
+                    next_dp[(new_r, new_x)] += count
+        dp = dict(next_dp)
+        counts_by_edges[edge_count] = sum(dp.values())
+
+    return counts_by_edges
+
+
+def simple_bundle_assignment_census(
+    max_r: int = 3, max_reactive: int = 5, max_edges: int | None = None
+) -> BundleAssignmentCensusResult:
+    """Run the phase-2 raw simple primitive bundle-assignment census."""
+
+    if max_r < 0 or max_reactive < 0:
+        raise ValueError("component limits must be non-negative")
+    natural_max_edges = max_r + max_reactive
+    resolved_max_edges = natural_max_edges if max_edges is None else max_edges
+    if resolved_max_edges < 1:
+        raise ValueError("max_edges must be at least 1")
+    if resolved_max_edges > natural_max_edges:
+        raise ValueError("max_edges cannot exceed max_r + max_reactive")
+
+    supports = support_census(max_edges=resolved_max_edges).relevant_by_edges
+    assignments = simple_bundle_assignment_count_by_edge_count(
+        resolved_max_edges, max_r=max_r, max_reactive=max_reactive
+    )
+    leaves = {
+        edge_count: supports[edge_count] * assignments[edge_count]
+        for edge_count in range(1, resolved_max_edges + 1)
+    }
+
+    return BundleAssignmentCensusResult(
+        max_r=max_r,
+        max_reactive=max_reactive,
+        max_edges=resolved_max_edges,
+        relevant_supports_by_edges=supports,
+        assignments_per_support_by_edges=assignments,
+        leaf_assignments_by_edges=leaves,
     )
 
 

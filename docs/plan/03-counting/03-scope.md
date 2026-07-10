@@ -57,10 +57,11 @@ N = 5: (5,0), (4,1), (3,2), (2,3), (1,4), (0,5)
   counts.
 - The support-census command validates support-edge counts through
   `max_edges=8`, which is the support bound for the current full scope.
+- The phase-2 `rice bundles` census now uses `--max-r` and `--max-reactive`
+  as the normal interface, derives the natural support bound from those budgets,
+  and tests the default `R <= 3`, `L+C <= 5` raw assignment-leaf total.
 
 ## Near-term next steps
 
-1. Keep the independent `R` and `L+C` budget interface when adding phase-2 bundle
-   assignments.
-2. Decide how degenerate rows or columns should be reported in reduced-model
+1. Decide how degenerate rows or columns should be reported in reduced-model
    output tables before replacing the legacy totals.

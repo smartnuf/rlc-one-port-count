@@ -5,8 +5,8 @@ Status key: `done`, `prog`, `todo`, `blocked`, `later`.
 ## 00 — Plan records and literature alignment
 
 - `done` [Bring plan records up to date](00-records/01-update-plan-records.md)
-- `todo` [Record literature conclusions from deep research](00-records/02-literature-conclusions.md)
-- `todo` [Update README motivation](00-records/03-readme-motivation.md)
+- `prog` [Record literature conclusions from deep research](00-records/02-literature-conclusions.md)
+- `prog` [Update README motivation](00-records/03-readme-motivation.md)
 
 ## 01 — Development environment
 

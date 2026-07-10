@@ -76,8 +76,7 @@ L||C
 R||L||C
 ```
 
-For `R <= 3, L+C <= 5`, the raw assignment leaves before isomorphism/signature
-merging are:
+This target is implemented by `rice bundles --max-r 3 --max-reactive 5`. The command derives the natural support bound `max_edges = max_r + max_reactive`; optional `--max-edges` is only for debugging/truncation and cannot exceed that bound. For `R <= 3, L+C <= 5`, the raw assignment leaves before isomorphism/signature merging are:
 
 | Support edges | Relevant supports | Valid bundle assignments per support | Leaf assignments |
 |---:|---:|---:|---:|
