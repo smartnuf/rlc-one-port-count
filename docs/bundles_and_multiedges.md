@@ -26,9 +26,10 @@ Therefore the current source treats these as distinct:
 and similarly for repeated inductors or capacitors. This is now considered a
 legacy overcount for the intended reduced-topology model.
 
-## Intended simple primitive bundles
+## Simple primitive bundles
 
-The reduced model should use only simple primitive bundles. A bundle is a
+The reduced model uses only simple primitive bundles. Phase 2 implements these
+bundles for the raw assignment census exposed as `rice bundles`. A bundle is a
 non-empty subset of `{R, L, C}` between the same two support nodes.
 
 Allowed bundles:
@@ -105,9 +106,11 @@ R || L != R -- L
 
 ## Series spans
 
-A series span is the local series analogue of a parallel bundle.
+A series span is the local series analogue of a parallel bundle. Series spans are
+part of the staged reduced-signature model and are not yet implemented by the
+current source.
 
-It is a maximal local chain of two-terminal factors separated by internal nodes
+A span is a maximal local chain of two-terminal factors separated by internal nodes
 of incidence 2 in the current reduced graph.
 
 A span need only lie on at least one simple terminal-to-terminal path. It need
@@ -127,7 +130,8 @@ second terminal path.
 
 ## Series order is not counted
 
-The reduced model should count these as the same span:
+When local series spans are implemented, the reduced model should count these as
+the same span:
 
 ```text
 R -- L
@@ -203,9 +207,9 @@ collapse repeated primitive singleton R/L/C factors;
 do not collapse repeated compound subnetworks.
 ```
 
-## What support graphs still do
+## Current implementation status
 
-Support graphs still provide the structural skeleton:
+Support graphs provide the structural skeleton for the staged reduced model:
 
 1. enumerate connected unlabelled simple graphs;
 2. choose unordered terminal pairs;
@@ -213,6 +217,17 @@ Support graphs still provide the structural skeleton:
 4. assign reduced bundle/span/component labels;
 5. canonicalise the result up to internal node renaming and terminal reversal.
 
-The current source stops at legacy bundle assignment. Future phases should add
-simple bundles, local series spans, and reduced signatures as described in
-`docs/model_decisions.md`.
+The current implementation is staged:
+
+- The legacy `count_networks` path still uses multiset component-count bundles
+  and remains a legacy overcount for the reduced-topology model.
+- Phase 1 support census is implemented as `rice supports`: it performs steps 1
+  through 3 and reports basic support graphs, unordered two-terminal labellings,
+  and terminal-relevant two-terminal supports.
+- Phase 2 raw simple primitive bundle-assignment census is implemented as
+  `rice bundles`: it assigns the seven simple primitive bundles above to
+  terminal-relevant supports under the component budgets and reports raw leaf
+  assignments before assigned-support isomorphism or signature merging.
+- Local series spans, assigned-support canonicalisation, and reduced signatures
+  are still future work. Future phases should add them as described in
+  `docs/model_decisions.md`.
