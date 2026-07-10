@@ -19,9 +19,15 @@ Status key: `done`, `prog`, `todo`, `blocked`, `later`.
 
 ## 02 — Cleanup and simplification
 
+Reviewed execution order (see `02-cleanup/01-review.md` section 8):
+`03-generic-x` → `02-legacy` → `04-public-api` → `07-tests/04-cleanup-tests`.
+This intentionally does not match the files' numeric prefixes; the files are
+not renamed/renumbered to match, so follow the order stated here rather than
+the list order below.
+
 - `done` [Review current implementation before deletion](02-cleanup/01-review.md)
 - `todo` [Remove legacy implementation](02-cleanup/02-legacy.md)
-- `todo` [Remove generic `X` implementation, tests, and docs](02-cleanup/03-generic-x.md)
+- `done` [Remove generic `X` implementation, tests, and docs](02-cleanup/03-generic-x.md)
 - `todo` [Update examples, imports, and public surface](02-cleanup/04-public-api.md)
 
 ## 03 — Catalogue model and distinctness

@@ -39,3 +39,17 @@ Ensure there is one development contract, not several subtly different ones.
   `py -3` launcher runtimes, and Windows cleanup skips directory reparse points
   before recursion. Added regression coverage for script parsing and selection
   behavior.
+
+- 2026-07-10: Removed generic-`X` support (`docs/plan/02-cleanup/03-generic-x.md`).
+  `legacy-generic` is no longer a Make target and no longer appears in
+  `scripts/check.sh` or `scripts/check.ps1`; both scripts and the Makefile
+  still run the same reduced sequence: lint, tests, support census, bundle
+  assignment census, labeling census, and `legacy-count`/`legacy lc count`.
+  The Linux/Bash/Make path and the native PowerShell path remain equivalent
+  after this removal — both dropped the same generic invocation and kept
+  every other stage identical. Re-ran `make check` (via `./scripts/check.sh`)
+  successfully after the change; `scripts/check.ps1` was inspected line by
+  line for exact parity with `scripts/check.sh` but was not executed, since
+  no Windows/PowerShell environment was available in this session (see
+  `docs/plan/02-cleanup/03-generic-x.md` progress notes for the full
+  validation record).

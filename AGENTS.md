@@ -106,7 +106,6 @@ python3 -m venv .venv
 .venv/bin/python -m rice bundles --max-r 3 --max-reactive 5
 .venv/bin/python -m rice labelings --max-r 3 --max-reactive 5
 .venv/bin/python -m rice --mode lc --max-r 3 --max-reactive 5
-.venv/bin/python -m rice --mode generic --max-r 3 --max-reactive 5
 ```
 
 Do not run these ambiguous commands in Codex tasks:
@@ -164,7 +163,7 @@ current project direction. The current implementation uses NetworkX only. The su
 These validate the current source as it stands. make check, ./scripts/check.sh, and
 .\scripts\check.ps1 are the full currently documented validation paths and run
 lint/static checks, tests, support census, bundle assignment census, labeling
-census, `legacy-count`, and `legacy-generic`.
+census, and `legacy-count`.
 
 ```bash
 make check
@@ -178,19 +177,21 @@ or explicitly:
 .venv/bin/python -m rice bundles --max-r 3 --max-reactive 5
 .venv/bin/python -m rice labelings --max-r 3 --max-reactive 5
 .venv/bin/python -m rice --mode lc --max-r 3 --max-reactive 5
-.venv/bin/python -m rice --mode generic --max-r 3 --max-reactive 5
 ```
 
-Legacy reference totals:
+Legacy reference total:
 
 - `mode=lc`: total `1,408,796`; exactly `R=3` total `1,268,282`.
-- `mode=generic`: total `57,945`; exactly `R=3` total `51,736`.
 
-`legacy-generic` is included in `make check` only while generic-X support
-remains present. A future generic-removal PR should remove `legacy-generic` from
-`make check` together with `--mode generic` and the matching documentation/results
-entries. When the reduced model is implemented, tests and docs should be updated
-together and these figures should be labelled legacy.
+`--mode generic` (single-reactive-type `X` counting) and the `legacy-generic`
+`make check`/script target have been removed
+(`docs/plan/02-cleanup/03-generic-x.md`). `--mode` now accepts only `lc`;
+passing `--mode generic` fails cleanly with a normal argument error. The
+historical `57,945` / `51,736` generic-mode totals the removed implementation
+once produced are recorded, clearly labelled as historical, in
+`docs/results.md`. When the reduced model is implemented, tests and docs
+should be updated together and the remaining `lc` figures should be labelled
+legacy.
 
 ## Near-term implementation sequence
 

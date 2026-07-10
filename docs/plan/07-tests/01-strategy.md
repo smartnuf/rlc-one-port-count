@@ -29,7 +29,10 @@ Build confidence while the enumeration machinery evolves.
   relevance examples.
 - CLI tests cover support and legacy count subcommands with top-level option
   preservation.
-- Legacy count regression tests still cover both `lc` and `generic` modes.
+- Legacy count regression tests cover the `lc` mode. The `generic` mode was
+  removed (`docs/plan/02-cleanup/03-generic-x.md`); a regression test now
+  confirms `count_networks(mode="generic")` raises a clear `ValueError`, and
+  CLI tests confirm `--mode generic` fails cleanly through argparse.
 - Edge-colouring, assigned-support canonicalisation, descriptor conversion, and
   reduced-signature tests have not started, so the strategy remains `prog`.
 
@@ -38,5 +41,5 @@ Build confidence while the enumeration machinery evolves.
 1. Add phase-2 tests for valid simple primitive bundle assignment totals.
 2. Add phase-3 boundary tests from `AGENTS.md` and `docs/model_decisions.md`
    when reduced signatures are introduced.
-3. Keep legacy regression tests until the legacy implementation and generic `X`
-   path are deliberately removed.
+3. Keep legacy `lc` regression tests until the legacy implementation itself is
+   deliberately removed (`docs/plan/02-cleanup/02-legacy.md`).

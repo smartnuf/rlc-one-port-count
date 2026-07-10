@@ -105,15 +105,16 @@ For `R <= 3, L + C <= 5`, with L and C distinct, the legacy result is:
 - **1,408,796** networks with **at most 3 R** and **at most 5 L+C**;
 - **1,268,282** networks with **exactly 3 R** and **at most 5 L+C**.
 
-For `R <= 3, X <= 5`, where all reactive elements are treated as one generic
-`X`, the legacy result is:
-
-- **57,945** networks with **at most 3 R** and **at most 5 X**;
-- **51,736** networks with **exactly 3 R** and **at most 5 X**.
-
-These numbers are retained as a regression/reference for the legacy counter.
-They should not be treated as the final target count for the reduced-topology
+This number is retained as a regression/reference for the legacy counter. It
+should not be treated as the final target count for the reduced-topology
 model.
+
+The legacy counter previously also supported `--mode generic`, treating all
+reactive elements as one undifferentiated type `X`. That mode has been
+removed (`docs/plan/02-cleanup/03-generic-x.md`) and is no longer implemented,
+reproducible, or part of the active validation contract; see
+[`docs/results.md`](docs/results.md) for the historical `57,945` /
+`51,736` figures it once produced.
 
 ## Intended reduced-topology model
 
@@ -242,12 +243,11 @@ python3 -m venv .venv
 .venv/bin/python -m rice reduced --max-r 2 --max-reactive 3
 .venv/bin/python -m rice reduced --max-r 2 --max-reactive 3 --format json
 .venv/bin/python -m rice --mode lc --max-r 3 --max-reactive 5
-.venv/bin/python -m rice --mode generic --max-r 3 --max-reactive 5
 ```
 
-`make check` includes `legacy-generic` only while generic-X support remains present.
-A future generic-removal PR should remove that target from `make check` together
-with `--mode generic` and the matching documentation/results entries.
+`--mode generic` and the `legacy-generic` `make check` target have been
+removed (`docs/plan/02-cleanup/03-generic-x.md`); `--mode` now accepts only
+`lc`.
 
 The primary installed console script can also be run explicitly from the venv.
 Subcommand options go after the subcommand:

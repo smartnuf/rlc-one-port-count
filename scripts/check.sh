@@ -14,4 +14,3 @@ run .venv/bin/python -m rice supports --max-edges 8
 run .venv/bin/python -m rice bundles --max-r 3 --max-reactive 5
 run .venv/bin/python -m rice labelings --max-r 3 --max-reactive 5
 run .venv/bin/python -m rice --mode lc --max-r 3 --max-reactive 5
-run .venv/bin/python -m rice --mode generic --max-r 3 --max-reactive 5

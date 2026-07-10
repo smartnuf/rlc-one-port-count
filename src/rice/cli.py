@@ -199,10 +199,10 @@ def _add_count_arguments(
     )
     parser.add_argument(
         "--mode",
-        choices=("lc", "generic"),
+        choices=("lc",),
         default=default,
         help=help_text
-        or "'lc' distinguishes L and C; 'generic' treats reactive elements as X",
+        or "reactive-element mode; only 'lc' (L and C counted as distinct types) is supported",
     )
     parser.add_argument(
         "--format",
@@ -555,8 +555,7 @@ def main(argv: list[str] | None = None) -> int:
     if output_format == "json":
         print(json.dumps(_count_json(result), indent=2, sort_keys=True))
     else:
-        reactive_label = "L+C" if mode == "lc" else "X"
-        print(f"Mode: {mode}  (reactive column is {reactive_label})")
+        print(f"Mode: {mode}  (reactive column is L+C)")
         print(f"Limits: R <= {max_r}, reactive <= {max_reactive}")
         print(f"Terminal-relevant two-terminal support graphs: {result.support_count}")
         print(

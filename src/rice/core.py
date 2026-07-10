@@ -26,7 +26,7 @@ from typing import DefaultDict, Iterable, Literal
 import networkx as nx
 from networkx.algorithms import isomorphism as iso
 
-Mode = Literal["lc", "generic"]
+Mode = Literal["lc"]
 
 
 @dataclass(frozen=True)
@@ -447,16 +447,18 @@ class ReducedTopologyCensusResult:
 
 @dataclass(frozen=True)
 class CountResult:
-    """Legacy component-bundle result returned by :func:`count_networks`.
+    """Legacy LC component-bundle result returned by :func:`count_networks`.
 
     Attributes:
         max_r: Maximum total number of resistors.
         max_reactive: Maximum total number of reactive elements.
-        mode: ``"lc"`` distinguishes inductors and capacitors. ``"generic"``
-            treats all reactive elements as one type ``X``.
+        mode: Retained temporarily on the legacy counter's public API. Only
+            ``"lc"`` (inductors and capacitors counted as distinct component
+            types) is implemented; the previously supported ``"generic"``
+            single-reactive-type mode has been removed.
         table: A rectangular table indexed by ``table[r][x]``, where ``x`` is
-            total reactive count.  For ``mode="lc"`` the count sums over all
-            L/C splittings with ``l + c == x``.
+            the total reactive count ``l + c``.  The count sums over all L/C
+            splittings with ``l + c == x``.
         support_count: Number of terminal-relevant two-terminal support graphs
             used by the legacy bundle counter.
         support_count_by_edges: Terminal-relevant support counts by number of
@@ -481,7 +483,7 @@ class CountResult:
         return self.row_total(r)
 
     def as_markdown_table(self) -> str:
-        headers = ["R \\ X"] + [str(x) for x in range(self.max_reactive + 1)] + ["Row total"]
+        headers = ["R \\ L+C"] + [str(x) for x in range(self.max_reactive + 1)] + ["Row total"]
         lines = ["| " + " | ".join(headers) + " |"]
         lines.append("|" + "---:|" * len(headers))
         for r, row in enumerate(self.table):
@@ -672,36 +674,13 @@ def fixed_assignments_by_total(
     cycle_lengths: tuple[int, ...],
     max_r: int,
     max_reactive: int,
-    mode: Mode,
 ) -> dict[tuple[int, int], int]:
-    """Count legacy bundle assignments fixed by an edge permutation.
+    """Count legacy LC bundle assignments fixed by an edge permutation.
 
     This helper is part of the legacy component-count bundle counter, not the
     phase-1 support census.  For a fixed edge permutation, every edge in a cycle
-    must receive the same non-empty count bundle.
+    must receive the same non-empty ``(r, l, c)`` count bundle.
     """
-
-    if mode == "generic":
-        dp: dict[tuple[int, int], int] = {(0, 0): 1}
-        for cycle_length in cycle_lengths:
-            next_dp: DefaultDict[tuple[int, int], int] = defaultdict(int)
-            options = [
-                (r, x)
-                for r in range(max_r // cycle_length + 1)
-                for x in range(max_reactive // cycle_length + 1)
-                if r + x > 0
-            ]
-            for (old_r, old_x), count in dp.items():
-                for r, x in options:
-                    new_r = old_r + cycle_length * r
-                    new_x = old_x + cycle_length * x
-                    if new_r <= max_r and new_x <= max_reactive:
-                        next_dp[(new_r, new_x)] += count
-            dp = dict(next_dp)
-        return dp
-
-    if mode != "lc":
-        raise ValueError(f"unknown mode {mode!r}; expected 'lc' or 'generic'")
 
     dp_lc: dict[tuple[int, int, int], int] = {(0, 0, 0): 1}
     for cycle_length in cycle_lengths:
@@ -1111,18 +1090,28 @@ def reduced_topology_census(
     )
 
 def count_networks(max_r: int = 3, max_reactive: int = 5, mode: Mode = "lc") -> CountResult:
-    """Run the legacy multiset-bundle two-terminal network count."""
+    """Run the legacy multiset-bundle two-terminal network count.
+
+    ``mode`` is retained temporarily on this legacy counter's public API.
+    Only ``"lc"`` is implemented; the previously supported ``"generic"``
+    single-reactive-type mode has been removed. Passing any other value
+    raises ``ValueError``. Removing ``mode`` itself, along with the rest of
+    the legacy counter, belongs to a later cleanup task.
+    """
 
     if max_r < 0 or max_reactive < 0:
         raise ValueError("component limits must be non-negative")
-    if mode not in {"lc", "generic"}:
-        raise ValueError("mode must be 'lc' or 'generic'")
+    if mode != "lc":
+        raise ValueError(
+            f"mode {mode!r} is not supported; only 'lc' is implemented "
+            "('generic' single-reactive-type counting has been removed)"
+        )
 
     max_edges = max_r + max_reactive
     counts: DefaultDict[tuple[int, int], int] = defaultdict(int)
     support_count = 0
     support_count_by_edges: Counter[int] = Counter()
-    fixed_count_cache: dict[tuple[tuple[int, ...], int, int, Mode], dict[tuple[int, int], int]] = {}
+    fixed_count_cache: dict[tuple[tuple[int, ...], int, int], dict[tuple[int, int], int]] = {}
 
     for graph, terminals, autos in iter_two_terminal_supports(max_edges):
         support_count += 1
@@ -1133,10 +1122,10 @@ def count_networks(max_r: int = 3, max_reactive: int = 5, mode: Mode = "lc") -> 
 
         for permutation in edge_permutations:
             cycle_lengths = permutation_cycle_lengths(permutation)
-            cache_key = (cycle_lengths, max_r, max_reactive, mode)
+            cache_key = (cycle_lengths, max_r, max_reactive)
             fixed_counts = fixed_count_cache.get(cache_key)
             if fixed_counts is None:
-                fixed_counts = fixed_assignments_by_total(cycle_lengths, max_r, max_reactive, mode)
+                fixed_counts = fixed_assignments_by_total(cycle_lengths, max_r, max_reactive)
                 fixed_count_cache[cache_key] = fixed_counts
             for total_key, count in fixed_counts.items():
                 burnside_sum[total_key] += count

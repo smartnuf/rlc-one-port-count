@@ -21,9 +21,22 @@ def _assert_cli_error_without_traceback(capsys, argv, expected):
 
 
 def test_abbreviated_long_options_are_rejected(capsys):
-    _assert_cli_error_without_traceback(capsys, ["--mo", "generic", "supports"], ("unrecognized arguments", "invalid choice"))
+    _assert_cli_error_without_traceback(capsys, ["--mo", "lc", "supports"], ("unrecognized arguments", "invalid choice"))
     _assert_cli_error_without_traceback(capsys, ["supports", "--max-e", "8"], "unrecognized arguments")
     _assert_cli_error_without_traceback(capsys, ["bundles", "--max-re", "5"], "unrecognized arguments")
+
+
+def test_generic_mode_is_rejected_cleanly_without_traceback(capsys):
+    _assert_cli_error_without_traceback(
+        capsys,
+        ["count", "--mode", "generic", "--max-r", "3", "--max-reactive", "5"],
+        "invalid choice",
+    )
+    _assert_cli_error_without_traceback(
+        capsys,
+        ["--mode", "generic", "--max-r", "3", "--max-reactive", "5"],
+        "invalid choice",
+    )
 
 
 def test_supports_max_edges_option_works(capsys):

@@ -12,4 +12,3 @@ Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', 'supports
 Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', 'bundles', '--max-r', '3', '--max-reactive', '5') -Stage 'rice bundles'
 Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', 'labelings', '--max-r', '3', '--max-reactive', '5') -Stage 'rice labelings'
 Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', '--mode', 'lc', '--max-r', '3', '--max-reactive', '5') -Stage 'legacy lc count'
-Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', '--mode', 'generic', '--max-r', '3', '--max-reactive', '5') -Stage 'legacy generic count'

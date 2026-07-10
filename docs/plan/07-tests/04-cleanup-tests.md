@@ -46,3 +46,19 @@ Ensure removing legacy implementation and generic `X` support does not silently 
     `from rice import count_networks, CountResult` all fail with a clear
     error (not a traceback), and that `rice supports`/`bundles`/`labelings`/
     `reduced` and their exports are unchanged.
+- 2026-07-10: `docs/plan/02-cleanup/03-generic-x.md` landed. Test changes made:
+  `tests/test_counts.py::test_generic_reactive_counts_match_reference_table`
+  removed and replaced by
+  `test_generic_mode_is_no_longer_supported` (asserts `count_networks(mode=
+  "generic")` raises `ValueError`); `test_lc_counts_match_reference_table`
+  unchanged. In `tests/test_cli.py`, the `--mo generic` literal in
+  `test_abbreviated_long_options_are_rejected` was swapped to `--mo lc`
+  (abbreviation-rejection coverage preserved, generic value no longer
+  exists to reference), and a new
+  `test_generic_mode_is_rejected_cleanly_without_traceback` test confirms
+  both `rice count --mode generic` and `rice --mode generic` fail via
+  argparse (exit 2, no traceback). `tests/test_public_exports.py` was left
+  unchanged as instructed — generic mode was never a top-level export. The
+  count-command and no-subcommand LC tests were not touched; they remain for
+  `02-legacy` to remove/generalise per the bullet list above, which still
+  applies unchanged now that generic-X removal has landed first.
