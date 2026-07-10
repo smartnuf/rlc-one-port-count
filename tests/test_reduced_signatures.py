@@ -2,8 +2,11 @@ import networkx as nx
 import pytest
 
 from rice.core import (
+    ReducedFactor,
     canonical_reduced_signature,
+    factor_from_simple_primitive_bundle,
     normalise_parallel_factor,
+    normalise_reduced_factor,
     normalise_series_factor,
     primitive_factor,
 )
@@ -126,6 +129,46 @@ def test_mixed_node_label_types_are_supported_by_reduced_signature_validation():
         integer_graph, (0, 2), integer_assignments
     )
 
+
+def test_duplicate_opposite_assignment_orientations_are_rejected():
+    graph = nx.Graph([(0, 1)])
+
+    with pytest.raises(ValueError, match="duplicate or ambiguous.*0.*1"):
+        sig(graph, (0, 1), {(0, 1): "R", (1, 0): "L"})
+
+
+def test_duplicate_opposite_assignment_orientations_are_rejected_even_with_same_value():
+    graph = nx.Graph([(0, 1)])
+
+    with pytest.raises(ValueError, match="duplicate or ambiguous.*0.*1"):
+        sig(graph, (0, 1), {(0, 1): "R", (1, 0): "R"})
+
+
+def test_single_reversed_orientation_assignment_is_accepted():
+    graph = nx.Graph([(0, 1)])
+
+    assert sig(graph, (0, 1), {(1, 0): "R"}).stable_string() == "0-1:R"
+
+
+def test_duplicate_assignment_detection_supports_mixed_type_node_labels():
+    graph = nx.Graph()
+    graph.add_edge("s", 0)
+
+    with pytest.raises(ValueError, match="duplicate or ambiguous"):
+        sig(graph, ("s", 0), {("s", 0): "R", (0, "s"): "L"})
+
+
+def test_duplicate_assignment_rejection_is_insertion_order_independent():
+    graph = nx.Graph([(0, 1)])
+
+    first = {(0, 1): "R", (1, 0): "L"}
+    second = {(1, 0): "L", (0, 1): "R"}
+
+    with pytest.raises(ValueError, match="duplicate or ambiguous"):
+        sig(graph, (0, 1), first)
+    with pytest.raises(ValueError, match="duplicate or ambiguous"):
+        sig(graph, (0, 1), second)
+
 def test_mixed_node_label_signature_is_invariant_under_renaming_and_terminal_reversal():
     graph = nx.Graph()
     graph.add_edges_from([("s", 0), (0, "t")])
@@ -168,3 +211,73 @@ def test_malformed_and_terminal_irrelevant_inputs_are_rejected():
     dangling = nx.Graph([(0, 1), (1, 2), (1, 3)])
     with pytest.raises(ValueError, match="terminal-relevant"):
         sig(dangling, (0, 2), {(0, 1): "R", (1, 2): "L", (1, 3): "C"})
+
+
+def test_supplied_reduced_factor_parallel_duplicate_primitive_normalises_to_primitive():
+    r = primitive_factor("R")
+
+    assert factor_from_simple_primitive_bundle(ReducedFactor("parallel", (r, r))) == r
+
+
+def test_supplied_reduced_factor_reorders_primitive_and_compound_operands():
+    r = primitive_factor("R")
+    l = primitive_factor("L")
+    c = primitive_factor("C")
+    rl = ReducedFactor("series", (r, l))
+
+    assert normalise_reduced_factor(ReducedFactor("parallel", (c, rl, r))) == normalise_reduced_factor(
+        ReducedFactor("parallel", (rl, r, c))
+    )
+
+
+def test_supplied_reduced_factor_flattens_nested_series_and_parallel():
+    r = primitive_factor("R")
+    l = primitive_factor("L")
+    c = primitive_factor("C")
+
+    nested_series = ReducedFactor("series", (r, ReducedFactor("series", (l, c))))
+    flat_series = ReducedFactor("series", (c, r, l))
+    nested_parallel = ReducedFactor("parallel", (r, ReducedFactor("parallel", (l, c))))
+    flat_parallel = ReducedFactor("parallel", (c, r, l))
+
+    assert normalise_reduced_factor(nested_series) == normalise_reduced_factor(flat_series)
+    assert normalise_reduced_factor(nested_parallel) == normalise_reduced_factor(flat_parallel)
+
+
+def test_supplied_reduced_factor_repeated_equal_compounds_remain_repeated():
+    r = primitive_factor("R")
+    l = primitive_factor("L")
+    arm = ReducedFactor("series", (r, l))
+    normalised = normalise_reduced_factor(ReducedFactor("parallel", (arm, arm)))
+
+    assert normalised.kind == "parallel"
+    assert normalised.operands == (normalise_reduced_factor(arm), normalise_reduced_factor(arm))
+
+
+@pytest.mark.parametrize(
+    ("factor", "message"),
+    [
+        (ReducedFactor("bogus", ()), "unknown reduced factor kind"),
+        (ReducedFactor("primitive", "X"), "malformed primitive"),
+        (ReducedFactor("primitive", (primitive_factor("R"),)), "malformed primitive"),
+        (ReducedFactor("series", ()), "requires at least one"),
+        (ReducedFactor("parallel", []), "must be a tuple"),
+        (ReducedFactor("series", ("R",)), "operands must be ReducedFactor"),
+    ],
+)
+def test_supplied_reduced_factor_malformed_values_raise_clear_errors(factor, message):
+    with pytest.raises(ValueError, match=message):
+        normalise_reduced_factor(factor)
+
+
+def test_canonical_reduced_signature_normalises_supplied_reduced_factors():
+    r = primitive_factor("R")
+    l = primitive_factor("L")
+    c = primitive_factor("C")
+    graph = nx.Graph([(0, 1), (1, 2)])
+    messy = ReducedFactor("parallel", (ReducedFactor("parallel", (r, r)), c))
+    clean = ReducedFactor("parallel", (c, r))
+
+    assert sig(graph, (0, 2), {(0, 1): messy, (1, 2): l}) == sig(
+        graph, (0, 2), {(0, 1): clean, (1, 2): l}
+    )

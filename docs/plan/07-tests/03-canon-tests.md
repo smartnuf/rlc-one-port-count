@@ -28,6 +28,8 @@ Ensure duplicate rejection and descriptor production are trustworthy.
   merging, compound duplicate preservation, terminal reversal, internal node
   renaming, series arms inside parallel networks, repeated reduction,
   non-series-parallel bridge/core stability, non-collision examples, mixed-type
-  hashable node labels on the reduced-signature validation path, and malformed
-  or terminal-irrelevant input rejection. Descriptor-output and full census
-  integration tests remain future work.
+  hashable node labels on the reduced-signature validation path, duplicate
+  oriented assignment-key rejection, recursive caller-supplied ReducedFactor
+  validation/normalisation, and malformed or terminal-irrelevant input
+  rejection. Descriptor-output and full census integration tests remain future
+  work.
