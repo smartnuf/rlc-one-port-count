@@ -1,6 +1,6 @@
 # 07-tests / 04 — Regression tests for cleanup
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -96,3 +96,44 @@ Ensure removing legacy implementation and generic `X` support does not silently 
   text, examples, imports, terminology); this file's "Confirm docs examples
   run or at least parse" task item and any tests that audit surfaces belong
   to that final pass, not yet performed.
+- 2026-07-10: `docs/plan/02-cleanup/04-public-api.md` landed in the same PR
+  as this final pass, completing the cleanup family. Both "Done means" items
+  for this file are now satisfied:
+  - **"Cleanup removes only intended behaviour"**: the full-repo `rg` sweeps
+    described in `02-cleanup/04-public-api.md`'s progress notes confirm no
+    remaining active reference to `count_networks`, `CountResult`, `--mode`,
+    `rice count`, `legacy-count`, `legacy-generic`, or the no-subcommand
+    form, and no remaining prospective wording describing an already-
+    implemented stage as future work.
+  - **"Test failures guide users away from removed APIs"**: exercised
+    directly — `rice`, `rice count`, `rice count --max-r 2`, `rice --mode
+    lc`, and `rice --max-r 2 --max-reactive 3` all fail with a normal
+    argparse error (exit 2, no traceback,
+    `tests/test_cli.py::test_removed_count_interface_is_rejected_cleanly`
+    and `test_bare_rice_requires_a_subcommand`), and
+    `tests/test_public_exports.py::test_removed_legacy_names_are_absent_
+    from_exports_and_attributes` confirms `CountResult`, `count_networks`,
+    `Mode`, and `fixed_assignments_by_total` are absent from both
+    `rice.__all__` and `hasattr(rice, ...)`.
+  - **"Confirm docs examples run or at least parse"**: every active CLI
+    command in README.md, AGENTS.md, and the new `docs/python_api.md` was
+    either executed directly in the repository `.venv` (all `rice --help`/
+    `supports`/`bundles`/`labelings`/`reduced` invocations, both markdown and
+    `--format json` forms, and every Python code example in
+    `docs/python_api.md`) or is an environment-setup command
+    (`make setup`, `bash .codex/setup.sh`, `python3 -m venv .venv`, pip
+    install lines) whose syntax and documented role were checked by
+    inspection rather than execution, consistent with not re-running
+    environment bootstrapping unnecessarily. No historical/removed command
+    was executed to "confirm" it — those are documented as failing by
+    design and were verified to fail, not to succeed.
+  - Tests **added** in this pass: `tests/test_public_api_examples.py` (8
+    tests, exercising every `docs/python_api.md` example at tiny budgets).
+  - Tests **updated**: `tests/test_public_exports.py`'s `PUBLIC_EXPORTS` set
+    gained `SimplePrimitiveBundle` and `normalise_reduced_factor`
+    (`docs/plan/02-cleanup/04-public-api.md`'s public-API decision).
+  - No notebook-facing examples exist in the repository; none were added.
+  - Full suite: 107 tests passing (99 before this pass + 8 new).
+  - This file (`07-tests/04-cleanup-tests.md`) is now marked `done`: all of
+    its "Done means" criteria are satisfied and its final post-public-audit
+    verification, which was the only reason it was left open, is complete.

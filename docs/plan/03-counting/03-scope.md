@@ -50,11 +50,16 @@ N = 5: (5,0), (4,1), (3,2), (2,3), (1,4), (0,5)
 
 ## Progress notes
 
-- The CLI and legacy count path accept independent `--max-r` and
-  `--max-reactive` bounds and label the reactive column as `L+C` in `lc` mode.
-- `make check` currently validates the full legacy `R <= 3`, `L+C <= 5` path,
-  but these totals are legacy multiset-bundle counts, not final reduced-model
-  counts.
+- The `supports`, `bundles`, `labelings`, and `reduced` subcommands each
+  accept independent `--max-r` and `--max-reactive` bounds and label the
+  reactive column as `L+C`. The legacy count path that previously accepted
+  these same bounds under a `--mode lc`/`--mode generic` split has been
+  removed in full (`docs/plan/02-cleanup/02-legacy.md`).
+- `make check` validates the phase-1/2/3 censuses at the full `R <= 3`,
+  `L+C <= 5` scope and the end-to-end reduced-topology census at the small
+  golden `R <= 2`, `L+C <= 3` slice. The legacy multiset-bundle totals it used
+  to validate are no longer part of `make check`; they are recorded only as
+  historical data in `docs/results.md`.
 - The support-census command validates support-edge counts through
   `max_edges=8`, which is the support bound for the current full scope.
 - The phase-2 `rice bundles` census now uses `--max-r` and `--max-reactive`
@@ -64,4 +69,5 @@ N = 5: (5,0), (4,1), (3,2), (2,3), (1,4), (0,5)
 ## Near-term next steps
 
 1. Decide how degenerate rows or columns should be reported in reduced-model
-   output tables before replacing the legacy totals.
+   output tables once the full `R <= 3`, `L+C <= 5` reduced-topology census is
+   computed (`docs/plan/05-slices/04-r3-x5.md`).

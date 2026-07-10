@@ -25,12 +25,12 @@ counted `R||R` separately from `R`.
 Historical legacy results are recorded, clearly labelled as historical, in
 `docs/results.md`.
 
-## Reduced computation target
+## Reduced computation
 
-The intended next model counts reduced two-terminal RLC topology classes. See
+The reduced model counts reduced two-terminal RLC topology classes. See
 `docs/model_decisions.md` for the full contract.
 
-The main changes are:
+The main differences from the historical legacy model above are:
 
 - simple primitive bundles only: `R`, `L`, `C`, `R||L`, `R||C`, `L||C`,
   `R||L||C`;
@@ -40,11 +40,11 @@ The main changes are:
   compositions;
 - duplicate compound subnetworks do not merge.
 
-The reduced model should be implemented in stages.
+The reduced model is implemented in stages.
 
 ## Stage 1: support graph census
 
-Before changing component assignment, implement a support-only census:
+Implemented as `rice supports` / `support_census`, a support-only census:
 
 1. enumerate basic connected unlabelled simple support graphs;
 2. enumerate unordered two-terminal labellings of each basic graph;
@@ -80,7 +80,8 @@ options must go after `supports`; there is no no-subcommand form.
 
 ## Stage 2: simple bundle assignment
 
-After support graph census is stable, assign only simple primitive bundles:
+Implemented as `rice bundles` / `simple_bundle_assignment_census`, assigning
+only simple primitive bundles:
 
 ```text
 R
@@ -99,8 +100,13 @@ implementation.
 
 ## Stage 3: reduced signatures
 
-The final reduced count should use canonical signatures rather than raw graph
-assignment counts.
+The final reduced count uses canonical signatures rather than raw graph
+assignment counts, implemented as `canonical_reduced_signature` for one
+assigned network and, for full enumeration and merging across a budget slice,
+`rice reduced` / `reduced_topology_census` — currently computed and
+committed for the small golden slice `R <= 2`, `L+C <= 3`
+(`docs/plan/05-slices/04-r3-x5.md` tracks running the full `R <= 3`,
+`L+C <= 5` scope through the same enumeration).
 
 At minimum, the signature layer must satisfy:
 

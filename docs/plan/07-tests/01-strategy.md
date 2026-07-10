@@ -29,17 +29,24 @@ Build confidence while the enumeration machinery evolves.
   relevance examples.
 - CLI tests cover the four surviving subcommands with top-level option
   preservation.
-- Edge-colouring, assigned-support canonicalisation, descriptor conversion, and
-  reduced-signature tests have not started, so the strategy remains `prog`.
 - 2026-07-10: The legacy multiset-bundle counter (`lc` and previously
   `generic` modes, `rice count`, the no-subcommand form) has been removed in
   full (`docs/plan/02-cleanup/02-legacy.md`, following
   `docs/plan/02-cleanup/03-generic-x.md`). Its historical golden tables are
   no longer live regression tests; they are recorded, clearly labelled as
   historical, in `docs/results.md`.
+- 2026-07-10: Assigned-support canonicalisation (`tests/test_bundle_labelings.py`),
+  local series/parallel reduced-signature normalisation
+  (`tests/test_reduced_signatures.py`), and small-slice end-to-end census
+  integration (`tests/test_reduced_census.py`) all have substantial test
+  coverage now, including all the boundary cases listed in `AGENTS.md`.
+  Descriptor conversion tests, and full standard-slice (`R <= 3`, `L+C <= 5`)
+  regression tests, have not started — that is the remaining reason this
+  strategy stays `prog` rather than `done`.
 
 ## Near-term next steps
 
-1. Add phase-2 tests for valid simple primitive bundle assignment totals.
-2. Add phase-3 boundary tests from `AGENTS.md` and `docs/model_decisions.md`
-   when reduced signatures are introduced.
+1. Add descriptor-conversion tests once a descriptor output format exists
+   (`docs/plan/09-later/04-descriptors.md`).
+2. Add full-standard-slice (`R <= 3`, `L+C <= 5`) regression tests once that
+   slice is computed (`docs/plan/05-slices/04-r3-x5.md`).

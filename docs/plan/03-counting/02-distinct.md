@@ -52,12 +52,15 @@ solver for general electrical equivalence.
 
 ## Progress notes
 
-- Current implementation has completed the support-only portion of the staged
-  reduced model: connected unlabelled simple support graphs, unordered terminal
-  pair orbits, and terminal-relevance filtering are implemented in `rice.core`
-  and exposed through `rice supports`.
-- The legacy `count_networks` path is explicitly labelled legacy and still uses
-  multiset component-count bundles.
+- All five reduced-model stages are now implemented: connected unlabelled
+  simple support graphs, unordered terminal-pair orbits, and
+  terminal-relevance filtering (`rice supports`); raw simple primitive bundle
+  assignment (`rice bundles`); assigned-support labeling-orbit
+  canonicalisation (`rice labelings`); local canonical reduced-signature
+  machinery (`canonical_reduced_signature`); and an end-to-end reduced-topology
+  census for the committed small golden slice (`rice reduced`). The legacy
+  `count_networks` path, which used multiset component-count bundles, has
+  been removed in full (`docs/plan/02-cleanup/02-legacy.md`).
 - Phase-2 raw simple primitive bundle assignment is implemented in `rice.core`
   and exposed through `rice bundles`, using only `R`, `L`, `C`, `R||L`,
   `R||C`, `L||C`, and `R||L||C`. The normal `R <= 3`, `L+C <= 5` interface derives `max_edges=8`

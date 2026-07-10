@@ -80,14 +80,14 @@ totals are recorded, clearly labelled as historical, in
 
 The model is documented in:
 
-- [`docs/model_decisions.md`](docs/model_decisions.md) defines the intended
-  counting contract and boundary cases.
+- [`docs/model_decisions.md`](docs/model_decisions.md) defines the counting
+  contract and boundary cases.
 - [`docs/support_graph_enumeration.md`](docs/support_graph_enumeration.md)
-  defines the first implementation milestone: support-graph census and
-  terminal-relevance filtering.
+  defines the support-graph census and terminal-relevance filtering that
+  every later stage builds on.
 - [`docs/bundles_and_multiedges.md`](docs/bundles_and_multiedges.md) explains
-  legacy multiset bundles and the intended replacement by simple primitive
-  bundles and series spans.
+  the historical legacy multiset bundles and the simple primitive bundles and
+  series spans that replaced them.
 - [`docs/simple_path_coverage.md`](docs/simple_path_coverage.md) documents the
   terminal-relevance test.
 
@@ -97,16 +97,25 @@ assignment leaves, and `rice labelings` for phase 3 canonical bundle-labeling
 orbits under internal-node renaming and reversal of the unordered terminal pair.
 Local series-span reductions and recursive reduced signatures are available as a focused API for individual assigned networks. The first complete end-to-end reduced-topology census is implemented as `rice reduced` for the small golden slice `R <= 2`, `L+C <= 3`; the full `R <= 3`, `L+C <= 5` reduced catalogue remains future work.
 
+The supported Python API (`support_census`, `simple_bundle_assignment_census`,
+`simple_bundle_labeling_census`, `canonical_reduced_signature`,
+`reduced_topology_census`, and their result types) is documented with small
+runnable examples in [`docs/python_api.md`](docs/python_api.md).
+
 ## Migration from the removed legacy counter
 
 The legacy multiset-bundle counter (`rice count`, `--mode`, and the
 no-subcommand compatibility form) has been removed
 (`docs/plan/02-cleanup/02-legacy.md`). `rice reduced` is the closest
-supported replacement, but its counts are intentionally **not** numerically
-equivalent to the removed counter: repeated same-type primitive parallel
-branches such as `R||R` are not generated as separate reduced topologies, so
-reduced-topology counts are always smaller than the old multiset-bundle
-counts for the same `R`/`L+C` budget.
+supported replacement, but the two are **not numerically equivalent**
+counting contracts: the reduced model excludes or merges additional raw
+representations that the legacy counter treated as distinct (for example,
+repeated same-type primitive parallel branches such as `R||R` are not
+generated as separate reduced topologies), so reduced-topology counts are
+generally lower than the old multiset-bundle counts for a given `R`/`L+C`
+budget. This is a difference in what is being counted, not a fixed scaling
+factor, and reduced counts should not be assumed strictly smaller for every
+possible budget slice.
 
 ```bash
 .venv/bin/python -m rice reduced --max-r 2 --max-reactive 3
@@ -116,9 +125,9 @@ The removed counter's historical totals (both its `lc` mode and its
 previously-removed `generic` mode) are recorded, clearly labelled as
 historical, in [`docs/results.md`](docs/results.md).
 
-## Intended reduced-topology model
+## Reduced-topology model
 
-The intended model counts reduced two-terminal RLC one-port topologies rather
+The reduced model counts reduced two-terminal RLC one-port topologies rather
 than every raw multigraph drawing. The guiding decisions are:
 
 - terminals form an unordered pair, so terminal reversal does not create a new
@@ -132,8 +141,8 @@ than every raw multigraph drawing. The guiding decisions are:
   `L||C`, `R||L||C`;
 - repeated primitive same-type parallel branches, such as `R||R`, are not
   generated in the reduced model;
-- local series chains/spans are intended to commute: `R--L` and `L--R` should
-  have the same reduced signature;
+- local series chains/spans commute: `R--L` and `L--R` have the same reduced
+  signature;
 - duplicate primitive singleton factors in a series span merge: `R--A--R`
   reduces to `A--R`;
 - duplicate compound subnetworks do not merge: `A--A` is not reduced to `A`
@@ -143,10 +152,10 @@ The reduced model is deliberately not a full electrical-equivalence solver. It
 does not attempt Y-Delta transformations, bridge balance simplifications,
 duality, Foster/Cauer equivalences, or rational impedance equality.
 
-## First implementation milestone
+## Support-graph census
 
-Before changing component assignment or reduced signatures, implement the
-support-graph census described in [`docs/support_graph_enumeration.md`](docs/support_graph_enumeration.md).
+Every later stage builds on the support-graph census described in
+[`docs/support_graph_enumeration.md`](docs/support_graph_enumeration.md).
 
 For `max_edges = 8`, the expected census is:
 
@@ -319,4 +328,4 @@ documentation, and `pyproject.toml`; recreate `.venv` in each development
 environment.
 
 
-The `labelings` command reports phase-3 canonical bundle-labeling orbits. It preserves the phase-2 raw leaf total and additionally quotients assignments by automorphisms of each terminal-relevant support that preserve the unordered terminal pair, including automorphisms that swap the terminals. For `R <= 3, L+C <= 5`, the standard slice has **1,166,714** raw leaves and **830,094** canonical bundle-labeling orbits. This is still not a final reduced-topology count: local series-span reductions and recursive reduced signatures are now available only as a focused per-network API, while full standard-slice signature enumeration and merging remain deliberately deferred.
+The `labelings` command reports phase-3 canonical bundle-labeling orbits. It preserves the phase-2 raw leaf total and additionally quotients assignments by automorphisms of each terminal-relevant support that preserve the unordered terminal pair, including automorphisms that swap the terminals. For `R <= 3, L+C <= 5`, the standard slice has **1,166,714** raw leaves and **830,094** canonical bundle-labeling orbits. This is still not a final reduced-topology count: local series-span reductions and canonical reduced signatures are applied, and full signature enumeration and merging across a budget slice is implemented as `rice reduced`. Running the full standard `R <= 3`, `L+C <= 5` slice through that enumeration remains future work (`docs/plan/05-slices/04-r3-x5.md`); the committed small golden slice `R <= 2`, `L+C <= 3` is fully computed today.

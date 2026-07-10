@@ -19,16 +19,16 @@ Status key: `done`, `prog`, `todo`, `blocked`, `later`.
 
 ## 02 — Cleanup and simplification
 
-Reviewed execution order (see `02-cleanup/01-review.md` section 8):
-`03-generic-x` → `02-legacy` → `04-public-api` → `07-tests/04-cleanup-tests`.
-This intentionally does not match the files' numeric prefixes; the files are
-not renamed/renumbered to match, so follow the order stated here rather than
-the list order below.
+The cleanup family is complete. Executed in the order reviewed in
+`02-cleanup/01-review.md` section 8 (which intentionally did not match the
+files' numeric prefixes; the files were not renamed/renumbered to match):
+`03-generic-x` → `02-legacy` → `04-public-api` → `07-tests/04-cleanup-tests`
+(the last of these lives under the `07 —` group below, not this one).
 
 - `done` [Review current implementation before deletion](02-cleanup/01-review.md)
 - `done` [Remove legacy implementation](02-cleanup/02-legacy.md)
 - `done` [Remove generic `X` implementation, tests, and docs](02-cleanup/03-generic-x.md)
-- `todo` [Update examples, imports, and public surface](02-cleanup/04-public-api.md)
+- `done` [Update examples, imports, and public surface](02-cleanup/04-public-api.md)
 
 ## 03 — Catalogue model and distinctness
 
@@ -70,7 +70,7 @@ the list order below.
 - `prog` [Set up test strategy for catalogue enumeration](07-tests/01-strategy.md)
 - `prog` [Add golden count tests](07-tests/02-golden-counts.md)
 - `prog` [Add distinctness and reduction tests](07-tests/03-canon-tests.md)
-- `todo` [Add cleanup regression tests](07-tests/04-cleanup-tests.md)
+- `done` [Add cleanup regression tests](07-tests/04-cleanup-tests.md)
 - `prog` [Add CI-friendly validation commands](07-tests/05-ci.md)
 
 ## 08 — Documentation

@@ -31,5 +31,11 @@ Ensure duplicate rejection and descriptor production are trustworthy.
   hashable node labels on the reduced-signature validation path, duplicate
   oriented assignment-key rejection, recursive caller-supplied ReducedFactor
   validation/normalisation, and malformed or terminal-irrelevant input
-  rejection. Descriptor-output and full census integration tests remain future
-  work.
+  rejection.
+- 2026-07-10: Full census integration is implemented and tested
+  (`tests/test_reduced_census.py`) for the committed small golden slice
+  `R <= 2`, `L+C <= 3`, including determinism, no-duplicate-signature checks,
+  and API/CLI/committed-JSON agreement. Extending that integration test
+  coverage to the full standard `R <= 3`, `L+C <= 5` slice, and
+  descriptor-output tests, remain future work
+  (`docs/plan/05-slices/04-r3-x5.md`, `docs/plan/09-later/04-descriptors.md`).

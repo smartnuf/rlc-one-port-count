@@ -194,22 +194,44 @@ clearly labelled as historical, in `docs/results.md`. They are not
 reproducible by any current command and are not part of the active
 validation contract.
 
-## Near-term implementation sequence
+## Implementation status and remaining work
 
-The support, bundle, and assigned-support labeling stages are implemented.
-Current reduced-signature work should stay focused on local per-network
-canonicalisation before adding full standard-slice signature enumeration and
-merging.
+All five reduced-model stages described below are implemented:
+
+1. Phase 1 — support graph census (`rice supports` / `support_census`).
+2. Phase 2 — raw simple-bundle assignment census (`rice bundles` /
+   `simple_bundle_assignment_census`).
+3. Phase 3 — assigned-support bundle-labeling orbit census (`rice labelings` /
+   `simple_bundle_labeling_census`).
+4. Local canonical reduced signatures for individual assigned two-terminal
+   networks (`canonical_reduced_signature`, `ReducedFactor`,
+   `ReducedSignature`).
+5. End-to-end reduced-topology census for the committed small golden slice
+   `R <= 2`, `L+C <= 3` (`rice reduced` / `reduced_topology_census`).
+
+The definitions and golden tables below remain the normative reference for
+each stage's contract; they are not prospective instructions.
+
+Remaining work (see the plan index, `docs/plan/00-index.md`, for task-level
+detail):
+
+- larger named slices beyond the small golden slice (`docs/plan/05-slices/`);
+- performance and output-size review before attempting larger budgets;
+- the Ladenheim comparison slice (`docs/plan/03-counting/05-ladenheim.md`,
+  `docs/plan/05-slices/02-ladenheim.md`);
+- full `R <= 3`, `L+C <= 5` execution (`docs/plan/05-slices/04-r3-x5.md`);
+- descriptor/catalogue outputs and stronger equivalence investigations
+  (`docs/plan/09-later/`).
 
 ### Phase 1: support graph census
 
-Implement and test:
+Implemented as `rice supports` / `support_census`. It:
 
-1. enumerate connected unlabelled simple support graphs up to a configurable
+1. enumerates connected unlabelled simple support graphs up to a configurable
    edge bound;
-2. enumerate distinct unordered two-terminal labellings of each support graph;
-3. filter terminal-relevant two-terminal support graphs;
-4. report counts by support-edge count for all three categories.
+2. enumerates distinct unordered two-terminal labellings of each support graph;
+3. filters terminal-relevant two-terminal support graphs;
+4. reports counts by support-edge count for all three categories.
 
 Definitions for phase 1:
 
@@ -246,8 +268,8 @@ make check
 
 ### Phase 2: simple bundle assignment
 
-After phase 1 is stable, assign only valid simple primitive bundles to support
-edges:
+Implemented as `rice bundles` / `simple_bundle_assignment_census`. It assigns
+only valid simple primitive bundles to support edges:
 
 ```text
 R
@@ -286,14 +308,17 @@ reversal. For `R <= 3, L+C <= 5`, this preserves `1,166,714` raw leaves and
 reports `830,094` canonical bundle-labeling orbits. This is not the final
 reduced-topology count.
 
-### Current reduced-signature stage
+### Local canonical reduced signatures and end-to-end census
 
-After phase 3, the code adds canonical reduced-topology signatures for
-individual assigned two-terminal networks by applying the documented local
-series and parallel rules. Full signature enumeration and merging across the
-standard slice remains a later stage.
+Implemented as `canonical_reduced_signature` (per-network local series/parallel
+reduction) and `rice reduced` / `reduced_topology_census` (full enumeration
+and signature merging across a budget slice). `rice reduced` currently
+enumerates and merges the committed small golden slice `R <= 2`, `L+C <= 3`
+by default (see `docs/results.md`); running it against the full `R <= 3`,
+`L+C <= 5` slice is tracked as remaining work
+(`docs/plan/05-slices/04-r3-x5.md`), not an unimplemented code path.
 
-Required boundary tests:
+Boundary tests (implemented in `tests/test_reduced_signatures.py`):
 
 ```text
 R--L == L--R

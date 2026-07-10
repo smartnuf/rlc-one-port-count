@@ -2,7 +2,10 @@
 
 Pins ``rice.__all__`` to the final supported set of names, after the legacy
 multiset-bundle counter (``CountResult``, ``count_networks``) and its ``mode``
-machinery were removed in ``docs/plan/02-cleanup/02-legacy.md``.
+machinery were removed in ``docs/plan/02-cleanup/02-legacy.md``, and after
+``SimplePrimitiveBundle`` and ``normalise_reduced_factor`` were added in
+``docs/plan/02-cleanup/04-public-api.md``. See ``docs/python_api.md`` for the
+documented role of every name here.
 """
 
 import rice
@@ -14,11 +17,13 @@ PUBLIC_EXPORTS = {
     "ReducedSignature",
     "ReducedTopologyCensusResult",
     "SIMPLE_PRIMITIVE_BUNDLES",
+    "SimplePrimitiveBundle",
     "SupportCensusResult",
     "canonical_reduced_signature",
     "iter_reduced_topology_signatures",
     "factor_from_simple_primitive_bundle",
     "normalise_parallel_factor",
+    "normalise_reduced_factor",
     "normalise_series_factor",
     "primitive_factor",
     "reduced_signature_component_counts",
