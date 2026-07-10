@@ -19,7 +19,7 @@ python_candidate_is_usable() {
         return 1
     fi
 
-    temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/rice-venv-check.XXXXXX")"
+    temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/rice-venv-check.XXXXXX")" || return 1
     status=0
     if ! "${candidate_path}" -m venv "${temp_dir}/venv" >/dev/null 2>&1; then
         status=1
