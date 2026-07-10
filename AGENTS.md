@@ -53,10 +53,10 @@ expand near-term plan steps as the implementation path becomes clearer.
 Use Python 3.11 or newer.
 
 This repository uses an explicit local virtual environment at `.venv`. Do not
-rely on `source .venv/bin/activate` persisting between shell sessions. In Codex
-Cloud, setup scripts and task commands may run in separate shells, so plain
-`python`, `python -m pytest`, and `pytest` can accidentally use the non-venv
-interpreter.
+rely on `source .venv/bin/activate` or `.venv\Scripts\Activate.ps1` persisting
+between shell sessions. In Codex Cloud, setup scripts and task commands may run
+in separate shells, so plain `python`, `python -m pytest`, and `pytest` can
+accidentally use the non-venv interpreter.
 
 Preferred setup and validation commands:
 
@@ -79,7 +79,21 @@ Supported non-Make Linux/WSL shell scripts are also available:
 
 The shell scripts must be run from the repository root. They validate that
 location before making environment-sensitive changes or deleting generated
-artefacts. Native PowerShell scripts are not available yet.
+artefacts.
+
+Native Windows PowerShell scripts are available without Make, Bash, WSL, or
+activation:
+
+```powershell
+.\scripts\setup.ps1
+.\scripts\test.ps1
+.\scripts\lint.ps1
+.\scripts\check.ps1
+.\scripts\clean.ps1
+```
+
+The PowerShell scripts must also be run from the repository root and use
+`.venv\Scripts\python.exe` explicitly after setup.
 
 Equivalent explicit commands:
 
@@ -104,7 +118,8 @@ python -m pip install -e ".[dev]"
 ```
 
 If dependencies are missing, do not install them into the system interpreter.
-Use `.venv/bin/python -m pip ...` or rerun the Codex setup script.
+Use .venv/bin/python -m pip ... on Linux/WSL, .venv\Scripts\python.exe -m pip ... on Windows, or rerun the repository setup
+script.
 
 Do not commit `.venv/`, `__pycache__/`, build artefacts, or generated archives.
 
@@ -146,8 +161,8 @@ current project direction. The current implementation uses NetworkX only.
 
 ## Current legacy validation commands
 
-These validate the current source as it stands. `make check` and
-`./scripts/check.sh` are the full currently documented validation paths and run
+These validate the current source as it stands. make check, ./scripts/check.sh, and
+.\scripts\check.ps1 are the full currently documented validation paths and run
 lint/static checks, tests, support census, bundle assignment census, labeling
 census, `legacy-count`, and `legacy-generic`.
 

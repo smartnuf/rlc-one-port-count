@@ -199,7 +199,31 @@ through repository-root shell scripts:
 
 These scripts validate that they are being run from the repository root, use
 `.venv/bin/python` explicitly after setup, and print the Python executable in
-use. Native PowerShell scripts are planned but are not present yet.
+use.
+
+On native Windows PowerShell, use the repository-root PowerShell scripts:
+
+```powershell
+.\scripts\setup.ps1
+.\scripts\test.ps1
+.\scripts\lint.ps1
+.\scripts\check.ps1
+.\scripts\clean.ps1
+```
+
+The PowerShell path uses `.venv\Scripts\python.exe` explicitly and does not
+require Make, Bash, WSL, or virtual-environment activation. If local execution
+policy blocks a script, prefer a process-scoped policy for that shell:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+A single script can also be verified with a one-process invocation:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\test.ps1
+```
 
 The equivalent explicit commands are:
 

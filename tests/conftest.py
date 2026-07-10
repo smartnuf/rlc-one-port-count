@@ -7,6 +7,43 @@ import sys
 from pathlib import Path
 
 
+def _normalised_path(path: Path) -> str:
+    return os.path.normcase(str(path.resolve()))
+
+
+def _repository_venv_python(repo_root: Path, platform: str | None = None) -> Path | None:
+    """Return the repository venv interpreter path when the venv exists."""
+
+    platform_name = sys.platform if platform is None else platform
+    venv_dir = repo_root / ".venv"
+    windows_python = venv_dir / "Scripts" / "python.exe"
+    posix_python = venv_dir / "bin" / "python"
+
+    candidates = (
+        (windows_python, posix_python)
+        if platform_name.startswith("win")
+        else (posix_python, windows_python)
+    )
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    return None
+
+
+def _is_repository_venv_prefix(current_prefix: str, repo_root: Path) -> bool:
+    expected_prefix = repo_root / ".venv"
+    return _normalised_path(Path(current_prefix)) == _normalised_path(expected_prefix)
+
+
+def _pytest_command_hint(platform: str | None = None) -> str:
+    platform_name = sys.platform if platform is None else platform
+    if platform_name.startswith("win"):
+        return r".\.venv\Scripts\python.exe -m pytest -q"
+    return ".venv/bin/python -m pytest -q"
+
+
 def pytest_sessionstart(session):  # type: ignore[no-untyped-def]
     """Fail early when tests run with the wrong Python interpreter.
 
@@ -26,24 +63,20 @@ def pytest_sessionstart(session):  # type: ignore[no-untyped-def]
         return
 
     repo_root = Path(__file__).resolve().parents[1]
-    venv_dir = repo_root / ".venv"
-    venv_python = venv_dir / "bin" / "python"
+    venv_python = _repository_venv_python(repo_root)
 
-    if not venv_python.exists():
+    if venv_python is None:
         return
 
-    current_prefix = Path(sys.prefix).resolve()
-    expected_prefix = venv_dir.resolve()
-
-    if current_prefix != expected_prefix:
+    if not _is_repository_venv_prefix(sys.prefix, repo_root):
         raise RuntimeError(
             "Tests must run inside the repository .venv. Use:\n"
             "\n"
-            "    .venv/bin/python -m pytest -q\n"
+            f"    {_pytest_command_hint()}\n"
             "\n"
             f"Current executable: {sys.executable}\n"
             f"Current sys.prefix: {sys.prefix}\n"
-            f"Expected sys.prefix: {expected_prefix}\n"
+            f"Expected sys.prefix: {(repo_root / '.venv').resolve()}\n"
             "\n"
             "To override intentionally, set RICE_ALLOW_NON_VENV=1."
         )
