@@ -27,6 +27,8 @@ _REDUCED_DEFAULT_MAX_REACTIVE = 3
 
 _COUNT_OPTION_NAMES = ("--max-r", "--max-reactive", "--mode")
 _LEGACY_GLOBAL_OPTION_NAMES = (*_COUNT_OPTION_NAMES, "--format")
+_REDUCED_DEFAULT_MAX_R = 2
+_REDUCED_DEFAULT_MAX_REACTIVE = 3
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -138,13 +140,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--max-r",
         type=int,
         default=argparse.SUPPRESS,
-        help="maximum number of resistors, default: 2",
+        help=f"maximum number of resistors, default: {_REDUCED_DEFAULT_MAX_R}",
     )
     reduced_parser.add_argument(
         "--max-reactive",
         type=int,
         default=argparse.SUPPRESS,
-        help="maximum total number of reactive elements, default: 3",
+        help=(
+            "maximum total number of reactive elements, "
+            f"default: {_REDUCED_DEFAULT_MAX_REACTIVE}"
+        ),
     )
     reduced_parser.add_argument(
         "--max-edges",
@@ -249,6 +254,10 @@ def _reduced_topology_census_json(
 ) -> dict[str, Any]:
     """Return reduced-topology census data using a stable documented shape."""
 
+    regeneration_command = (
+        ".venv/bin/python -m rice reduced "
+        f"--max-r {result.max_r} --max-reactive {result.max_reactive} --format json"
+    )
     return {
         "format_version": 1,
         "scope": {

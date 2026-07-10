@@ -238,6 +238,20 @@ def test_reduced_json_output(capsys):
     assert output["total"] == 313
     assert output["diagnostics"]["raw_phase2_assignments_total"] == 1830
     assert output["diagnostics"]["phase3_assigned_support_labeling_orbits_total"] == 1112
+    assert "canonical_signatures" not in output
+    assert (
+        output["regeneration_command"]
+        == ".venv/bin/python -m rice reduced --max-r 2 --max-reactive 3 --format json"
+    )
+
+
+def test_reduced_subcommand_defaults_to_small_golden_slice(capsys):
+    assert main(["reduced"]) == 0
+
+    output = capsys.readouterr().out
+
+    assert "Canonical reduced-topology census: R <= 2, L+C <= 3, max_edges <= 5" in output
+    assert "Cumulative reduced-topology total: 313" in output
 
 
 def test_reduced_subcommand_help_shows_reduced_options():
