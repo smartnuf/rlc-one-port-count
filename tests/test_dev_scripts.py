@@ -13,9 +13,14 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO_ROOT / "scripts"
 
-_REQUIRES_BASH = pytest.mark.skipif(
+_REQUIRES_BASH_EXECUTABLE = pytest.mark.skipif(
     shutil.which("bash") is None,
-    reason="bash is not available on PATH (e.g. native Windows without Git Bash/WSL)",
+    reason="a Bash executable is not available on PATH",
+)
+
+_REQUIRES_POSIX_HOST_WITH_BASH = pytest.mark.skipif(
+    os.name == "nt" or shutil.which("bash") is None,
+    reason="pytest must be running on a POSIX host with Bash available",
 )
 
 # External commands scripts/setup.sh, scripts/_common.sh, and the fake
@@ -24,11 +29,12 @@ _REQUIRES_BASH = pytest.mark.skipif(
 _REQUIRED_SYSTEM_TOOLS = ("bash", "awk", "basename", "dirname", "mktemp", "rm", "mkdir")
 
 
-@_REQUIRES_BASH
+@_REQUIRES_BASH_EXECUTABLE
 def test_public_shell_scripts_parse_with_bash() -> None:
     scripts = sorted(SCRIPTS.glob("*.sh"))
     assert scripts
-    subprocess.run(["bash", "-n", *map(str, scripts)], check=True, cwd=REPO_ROOT)
+    relative_scripts = [script.relative_to(REPO_ROOT).as_posix() for script in scripts]
+    subprocess.run(["bash", "-n", *relative_scripts], check=True, cwd=REPO_ROOT)
 
 
 def test_public_shell_scripts_avoid_bash4_only_features() -> None:
@@ -85,7 +91,7 @@ def _add_required_system_tool_symlinks(bindir: Path) -> None:
             os.symlink(found, link)
 
 
-@_REQUIRES_BASH
+@_REQUIRES_POSIX_HOST_WITH_BASH
 def test_setup_sh_skips_python_without_working_venv(tmp_path: Path) -> None:
     bindir = tmp_path / "bin"
     bindir.mkdir()
@@ -94,6 +100,9 @@ def test_setup_sh_skips_python_without_working_venv(tmp_path: Path) -> None:
     _add_required_system_tool_symlinks(bindir)
 
     env = os.environ.copy()
+    # This isolated POSIX PATH and its symlinks are meaningful only when pytest
+    # itself runs on POSIX. Native Windows Python invoking the WSL Bash launcher
+    # does not share WSL's filesystem paths or executable environment.
     # PATH is replaced, not prepended: if a real python3.14 (or any other
     # probed candidate name) were still reachable elsewhere on PATH, the
     # script would find and select it ahead of the fake python3.13 below,

@@ -60,3 +60,6 @@ scripts/
   `py -3` launcher runtimes, and Windows cleanup skips directory reparse points
   before recursion. Added regression coverage for script parsing and selection
   behavior.
+- 2026-07-10: Kept Bash syntax coverage runnable through a Windows WSL Bash
+  launcher by passing repository-relative POSIX paths, while restricting the
+  isolated-POSIX-environment setup test to pytest sessions running on POSIX.
