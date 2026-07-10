@@ -49,8 +49,6 @@ def test_small_r2_x3_api_cli_and_committed_json_agree():
     assert payload == GOLDEN
     assert payload["exact_counts_by_r_x"] == [list(row) for row in EXPECTED_TABLE]
     assert payload["total"] == result.total == GOLDEN["total"]
-    assert payload["diagnostics"] == GOLDEN["diagnostics"]
-    assert payload["scope"] == GOLDEN["scope"]
 
 
 def test_reduced_census_output_is_deterministic_and_has_no_duplicates():

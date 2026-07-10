@@ -43,10 +43,11 @@ Diagnostic progression for this same slice:
 | Phase-3 assigned-support labeling orbits | 1,112 |
 | Final canonical reduced signatures | 313 |
 
-Regenerate the machine-readable summary with:
+Regenerate the machine-readable summary exactly with:
 
 ```bash
 .venv/bin/python -m rice reduced --max-r 2 --max-reactive 3 --format json
 ```
 
-The committed JSON summary is `data/counts/small-r2-x3.json`.
+The committed JSON summary is `data/counts/small-r2-x3.json`; the command
+output is intended to diff cleanly against that file without post-processing.

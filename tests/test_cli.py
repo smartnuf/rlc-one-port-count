@@ -220,7 +220,7 @@ def test_labelings_subcommand_help_shows_labeling_options():
 
 
 def test_reduced_subcommand_outputs_canonical_census(capsys):
-    assert main(["reduced", "--max-r", "2", "--max-reactive", "3"]) == 0
+    assert main(["reduced"]) == 0
 
     output = capsys.readouterr().out
 
@@ -265,3 +265,5 @@ def test_reduced_subcommand_help_shows_reduced_options():
     assert "--max-r" in result.stdout
     assert "--max-reactive" in result.stdout
     assert "--format" in result.stdout
+    assert "default: 2" in result.stdout
+    assert "default: 3" in result.stdout

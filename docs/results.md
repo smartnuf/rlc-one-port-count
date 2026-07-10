@@ -128,7 +128,8 @@ by those signatures, or claims a final reduced-topology total.
 ## First complete reduced-topology golden slice
 
 The first end-to-end reduced-topology census is implemented for the deliberately
-small regression slice:
+small regression slice. This slice is also the default for `rice reduced`; pass
+explicit limits only when intentionally exploring a larger slice:
 
 ```bash
 .venv/bin/python -m rice reduced --max-r 2 --max-reactive 3

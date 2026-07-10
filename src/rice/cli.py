@@ -22,6 +22,9 @@ from .core import (
 )
 
 
+_REDUCED_DEFAULT_MAX_R = 2
+_REDUCED_DEFAULT_MAX_REACTIVE = 3
+
 _COUNT_OPTION_NAMES = ("--max-r", "--max-reactive", "--mode")
 _LEGACY_GLOBAL_OPTION_NAMES = (*_COUNT_OPTION_NAMES, "--format")
 _REDUCED_DEFAULT_MAX_R = 2
@@ -246,8 +249,9 @@ def _bundle_labeling_census_json(result: BundleLabelingCensusResult) -> dict[str
     return payload
 
 
-
-def _reduced_topology_census_json(result: ReducedTopologyCensusResult) -> dict[str, Any]:
+def _reduced_topology_census_json(
+    result: ReducedTopologyCensusResult,
+) -> dict[str, Any]:
     """Return reduced-topology census data using a stable documented shape."""
 
     regeneration_command = (
@@ -273,8 +277,12 @@ def _reduced_topology_census_json(result: ReducedTopologyCensusResult) -> dict[s
             "phase3_assigned_support_labeling_orbits_total": result.canonical_labeling_orbits_total,
             "canonical_reduced_signatures_total": result.total,
         },
-        "regeneration_command": regeneration_command,
+        "regeneration_command": (
+            f".venv/bin/python -m rice reduced --max-r {result.max_r} "
+            f"--max-reactive {result.max_reactive} --format json"
+        ),
     }
+
 
 def _count_json(result: CountResult) -> dict[str, Any]:
     """Return legacy count data including computed totals for JSON output."""
@@ -446,7 +454,6 @@ def main(argv: list[str] | None = None) -> int:
             )
         return 0
 
-
     if args.command == "reduced":
         max_r = getattr(args, "max_r", _REDUCED_DEFAULT_MAX_R)
         max_reactive = getattr(
@@ -455,17 +462,30 @@ def main(argv: list[str] | None = None) -> int:
         max_edges = getattr(args, "max_edges", None)
         if max_edges is not None and max_edges > max_r + max_reactive:
             parser.error("reduced --max-edges cannot exceed --max-r + --max-reactive")
-        result = reduced_topology_census(max_r=max_r, max_reactive=max_reactive, max_edges=max_edges)
+        result = reduced_topology_census(
+            max_r=max_r, max_reactive=max_reactive, max_edges=max_edges
+        )
         if output_format == "json":
-            print(json.dumps(_reduced_topology_census_json(result), indent=2, sort_keys=True))
+            print(
+                json.dumps(
+                    _reduced_topology_census_json(result), indent=2, sort_keys=True
+                )
+            )
         else:
             print(
                 "Canonical reduced-topology census: "
                 f"R <= {result.max_r}, L+C <= {result.max_reactive}, "
                 f"max_edges <= {result.max_edges}"
             )
-            print("Exact table entries are reduced primitive counts. L and C remain distinct topology labels, aggregated by L+C columns.")
-            print("Equivalence: internal node renaming, terminal reversal, local commutative series/parallel normalisation, and duplicate primitive singleton merging.")
+            print(
+                "Exact table entries are reduced primitive counts. "
+                "L and C remain distinct topology labels, aggregated by L+C columns."
+            )
+            print(
+                "Equivalence: internal node renaming, terminal reversal, "
+                "local commutative series/parallel normalisation, and duplicate "
+                "primitive singleton merging."
+            )
             print("This is not full rational-immittance equivalence.")
             print()
             print(result.as_markdown_table())
