@@ -1,19 +1,17 @@
-"""Enumerate small two-terminal RLC one-port support graphs and legacy counts.
+"""Enumerate small two-terminal RLC one-port support graphs and reduced topologies.
 
-The reduced-model work starts with a support-only census: connected unlabelled
-simple support graphs, unordered terminal-pair orbits, and terminal-relevant
-two-terminal supports. Phase 2 adds a raw simple-bundle assignment census over
-those supports; series spans and reduced signatures are intentionally outside
-that census. Phase 3 quotients those assigned supports by support
-automorphisms preserving the unordered terminal pair. The module also exposes
-focused per-network local reduction and canonical reduced-signature helpers;
-full standard-slice signature enumeration and merging is intentionally not yet
-implemented.
-
-The older :func:`count_networks` entry point remains as a legacy
-multiset-bundle counter.  It assigns non-empty component-count bundles to
-terminal-relevant support edges and uses Burnside's lemma only for that legacy
-bundle-orbit calculation.
+The reduced-model pipeline starts with a support-only census: connected
+unlabelled simple support graphs, unordered terminal-pair orbits, and
+terminal-relevant two-terminal supports (:func:`support_census`). Phase 2 adds
+a raw simple-bundle assignment census over those supports
+(:func:`simple_bundle_assignment_census`); series spans and reduced
+signatures are intentionally outside that census. Phase 3 quotients those
+assigned supports by support automorphisms preserving the unordered terminal
+pair (:func:`simple_bundle_labeling_census`). The module also exposes focused
+per-network local reduction and canonical reduced-signature helpers
+(:func:`canonical_reduced_signature`), and combines every stage into an
+end-to-end canonical reduced-topology census
+(:func:`reduced_topology_census`, :func:`iter_reduced_topology_signatures`).
 """
 
 from __future__ import annotations
@@ -25,8 +23,6 @@ from typing import DefaultDict, Iterable, Literal
 
 import networkx as nx
 from networkx.algorithms import isomorphism as iso
-
-Mode = Literal["lc"]
 
 
 @dataclass(frozen=True)
@@ -445,52 +441,6 @@ class ReducedTopologyCensusResult:
             lines.append("| " + " | ".join(values) + " |")
         return "\n".join(lines)
 
-@dataclass(frozen=True)
-class CountResult:
-    """Legacy LC component-bundle result returned by :func:`count_networks`.
-
-    Attributes:
-        max_r: Maximum total number of resistors.
-        max_reactive: Maximum total number of reactive elements.
-        mode: Retained temporarily on the legacy counter's public API. Only
-            ``"lc"`` (inductors and capacitors counted as distinct component
-            types) is implemented; the previously supported ``"generic"``
-            single-reactive-type mode has been removed.
-        table: A rectangular table indexed by ``table[r][x]``, where ``x`` is
-            the total reactive count ``l + c``.  The count sums over all L/C
-            splittings with ``l + c == x``.
-        support_count: Number of terminal-relevant two-terminal support graphs
-            used by the legacy bundle counter.
-        support_count_by_edges: Terminal-relevant support counts by number of
-            support edges.
-    """
-
-    max_r: int
-    max_reactive: int
-    mode: Mode
-    table: tuple[tuple[int, ...], ...]
-    support_count: int
-    support_count_by_edges: dict[int, int]
-
-    @property
-    def total(self) -> int:
-        return sum(sum(row) for row in self.table)
-
-    def row_total(self, r: int) -> int:
-        return sum(self.table[r])
-
-    def exactly_r_total(self, r: int) -> int:
-        return self.row_total(r)
-
-    def as_markdown_table(self) -> str:
-        headers = ["R \\ L+C"] + [str(x) for x in range(self.max_reactive + 1)] + ["Row total"]
-        lines = ["| " + " | ".join(headers) + " |"]
-        lines.append("|" + "---:|" * len(headers))
-        for r, row in enumerate(self.table):
-            values = [str(r)] + [str(v) for v in row] + [str(sum(row))]
-            lines.append("| " + " | ".join(values) + " |")
-        return "\n".join(lines)
-
 
 def graph_invariant(graph: nx.Graph) -> tuple[object, ...]:
     """Cheap invariant used to bucket candidate simple graphs.
@@ -670,45 +620,13 @@ def permutation_cycle_lengths(permutation: tuple[int, ...]) -> tuple[int, ...]:
     return tuple(sorted(lengths))
 
 
-def fixed_assignments_by_total(
-    cycle_lengths: tuple[int, ...],
-    max_r: int,
-    max_reactive: int,
-) -> dict[tuple[int, int], int]:
-    """Count legacy LC bundle assignments fixed by an edge permutation.
-
-    This helper is part of the legacy component-count bundle counter, not the
-    phase-1 support census.  For a fixed edge permutation, every edge in a cycle
-    must receive the same non-empty ``(r, l, c)`` count bundle.
-    """
-
-    dp_lc: dict[tuple[int, int, int], int] = {(0, 0, 0): 1}
-    for cycle_length in cycle_lengths:
-        next_dp_lc: DefaultDict[tuple[int, int, int], int] = defaultdict(int)
-        options_lc = [
-            (r, l, c)
-            for r in range(max_r // cycle_length + 1)
-            for l in range(max_reactive // cycle_length + 1)
-            for c in range(max_reactive // cycle_length + 1)
-            if r + l + c > 0 and cycle_length * (l + c) <= max_reactive
-        ]
-        for (old_r, old_l, old_c), count in dp_lc.items():
-            for r, l, c in options_lc:
-                new_r = old_r + cycle_length * r
-                new_l = old_l + cycle_length * l
-                new_c = old_c + cycle_length * c
-                if new_r <= max_r and new_l + new_c <= max_reactive:
-                    next_dp_lc[(new_r, new_l, new_c)] += count
-        dp_lc = dict(next_dp_lc)
-
-    aggregated: DefaultDict[tuple[int, int], int] = defaultdict(int)
-    for (r, l, c), count in dp_lc.items():
-        aggregated[(r, l + c)] += count
-    return dict(aggregated)
-
-
 def iter_two_terminal_supports(max_edges: int):
-    """Yield terminal-relevant support representatives for legacy counting."""
+    """Yield terminal-relevant support representatives for every enumeration stage.
+
+    This is the shared support-enumeration entry point used by
+    :func:`simple_bundle_labeling_census` and
+    :func:`iter_reduced_topology_signatures`.
+    """
 
     levels = generate_connected_unlabelled_simple_graphs(max_edges)
     for edge_count in range(1, max_edges + 1):
@@ -1087,65 +1005,4 @@ def reduced_topology_census(
         canonical_signatures=tuple(stable_strings),
         raw_leaf_assignments_total=raw.leaf_assignments_total,
         canonical_labeling_orbits_total=labelings.canonical_labeling_orbits_total,
-    )
-
-def count_networks(max_r: int = 3, max_reactive: int = 5, mode: Mode = "lc") -> CountResult:
-    """Run the legacy multiset-bundle two-terminal network count.
-
-    ``mode`` is retained temporarily on this legacy counter's public API.
-    Only ``"lc"`` is implemented; the previously supported ``"generic"``
-    single-reactive-type mode has been removed. Passing any other value
-    raises ``ValueError``. Removing ``mode`` itself, along with the rest of
-    the legacy counter, belongs to a later cleanup task.
-    """
-
-    if max_r < 0 or max_reactive < 0:
-        raise ValueError("component limits must be non-negative")
-    if mode != "lc":
-        raise ValueError(
-            f"mode {mode!r} is not supported; only 'lc' is implemented "
-            "('generic' single-reactive-type counting has been removed)"
-        )
-
-    max_edges = max_r + max_reactive
-    counts: DefaultDict[tuple[int, int], int] = defaultdict(int)
-    support_count = 0
-    support_count_by_edges: Counter[int] = Counter()
-    fixed_count_cache: dict[tuple[tuple[int, ...], int, int], dict[tuple[int, int], int]] = {}
-
-    for graph, terminals, autos in iter_two_terminal_supports(max_edges):
-        support_count += 1
-        support_count_by_edges[graph.number_of_edges()] += 1
-        edge_permutations = edge_permutations_preserving_terminal_set(graph, terminals, autos)
-        group_size = len(edge_permutations)
-        burnside_sum: DefaultDict[tuple[int, int], int] = defaultdict(int)
-
-        for permutation in edge_permutations:
-            cycle_lengths = permutation_cycle_lengths(permutation)
-            cache_key = (cycle_lengths, max_r, max_reactive)
-            fixed_counts = fixed_count_cache.get(cache_key)
-            if fixed_counts is None:
-                fixed_counts = fixed_assignments_by_total(cycle_lengths, max_r, max_reactive)
-                fixed_count_cache[cache_key] = fixed_counts
-            for total_key, count in fixed_counts.items():
-                burnside_sum[total_key] += count
-
-        for total_key, count in burnside_sum.items():
-            if count % group_size != 0:
-                raise ArithmeticError(
-                    f"Burnside sum {count} is not divisible by group size {group_size} for {total_key}"
-                )
-            counts[total_key] += count // group_size
-
-    table = tuple(
-        tuple(counts.get((r, x), 0) for x in range(max_reactive + 1)) for r in range(max_r + 1)
-    )
-
-    return CountResult(
-        max_r=max_r,
-        max_reactive=max_reactive,
-        mode=mode,
-        table=table,
-        support_count=support_count,
-        support_count_by_edges=dict(sorted(support_count_by_edges.items())),
     )

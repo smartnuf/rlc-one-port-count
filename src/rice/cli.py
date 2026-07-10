@@ -11,10 +11,8 @@ from typing import Any
 from .core import (
     BundleAssignmentCensusResult,
     BundleLabelingCensusResult,
-    CountResult,
     ReducedTopologyCensusResult,
     SupportCensusResult,
-    count_networks,
     simple_bundle_assignment_census,
     reduced_topology_census,
     simple_bundle_labeling_census,
@@ -24,9 +22,6 @@ from .core import (
 
 _REDUCED_DEFAULT_MAX_R = 2
 _REDUCED_DEFAULT_MAX_REACTIVE = 3
-
-_COUNT_OPTION_NAMES = ("--max-r", "--max-reactive", "--mode")
-_LEGACY_GLOBAL_OPTION_NAMES = (*_COUNT_OPTION_NAMES, "--format")
 
 
 class RiceArgumentParser(argparse.ArgumentParser):
@@ -41,17 +36,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser = RiceArgumentParser(
         prog="rice",
         description="RICE — Resistor-Inductor-Capacitor Enumerator for small two-terminal RLC one-port topology classes.",
-        epilog=(
-            "Subcommand options go after the subcommand. The no-subcommand "
-            "legacy count form is retained for compatibility."
-        ),
+        epilog="Subcommand options go after the subcommand.",
     )
-    subparsers = parser.add_subparsers(dest="command", parser_class=RiceArgumentParser)
-
-    count_parser = subparsers.add_parser(
-        "count", help="run the legacy component-bundle count"
+    subparsers = parser.add_subparsers(
+        dest="command", parser_class=RiceArgumentParser, required=True
     )
-    _add_count_arguments(count_parser, suppress_defaults=True)
 
     supports_parser = subparsers.add_parser(
         "supports", help="run the phase-1 support graph census"
@@ -170,46 +159,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="output format, default: markdown",
     )
 
-    # Preserve the original no-subcommand interface for the legacy count, but
-    # hide these compatibility options from top-level help so they are not
-    # mistaken for options that apply to every subcommand.
-    _add_count_arguments(parser, suppress_defaults=True, hide_help=True)
     return parser
-
-
-def _add_count_arguments(
-    parser: argparse.ArgumentParser,
-    *,
-    suppress_defaults: bool = False,
-    hide_help: bool = False,
-) -> None:
-    default = argparse.SUPPRESS if suppress_defaults else None
-    help_text = argparse.SUPPRESS if hide_help else None
-    parser.add_argument(
-        "--max-r",
-        type=int,
-        default=default,
-        help=help_text or "maximum number of resistors, default: 3",
-    )
-    parser.add_argument(
-        "--max-reactive",
-        type=int,
-        default=default,
-        help=help_text or "maximum total number of reactive elements, default: 5",
-    )
-    parser.add_argument(
-        "--mode",
-        choices=("lc",),
-        default=default,
-        help=help_text
-        or "reactive-element mode; only 'lc' (L and C counted as distinct types) is supported",
-    )
-    parser.add_argument(
-        "--format",
-        choices=("markdown", "json"),
-        default=default,
-        help=help_text or "output format, default: markdown",
-    )
 
 
 def _support_census_json(result: SupportCensusResult) -> dict[str, Any]:
@@ -290,41 +240,6 @@ def _reduced_topology_census_json(
     }
 
 
-def _count_json(result: CountResult) -> dict[str, Any]:
-    """Return legacy count data including computed totals for JSON output."""
-
-    payload = asdict(result)
-    payload["total"] = result.total
-    return payload
-
-
-def _option_name(token: str) -> str:
-    return token.split("=", 1)[0]
-
-
-def _reject_legacy_globals_before_supports(
-    parser: argparse.ArgumentParser, argv: list[str]
-) -> None:
-    """Reject compatibility global options that would otherwise be ignored."""
-
-    subcommands = {"supports", "bundles", "labelings", "reduced"}
-    command_indexes = [i for i, token in enumerate(argv) if token in subcommands]
-    if not command_indexes:
-        return
-    command_index = min(command_indexes)
-    legacy_options = {
-        _option_name(token)
-        for token in argv[:command_index]
-        if token.startswith("--") and _option_name(token) in _LEGACY_GLOBAL_OPTION_NAMES
-    }
-    if legacy_options:
-        options = ", ".join(sorted(legacy_options))
-        parser.error(
-            f"options {options} must be placed after the subcommand "
-            "when used with support or bundle census"
-        )
-
-
 def _validate_nonnegative(
     parser: argparse.ArgumentParser, command: str, option: str, value: int
 ) -> None:
@@ -393,7 +308,6 @@ def _resolve_support_max_edges(parser: argparse.ArgumentParser, args: argparse.N
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     parser = build_parser()
-    _reject_legacy_globals_before_supports(parser, argv)
     args = parser.parse_args(argv)
 
     output_format = getattr(args, "format", "markdown")
@@ -547,29 +461,7 @@ def main(argv: list[str] | None = None) -> int:
             )
         return 0
 
-    max_r = getattr(args, "max_r", 3)
-    max_reactive = getattr(args, "max_reactive", 5)
-    mode = getattr(args, "mode", "lc")
-    result = count_networks(max_r=max_r, max_reactive=max_reactive, mode=mode)
-
-    if output_format == "json":
-        print(json.dumps(_count_json(result), indent=2, sort_keys=True))
-    else:
-        print(f"Mode: {mode}  (reactive column is L+C)")
-        print(f"Limits: R <= {max_r}, reactive <= {max_reactive}")
-        print(f"Terminal-relevant two-terminal support graphs: {result.support_count}")
-        print(
-            f"Terminal-relevant support graphs by support-edge count: {result.support_count_by_edges}"
-        )
-        print()
-        print(result.as_markdown_table())
-        print()
-        print(f"Total: {result.total}")
-        if max_r >= 3:
-            print(
-                f"Exactly R=3, reactive <= {max_reactive}: {result.exactly_r_total(3)}"
-            )
-    return 0
+    raise AssertionError(f"unhandled subcommand {args.command!r}")
 
 
 if __name__ == "__main__":

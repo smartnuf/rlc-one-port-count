@@ -3,7 +3,6 @@
 from .core import (
     BundleAssignmentCensusResult,
     BundleLabelingCensusResult,
-    CountResult,
     ReducedFactor,
     ReducedSignature,
     ReducedTopologyCensusResult,
@@ -17,7 +16,6 @@ from .core import (
     primitive_factor,
     reduced_signature_component_counts,
     reduced_topology_census,
-    count_networks,
     simple_bundle_assignment_census,
     simple_bundle_labeling_census,
     simple_bundle_labeling_orbit_count,
@@ -27,7 +25,6 @@ from .core import (
 __all__ = [
     "BundleAssignmentCensusResult",
     "BundleLabelingCensusResult",
-    "CountResult",
     "ReducedFactor",
     "ReducedSignature",
     "ReducedTopologyCensusResult",
@@ -41,7 +38,6 @@ __all__ = [
     "primitive_factor",
     "reduced_signature_component_counts",
     "reduced_topology_census",
-    "count_networks",
     "simple_bundle_assignment_census",
     "simple_bundle_labeling_census",
     "simple_bundle_labeling_orbit_count",

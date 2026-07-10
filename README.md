@@ -70,12 +70,15 @@ by documented arguments or counterexamples, not by assumption.
 
 ## Status
 
-The source currently implements a **legacy multiset-bundle counter**. That counter
-is useful as a first reference point, but it is intentionally being replaced by a
-more useful **reduced-topology** model.
+The **reduced-topology model** is the current implementation. It counts
+two-terminal RLC one-port topology classes after local primitive series and
+parallel redundancies have been removed. It replaces an earlier legacy
+multiset-bundle counter, which has since been removed in full
+(`docs/plan/02-cleanup/02-legacy.md`); the removed counter's historical
+totals are recorded, clearly labelled as historical, in
+[`docs/results.md`](docs/results.md).
 
-The new direction is documented before implementation so that Codex/agentic
-phases have a clear target:
+The model is documented in:
 
 - [`docs/model_decisions.md`](docs/model_decisions.md) defines the intended
   counting contract and boundary cases.
@@ -94,27 +97,24 @@ assignment leaves, and `rice labelings` for phase 3 canonical bundle-labeling
 orbits under internal-node renaming and reversal of the unordered terminal pair.
 Local series-span reductions and recursive reduced signatures are available as a focused API for individual assigned networks. The first complete end-to-end reduced-topology census is implemented as `rice reduced` for the small golden slice `R <= 2`, `L+C <= 3`; the full `R <= 3`, `L+C <= 5` reduced catalogue remains future work.
 
-## Current legacy results
+## Migration from the removed legacy counter
 
-The current source counts raw graph-topology classes using support graphs and
-parallel component-count bundles. In that model, repeated same-type parallel
-branches such as `R || R` are counted separately from a single `R` branch.
+The legacy multiset-bundle counter (`rice count`, `--mode`, and the
+no-subcommand compatibility form) has been removed
+(`docs/plan/02-cleanup/02-legacy.md`). `rice reduced` is the closest
+supported replacement, but its counts are intentionally **not** numerically
+equivalent to the removed counter: repeated same-type primitive parallel
+branches such as `R||R` are not generated as separate reduced topologies, so
+reduced-topology counts are always smaller than the old multiset-bundle
+counts for the same `R`/`L+C` budget.
 
-For `R <= 3, L + C <= 5`, with L and C distinct, the legacy result is:
+```bash
+.venv/bin/python -m rice reduced --max-r 2 --max-reactive 3
+```
 
-- **1,408,796** networks with **at most 3 R** and **at most 5 L+C**;
-- **1,268,282** networks with **exactly 3 R** and **at most 5 L+C**.
-
-This number is retained as a regression/reference for the legacy counter. It
-should not be treated as the final target count for the reduced-topology
-model.
-
-The legacy counter previously also supported `--mode generic`, treating all
-reactive elements as one undifferentiated type `X`. That mode has been
-removed (`docs/plan/02-cleanup/03-generic-x.md`) and is no longer implemented,
-reproducible, or part of the active validation contract; see
-[`docs/results.md`](docs/results.md) for the historical `57,945` /
-`51,736` figures it once produced.
+The removed counter's historical totals (both its `lc` mode and its
+previously-removed `generic` mode) are recorded, clearly labelled as
+historical, in [`docs/results.md`](docs/results.md).
 
 ## Intended reduced-topology model
 
@@ -181,7 +181,7 @@ Run the tests:
 make test
 ```
 
-Run the support-census smoke check, phase-2 raw bundle-assignment smoke check, phase-3 labeling smoke check, and current legacy counts:
+Run the support-census smoke check, phase-2 raw bundle-assignment smoke check, phase-3 labeling smoke check, and the small golden reduced-topology census:
 
 ```bash
 make check
@@ -242,12 +242,11 @@ python3 -m venv .venv
 .venv/bin/python -m rice labelings --max-r 3 --max-reactive 5
 .venv/bin/python -m rice reduced --max-r 2 --max-reactive 3
 .venv/bin/python -m rice reduced --max-r 2 --max-reactive 3 --format json
-.venv/bin/python -m rice --mode lc --max-r 3 --max-reactive 5
 ```
 
-`--mode generic` and the `legacy-generic` `make check` target have been
-removed (`docs/plan/02-cleanup/03-generic-x.md`); `--mode` now accepts only
-`lc`.
+The legacy multiset-bundle counter (`rice count`, `--mode`, and the
+no-subcommand form) has been removed
+(`docs/plan/02-cleanup/02-legacy.md`); a subcommand is now required.
 
 The primary installed console script can also be run explicitly from the venv.
 Subcommand options go after the subcommand:
@@ -257,13 +256,7 @@ Subcommand options go after the subcommand:
 .venv/bin/rice supports --max-r 3 --max-reactive 5
 .venv/bin/rice bundles --max-r 3 --max-reactive 5
 .venv/bin/rice labelings --max-r 3 --max-reactive 5
-.venv/bin/rice count --mode lc --max-r 3 --max-reactive 5
-```
-
-The legacy no-subcommand count form is retained for compatibility only:
-
-```bash
-.venv/bin/rice --mode lc --max-r 3 --max-reactive 5
+.venv/bin/rice reduced --max-r 2 --max-reactive 3
 ```
 
 The `bundles` command reports raw phase-2 simple primitive bundle-assignment
@@ -276,11 +269,12 @@ treat `--max-r 0 --max-reactive 0` as a valid empty census with zero totals and
 no support-edge rows; negative budgets and zero/negative explicit edge bounds
 when the component budget is nonzero are rejected at the CLI boundary.
 
-Do not put support-census options before `supports`; for example,
-`.venv/bin/rice --max-edges 8 supports` is not valid. Count-budget options
-before `supports` are rejected rather than silently ignored. Long options must
-use their exact documented names; argparse abbreviation is disabled for the
-top-level parser and all subcommands.
+Do not put subcommand options before the subcommand name; for example,
+`.venv/bin/rice --max-edges 8 supports` is not valid and is rejected rather
+than silently ignored. Every option belongs to exactly one subcommand parser,
+so a bare `rice` (no subcommand) is also rejected. Long options must use their
+exact documented names; argparse abbreviation is disabled for the top-level
+parser and all subcommands.
 
 The declared runtime dependency floor is NetworkX 3.2 on Python 3.11 or newer; do not add an upper bound unless a tested incompatibility requires one.
 

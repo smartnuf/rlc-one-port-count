@@ -26,7 +26,7 @@ not renamed/renumbered to match, so follow the order stated here rather than
 the list order below.
 
 - `done` [Review current implementation before deletion](02-cleanup/01-review.md)
-- `todo` [Remove legacy implementation](02-cleanup/02-legacy.md)
+- `done` [Remove legacy implementation](02-cleanup/02-legacy.md)
 - `done` [Remove generic `X` implementation, tests, and docs](02-cleanup/03-generic-x.md)
 - `todo` [Update examples, imports, and public surface](02-cleanup/04-public-api.md)
 

@@ -21,22 +21,9 @@ def _assert_cli_error_without_traceback(capsys, argv, expected):
 
 
 def test_abbreviated_long_options_are_rejected(capsys):
-    _assert_cli_error_without_traceback(capsys, ["--mo", "lc", "supports"], ("unrecognized arguments", "invalid choice"))
     _assert_cli_error_without_traceback(capsys, ["supports", "--max-e", "8"], "unrecognized arguments")
     _assert_cli_error_without_traceback(capsys, ["bundles", "--max-re", "5"], "unrecognized arguments")
-
-
-def test_generic_mode_is_rejected_cleanly_without_traceback(capsys):
-    _assert_cli_error_without_traceback(
-        capsys,
-        ["count", "--mode", "generic", "--max-r", "3", "--max-reactive", "5"],
-        "invalid choice",
-    )
-    _assert_cli_error_without_traceback(
-        capsys,
-        ["--mode", "generic", "--max-r", "3", "--max-reactive", "5"],
-        "invalid choice",
-    )
+    _assert_cli_error_without_traceback(capsys, ["reduced", "--max-e", "5"], "unrecognized arguments")
 
 
 def test_supports_max_edges_option_works(capsys):
@@ -103,7 +90,7 @@ def test_supports_subcommand_help_shows_max_edges():
     assert "--max-reactive" in result.stdout
 
 
-def test_top_level_help_does_not_show_support_or_count_options_as_global():
+def test_top_level_help_lists_only_surviving_subcommands_and_no_global_options():
     result = subprocess.run(
         [sys.executable, "-m", "rice", "--help"],
         check=True,
@@ -113,10 +100,11 @@ def test_top_level_help_does_not_show_support_or_count_options_as_global():
 
     assert "usage: rice" in result.stdout
     assert "Resistor-Inductor-Capacitor Enumerator" in result.stdout
-    assert "count" in result.stdout
     assert "supports" in result.stdout
     assert "bundles" in result.stdout
+    assert "labelings" in result.stdout
     assert "reduced" in result.stdout
+    assert "count" not in result.stdout
     assert "--max-edges" not in result.stdout
     assert "--max-r" not in result.stdout
     assert "--max-reactive" not in result.stdout
@@ -200,44 +188,46 @@ def test_bundles_subcommand_help_shows_bundle_options():
     assert "debugging/truncation" in result.stdout
 
 
-def test_count_subcommand_help_shows_count_options():
-    result = subprocess.run(
-        [sys.executable, "-m", "rice", "count", "--help"],
-        check=True,
-        text=True,
-        capture_output=True,
-    )
+def test_subcommand_options_before_the_subcommand_are_rejected(capsys):
+    """Subcommand options belong after the subcommand name, never before it."""
 
-    assert "--max-r" in result.stdout
-    assert "--max-reactive" in result.stdout
-    assert "--mode" in result.stdout
+    for argv in (
+        ["--max-r", "3", "--max-reactive", "6", "supports"],
+        ["--format", "json", "reduced"],
+    ):
+        with pytest.raises(SystemExit) as excinfo:
+            main(argv)
+
+        assert excinfo.value.code == 2
+        err = capsys.readouterr().err
+        assert "rice: error:" in err
+        assert "Traceback" not in err
 
 
-def test_legacy_count_options_before_supports_are_rejected(capsys):
+def test_bare_rice_requires_a_subcommand(capsys):
     with pytest.raises(SystemExit) as excinfo:
-        main(["--max-r", "3", "--max-reactive", "6", "supports"])
+        main([])
 
     assert excinfo.value.code == 2
     err = capsys.readouterr().err
-    assert "must be placed after the subcommand" in err
+    assert "required" in err
+    assert "Traceback" not in err
 
 
-def test_legacy_no_subcommand_count_interface_still_works(capsys):
-    assert main(["--max-r", "2", "--max-reactive", "0", "--format", "json"]) == 0
+def test_removed_count_interface_is_rejected_cleanly(capsys):
+    for argv in (
+        ["count"],
+        ["count", "--max-r", "2"],
+        ["--mode", "lc"],
+        ["--max-r", "2", "--max-reactive", "3"],
+    ):
+        with pytest.raises(SystemExit) as excinfo:
+            main(argv)
 
-    output = json.loads(capsys.readouterr().out)
-
-    assert len(output["table"]) == 3
-    assert all(len(row) == 1 for row in output["table"])
-
-
-def test_count_subcommand_still_works(capsys):
-    assert main(["count", "--max-r", "2", "--format", "json", "--max-reactive", "0"]) == 0
-
-    output = json.loads(capsys.readouterr().out)
-
-    assert len(output["table"]) == 3
-    assert all(len(row) == 1 for row in output["table"])
+        assert excinfo.value.code == 2
+        err = capsys.readouterr().err
+        assert "rice: error:" in err
+        assert "Traceback" not in err
 
 
 def test_labelings_subcommand_outputs_phase_3_census(capsys):

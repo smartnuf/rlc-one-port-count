@@ -1,6 +1,6 @@
 # 02-cleanup / 02 — Remove legacy implementation
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -118,3 +118,78 @@ not the modules that contain them:
   feature (see `01-review.md` section 7's "commands that should fail after
   deletion" list, adjusted at implementation time for whatever
   compatibility-shim decision, if any, is made per section 6).
+
+## Progress notes
+
+- 2026-07-10: Implemented, no compatibility shim (per section 6's
+  recommendation and this task's explicit instruction not to retain one).
+  **Source**: deleted `Mode`, `CountResult`, `fixed_assignments_by_total`, and
+  `count_networks` from `src/rice/core.py`; updated the module docstring to
+  describe the current reduced-model pipeline instead of the removed counter,
+  and corrected `iter_two_terminal_supports`'s docstring (it no longer says
+  "for legacy counting"; it now states its shared role across
+  `simple_bundle_labeling_census` and `iter_reduced_topology_signatures`). No
+  imports became unused (`Literal`, `DefaultDict`, `Counter`, `combinations`,
+  `permutations` are all still used elsewhere in the module — confirmed with
+  `rg` before deleting anything).
+  **CLI**: deleted the `count` subparser, `_add_count_arguments`, the hidden
+  top-level compatibility arguments, `--mode`, `_count_json`, and the
+  no-subcommand fallback branch in `main()`. `add_subparsers(...,
+  required=True)` now makes a bare `rice` fail with a normal argparse
+  "the following arguments are required: command" error instead of falling
+  through to a dispatch branch. **The pre-subcommand guard
+  (`_reject_legacy_globals_before_supports`, `_LEGACY_GLOBAL_OPTION_NAMES`,
+  `_COUNT_OPTION_NAMES`, `_option_name`) was deleted outright**, not adapted:
+  empirically, `rice --max-r 3 supports` and `rice --format json reduced` now
+  fail cleanly through ordinary argparse (`invalid choice` on the `command`
+  positional, exit 2, no traceback) once the hidden top-level options that
+  the guard existed to protect against no longer exist. `RiceArgumentParser`
+  and `allow_abbrev=False` are unchanged.
+  **Exports**: removed `CountResult` and `count_networks` from both the
+  import list and `__all__` in `src/rice/__init__.py` in this same commit.
+  **Makefile/scripts**: removed `legacy-count` from `.PHONY` and as a target;
+  added a `reduced` target/`.PHONY` entry; replaced the `--mode lc` line in
+  `scripts/check.sh` and `scripts/check.ps1` with
+  `rice reduced --max-r 2 --max-reactive 3`.
+  **Tests**: deleted `tests/test_counts.py` in full; removed
+  `test_count_subcommand_help_shows_count_options`,
+  `test_legacy_no_subcommand_count_interface_still_works`, and
+  `test_count_subcommand_still_works` from `tests/test_cli.py`; replaced
+  `test_legacy_count_options_before_supports_are_rejected` with
+  `test_subcommand_options_before_the_subcommand_are_rejected` (generalised
+  to describe the user-facing rule, not the removed guard implementation);
+  removed the `--mode`-based abbreviation case and added a `reduced --max-e 5`
+  case to `test_abbreviated_long_options_are_rejected`; added
+  `test_bare_rice_requires_a_subcommand` and
+  `test_removed_count_interface_is_rejected_cleanly` (covering `rice`,
+  `rice count`, `rice count --max-r 2`, `rice --mode lc`, and
+  `rice --max-r 2 --max-reactive 3`); refactored
+  `tests/test_public_exports.py` to a single `PUBLIC_EXPORTS` set plus a
+  `REMOVED_NAMES` check (`CountResult`, `count_networks`, `Mode`,
+  `fixed_assignments_by_total`) asserting both absence from `__all__` and
+  `hasattr`.
+  **Docs**: README.md's "Current legacy results" section replaced with a
+  "Migration from the removed legacy counter" note (closest replacement is
+  `rice reduced`; counts are not numerically equivalent; `R||R` is not
+  generated separately); all active `rice count`/`--mode`/no-subcommand/
+  `legacy-count` examples removed from README.md and AGENTS.md;
+  `docs/results.md`'s `lc` and `generic` tables consolidated under one
+  "Historical legacy multiset-bundle counts" heading stating the
+  implementation and commands are removed; `docs/computation.md`,
+  `docs/model_decisions.md`, and `docs/bundles_and_multiedges.md` had their
+  legacy-model sections retitled "Historical: ... (removed)" and rewritten to
+  past tense, while keeping the `R||R`/primitive-duplicate-merging rationale
+  intact; `docs/bundles_and_multiedges.md`'s "Current implementation status"
+  section and an internally-contradictory "not yet implemented" line about
+  series spans were corrected to reflect that `rice reduced` now implements
+  full signature enumeration and merging for the golden slice.
+  **Validation**: `bash .codex/setup.sh`, `make test` (99 passed), `make
+  lint`, `make check` (including the new `rice reduced` final stage), `git
+  diff --check`, `make supports`/`bundles`/`labelings`/`reduced` individually,
+  all `--help` outputs, all surviving commands, and all explicitly-required
+  removed-command failure cases (`rice`, `rice count`, `rice count --max-r 2`,
+  `rice --mode lc`, `rice --max-r 2 --max-reactive 3`) all ran as expected.
+  `scripts/check.ps1` was inspected line-by-line for exact stage parity with
+  `scripts/check.sh` but not executed — no `pwsh`/Windows environment was
+  available in this session. Next cleanup task:
+  `docs/plan/02-cleanup/04-public-api.md`.

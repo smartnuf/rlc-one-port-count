@@ -11,4 +11,4 @@ Invoke-CheckedCommand -FilePath (Join-Path (Get-Location) 'scripts\test.ps1') -S
 Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', 'supports', '--max-edges', '8') -Stage 'rice supports'
 Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', 'bundles', '--max-r', '3', '--max-reactive', '5') -Stage 'rice bundles'
 Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', 'labelings', '--max-r', '3', '--max-reactive', '5') -Stage 'rice labelings'
-Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', '--mode', 'lc', '--max-r', '3', '--max-reactive', '5') -Stage 'legacy lc count'
+Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', 'reduced', '--max-r', '2', '--max-reactive', '3') -Stage 'rice reduced'

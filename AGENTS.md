@@ -12,19 +12,23 @@ R <= 3
 L + C <= 5
 ```
 
-The current source implements a legacy multiset-bundle count. The project is now
-moving toward a reduced-topology model. Treat the docs below as the normative
-specification for new work:
+The current source implements the reduced-topology model described below. An
+earlier legacy multiset-bundle counter has been removed in full
+(`docs/plan/02-cleanup/02-legacy.md`); its historical counts are recorded,
+clearly labelled as historical, in `docs/results.md`. Treat the docs below as
+the normative specification for new work:
 
 1. `docs/model_decisions.md` — counting contract, reductions, boundary cases.
 2. `docs/support_graph_enumeration.md` — first implementation milestone.
-3. `docs/bundles_and_multiedges.md` — bundle/span terminology and legacy caveat.
+3. `docs/bundles_and_multiedges.md` — bundle/span terminology and the
+   historical multiset-bundle model it replaced.
 4. `docs/simple_path_coverage.md` — terminal relevance and whole-graph rejection.
-5. `docs/results.md` — legacy counts and support-census target counts.
+5. `docs/results.md` — historical legacy counts and support-census target
+   counts.
 
 If code and docs disagree, do not silently preserve the old behaviour. Either
 update the code to the documented model or explicitly mark the old behaviour as
-`legacy`.
+historical.
 
 ## Plan index maintenance
 
@@ -105,7 +109,7 @@ python3 -m venv .venv
 .venv/bin/python -m rice supports --max-edges 8
 .venv/bin/python -m rice bundles --max-r 3 --max-reactive 5
 .venv/bin/python -m rice labelings --max-r 3 --max-reactive 5
-.venv/bin/python -m rice --mode lc --max-r 3 --max-reactive 5
+.venv/bin/python -m rice reduced --max-r 2 --max-reactive 3
 ```
 
 Do not run these ambiguous commands in Codex tasks:
@@ -131,12 +135,13 @@ changed subcommand help, for example:
 ```bash
 .venv/bin/python -m rice --help
 .venv/bin/python -m rice supports --help
-.venv/bin/python -m rice count --help
+.venv/bin/python -m rice reduced --help
 ```
 
-Whenever CLI syntax changes, update README and docs examples in the same change.
-Keep examples explicit about option placement: subcommand options go after the
-subcommand, while the no-subcommand count form is legacy compatibility only.
+Whenever CLI syntax changes, update README and docs examples in the same
+change. Keep examples explicit about option placement: subcommand options go
+after the subcommand name; a subcommand (`supports`, `bundles`, `labelings`,
+or `reduced`) is always required, and there is no no-subcommand form.
 
 ## Codex cloud expectations
 
@@ -158,12 +163,12 @@ checks.
 No external graph-generation binaries such as nauty/Traces are required for the
 current project direction. The current implementation uses NetworkX only. The supported/tested runtime floor is `networkx>=3.2` on Python 3.11 or newer; do not add unnecessary upper bounds.
 
-## Current legacy validation commands
+## Current validation commands
 
 These validate the current source as it stands. make check, ./scripts/check.sh, and
 .\scripts\check.ps1 are the full currently documented validation paths and run
 lint/static checks, tests, support census, bundle assignment census, labeling
-census, and `legacy-count`.
+census, and the small golden reduced-topology census.
 
 ```bash
 make check
@@ -176,22 +181,18 @@ or explicitly:
 .venv/bin/python -m rice supports --max-edges 8
 .venv/bin/python -m rice bundles --max-r 3 --max-reactive 5
 .venv/bin/python -m rice labelings --max-r 3 --max-reactive 5
-.venv/bin/python -m rice --mode lc --max-r 3 --max-reactive 5
+.venv/bin/python -m rice reduced --max-r 2 --max-reactive 3
 ```
 
-Legacy reference total:
-
-- `mode=lc`: total `1,408,796`; exactly `R=3` total `1,268,282`.
-
-`--mode generic` (single-reactive-type `X` counting) and the `legacy-generic`
-`make check`/script target have been removed
-(`docs/plan/02-cleanup/03-generic-x.md`). `--mode` now accepts only `lc`;
-passing `--mode generic` fails cleanly with a normal argument error. The
-historical `57,945` / `51,736` generic-mode totals the removed implementation
-once produced are recorded, clearly labelled as historical, in
-`docs/results.md`. When the reduced model is implemented, tests and docs
-should be updated together and the remaining `lc` figures should be labelled
-legacy.
+The legacy multiset-bundle counter (`count_networks`, `CountResult`,
+`rice count`, the no-subcommand form, and `--mode`) has been removed in full
+(`docs/plan/02-cleanup/02-legacy.md`); `legacy-count` is no longer a
+`make check`/script target. Its historical totals — `lc` mode total
+`1,408,796` (exactly `R=3` total `1,268,282`), and the previously-removed
+`generic` mode total `57,945` (exactly `R=3` total `51,736`) — are recorded,
+clearly labelled as historical, in `docs/results.md`. They are not
+reproducible by any current command and are not part of the active
+validation contract.
 
 ## Near-term implementation sequence
 

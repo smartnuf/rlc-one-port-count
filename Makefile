@@ -1,6 +1,6 @@
 VENV_PYTHON := .venv/bin/python
 
-.PHONY: setup install ensure-venv test lint supports bundles labelings legacy-count check print-env clean
+.PHONY: setup install ensure-venv test lint supports bundles labelings reduced check print-env clean
 
 setup:
 	bash scripts/setup.sh
@@ -25,8 +25,8 @@ bundles: ensure-venv
 labelings: ensure-venv
 	$(VENV_PYTHON) -m rice labelings --max-r 3 --max-reactive 5
 
-legacy-count: ensure-venv
-	$(VENV_PYTHON) -m rice --mode lc --max-r 3 --max-reactive 5
+reduced: ensure-venv
+	$(VENV_PYTHON) -m rice reduced --max-r 2 --max-reactive 3
 
 check:
 	bash scripts/check.sh

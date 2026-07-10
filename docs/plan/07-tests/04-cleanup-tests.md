@@ -62,3 +62,37 @@ Ensure removing legacy implementation and generic `X` support does not silently 
   count-command and no-subcommand LC tests were not touched; they remain for
   `02-legacy` to remove/generalise per the bullet list above, which still
   applies unchanged now that generic-X removal has landed first.
+- 2026-07-10: `docs/plan/02-cleanup/02-legacy.md` landed, removing the legacy
+  multiset-bundle counter in full. Tests **deleted**: `tests/test_counts.py`
+  in full (both `test_generic_mode_is_no_longer_supported` and
+  `test_lc_counts_match_reference_table`); from `tests/test_cli.py`,
+  `test_count_subcommand_help_shows_count_options`,
+  `test_legacy_no_subcommand_count_interface_still_works`,
+  `test_count_subcommand_still_works`, and
+  `test_generic_mode_is_rejected_cleanly_without_traceback` (the `--mode`
+  parser it exercised no longer exists at all). Tests **generalised**:
+  `test_legacy_count_options_before_supports_are_rejected` →
+  `test_subcommand_options_before_the_subcommand_are_rejected` (asserts the
+  user-facing rule — exit 2, a `rice: error:` message, no traceback — for
+  surviving `--max-r`/`--format` placed before a subcommand, rather than
+  asserting on the now-deleted guard's specific error text); the `--mo
+  generic`/`--mo lc` abbreviation case in `test_abbreviated_long_options_are_
+  rejected` was **removed outright** (there is no longer a `--mode` option
+  anywhere to abbreviate) and a `reduced --max-e 5` case was added in its
+  place so all three subcommands with truncatable options are covered.
+  Tests **added**: `test_bare_rice_requires_a_subcommand` and
+  `test_removed_count_interface_is_rejected_cleanly` (covering `rice`,
+  `rice count`, `rice count --max-r 2`, `rice --mode lc`, and
+  `rice --max-r 2 --max-reactive 3`, all exit 2 with no traceback).
+  `tests/test_public_exports.py` was refactored from the `LEGACY_ONLY_EXPORTS`
+  `|` `SURVIVING_EXPORTS` split to a single `PUBLIC_EXPORTS` set plus a
+  `REMOVED_NAMES` set (`CountResult`, `count_networks`, `Mode`,
+  `fixed_assignments_by_total`) checked absent from both `__all__` and
+  `hasattr`. All modern support/bundle/labeling/reduced-model tests and CLI
+  markdown/JSON tests were left unchanged and still pass with their existing
+  golden values (99 tests total after this round of deletions/additions).
+  This item is **not** marked `done`: `docs/plan/02-cleanup/04-public-api.md`
+  is still `todo` and is the final repository-wide coherence audit (help
+  text, examples, imports, terminology); this file's "Confirm docs examples
+  run or at least parse" task item and any tests that audit surfaces belong
+  to that final pass, not yet performed.

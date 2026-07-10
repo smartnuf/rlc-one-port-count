@@ -53,3 +53,22 @@ Ensure there is one development contract, not several subtly different ones.
   no Windows/PowerShell environment was available in this session (see
   `docs/plan/02-cleanup/03-generic-x.md` progress notes for the full
   validation record).
+
+- 2026-07-10: Removed the legacy multiset-bundle counter entirely
+  (`docs/plan/02-cleanup/02-legacy.md`): `legacy-count` is no longer a Make
+  target and no longer appears in `scripts/check.sh` or `scripts/check.ps1`.
+  The validation sequence is now, identically across the Make/Bash path and
+  the native PowerShell path: (1) lint, (2) tests, (3) support census
+  (`rice supports --max-edges 8`), (4) raw simple-bundle assignment census
+  (`rice bundles --max-r 3 --max-reactive 5`), (5) canonical bundle-labeling
+  census (`rice labelings --max-r 3 --max-reactive 5`), (6) the small
+  committed reduced-topology golden slice
+  (`rice reduced --max-r 2 --max-reactive 3`), replacing the removed legacy
+  LC count as the final stage. A new `make reduced` target and `.PHONY`
+  entry were added to match the existing `supports`/`bundles`/`labelings`
+  targets. Ran `make test`, `make lint`, and `make check` (via
+  `./scripts/check.sh`) successfully after the change, and `make
+  supports`/`make bundles`/`make labelings`/`make reduced` individually.
+  `scripts/check.ps1` was again inspected line by line for exact stage
+  parity with `scripts/check.sh` but not executed, since no
+  Windows/PowerShell environment was available in this session.

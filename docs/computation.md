@@ -1,12 +1,14 @@
 # Computation notes
 
-This document separates the current legacy computation from the intended reduced
-computation.
+This document explains the historical legacy multiset-bundle computation that
+the reduced model replaced, then documents the reduced computation's staged
+implementation.
 
-## Legacy computation currently implemented
+## Historical: legacy computation (removed)
 
-The current source counts isomorphism classes of connected undirected
-two-terminal multigraphs by:
+The legacy counter, now removed in full (`docs/plan/02-cleanup/02-legacy.md`),
+counted isomorphism classes of connected undirected two-terminal multigraphs
+by:
 
 1. enumerating connected unlabelled simple support graphs;
 2. choosing unordered terminal-pair representatives;
@@ -16,11 +18,12 @@ two-terminal multigraphs by:
 5. quotienting those assignments by terminal-set-preserving automorphisms using
    Burnside's lemma.
 
-In legacy `lc` mode, a support-edge bundle is `(r, l, c)` with arbitrary
-non-negative counts subject to the global budget. Thus the legacy model counts
-`R||R` separately from `R`.
+In legacy `lc` mode, a support-edge bundle was `(r, l, c)` with arbitrary
+non-negative counts subject to the global budget. Thus the legacy model
+counted `R||R` separately from `R`.
 
-Legacy results are recorded in `docs/results.md`.
+Historical legacy results are recorded, clearly labelled as historical, in
+`docs/results.md`.
 
 ## Reduced computation target
 
@@ -72,8 +75,8 @@ Run the census with subcommand options after `supports`:
 .venv/bin/python -m rice supports --max-r 3 --max-reactive 5
 ```
 
-The second form derives `max_edges = max_r + max_reactive`. Do not use the
-legacy no-subcommand count form for support census commands.
+The second form derives `max_edges = max_r + max_reactive`. Subcommand
+options must go after `supports`; there is no no-subcommand form.
 
 ## Stage 2: simple bundle assignment
 

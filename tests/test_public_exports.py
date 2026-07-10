@@ -1,19 +1,13 @@
-"""Characterisation test for the current top-level ``rice`` export surface.
+"""Characterisation test for the supported top-level ``rice`` export surface.
 
-This pins which public names are legacy-only versus shared with (or exclusive
-to) the reduced-topology model, so a later cleanup PR can see at a glance which
-entries in ``LEGACY_ONLY_EXPORTS`` to delete from ``rice.__all__`` and which
-entries in ``SURVIVING_EXPORTS`` must still resolve afterwards.
+Pins ``rice.__all__`` to the final supported set of names, after the legacy
+multiset-bundle counter (``CountResult``, ``count_networks``) and its ``mode``
+machinery were removed in ``docs/plan/02-cleanup/02-legacy.md``.
 """
 
 import rice
 
-LEGACY_ONLY_EXPORTS = {
-    "CountResult",
-    "count_networks",
-}
-
-SURVIVING_EXPORTS = {
+PUBLIC_EXPORTS = {
     "BundleAssignmentCensusResult",
     "BundleLabelingCensusResult",
     "ReducedFactor",
@@ -35,18 +29,24 @@ SURVIVING_EXPORTS = {
     "support_census",
 }
 
+REMOVED_NAMES = {
+    "CountResult",
+    "count_networks",
+    "Mode",
+    "fixed_assignments_by_total",
+}
 
-def test_current_public_export_surface_matches_documented_legacy_split():
-    assert set(rice.__all__) == LEGACY_ONLY_EXPORTS | SURVIVING_EXPORTS
+
+def test_public_export_surface_matches_supported_api():
+    assert set(rice.__all__) == PUBLIC_EXPORTS
 
 
-def test_every_documented_export_name_is_importable_from_top_level_package():
-    for name in LEGACY_ONLY_EXPORTS | SURVIVING_EXPORTS:
+def test_every_public_export_is_importable_from_top_level_package():
+    for name in PUBLIC_EXPORTS:
         assert hasattr(rice, name), f"rice.{name} is not importable"
 
 
-def test_generic_mode_is_not_a_top_level_export():
-    # "generic" reactive-element support is exposed only through count_networks'
-    # mode argument and the CLI, not as its own top-level name.
-    assert "Mode" not in rice.__all__
-    assert "generic" not in rice.__all__
+def test_removed_legacy_names_are_absent_from_exports_and_attributes():
+    for name in REMOVED_NAMES:
+        assert name not in rice.__all__
+        assert not hasattr(rice, name), f"rice.{name} should no longer exist"

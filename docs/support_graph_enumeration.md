@@ -194,9 +194,10 @@ implicit precedence choice. Supplying only one of `--max-r` and
 budgets must be nonnegative, and a supplied component-budget pair must have a
 positive sum.
 
-The legacy no-subcommand interface applies only to the component-bundle count;
-it is not a support-census form. For example, `rice --max-r 3 --max-reactive 5
-supports` is rejected so those count options cannot be silently ignored.
+A subcommand is always required, and every option belongs after its own
+subcommand. For example, `rice --max-r 3 --max-reactive 5 supports` is
+rejected so those options cannot be silently ignored or misapplied to the
+wrong subcommand.
 
 ## Required phase-1 tests
 

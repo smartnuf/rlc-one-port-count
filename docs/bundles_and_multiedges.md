@@ -1,13 +1,15 @@
 # Bundles, multi-edges, and series spans
 
-This document explains the legacy bundle model and the intended reduced model.
+This document explains the historical legacy bundle model and the reduced
+model that replaced it.
 
-## Legacy bundle model
+## Historical: legacy bundle model (removed)
 
-The current source represents parallel branches by assigning a component-count
-bundle to each edge of a simple support graph.
+The legacy counter, now removed in full (`docs/plan/02-cleanup/02-legacy.md`),
+represented parallel branches by assigning a component-count bundle to each
+edge of a simple support graph.
 
-In legacy `lc` mode, a bundle is:
+In legacy `lc` mode, a bundle was:
 
 ```text
 (r, l, c)
@@ -16,15 +18,16 @@ In legacy `lc` mode, a bundle is:
 where `r`, `l`, and `c` are arbitrary non-negative counts subject to the global
 component budget.
 
-Therefore the current source treats these as distinct:
+Therefore the legacy counter treated these as distinct:
 
 ```text
 (r=1, l=0, c=0)   one resistor
 (r=2, l=0, c=0)   two parallel resistors
 ```
 
-and similarly for repeated inductors or capacitors. This is now considered a
-legacy overcount for the intended reduced-topology model.
+and similarly for repeated inductors or capacitors. This was a legacy
+overcount relative to the reduced-topology model, and is documented here only
+as historical background.
 
 ## Simple primitive bundles
 
@@ -106,9 +109,10 @@ R || L != R -- L
 
 ## Series spans
 
-A series span is the local series analogue of a parallel bundle. Series spans are
-part of the staged reduced-signature model and are not yet implemented by the
-current source.
+A series span is the local series analogue of a parallel bundle. Series spans
+are part of the staged reduced-signature model; local series-span reduction
+and canonical reduced signatures are implemented (see `rice reduced` and
+`docs/model_decisions.md`).
 
 A span is a maximal local chain of two-terminal factors separated by internal nodes
 of incidence 2 in the current reduced graph.
@@ -217,10 +221,8 @@ Support graphs provide the structural skeleton for the staged reduced model:
 4. assign reduced bundle/span/component labels;
 5. canonicalise the result up to internal node renaming and terminal reversal.
 
-The current implementation is staged:
+The reduced-model implementation is staged:
 
-- The legacy `count_networks` path still uses multiset component-count bundles
-  and remains a legacy overcount for the reduced-topology model.
 - Phase 1 support census is implemented as `rice supports`: it performs steps 1
   through 3 and reports basic support graphs, unordered two-terminal labellings,
   and terminal-relevant two-terminal supports.
@@ -232,6 +234,11 @@ The current implementation is staged:
   `rice labelings`: it quotients the simple-bundle assignments by
   automorphisms of each terminal-relevant support that preserve the unordered
   terminal pair, including terminal reversal.
-- Local series spans and recursive reduced signatures now have focused machinery
-  for individual assigned two-terminal networks. Full enumeration and merging of
-  phase-3 orbit representatives by reduced signature remains future work.
+- Local series spans, recursive reduced signatures, and full standard-slice
+  signature enumeration and merging are implemented as `rice reduced`,
+  currently exposed for the small golden slice `R <= 2`, `L+C <= 3`; the full
+  `R <= 3`, `L+C <= 5` reduced catalogue remains future work.
+
+The legacy `count_networks` path that previously used multiset
+component-count bundles, and overcounted relative to the reduced-topology
+model, has been removed in full (`docs/plan/02-cleanup/02-legacy.md`).

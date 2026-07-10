@@ -1,20 +1,22 @@
 # Reduced topology model decisions
 
-This document records the intended counting model for the next implementation
-phases. It is deliberately more important than the current legacy counting code.
+This document records the counting model implemented by the reduced-topology
+pipeline, which is the current and only implementation. It also explains the
+historical legacy multiset-bundle model that the reduced model replaced.
 
 The purpose is to count useful two-terminal RLC one-port topology classes, while
 stripping away local redundancies that are obvious for ideal primitive R, L, and
 C elements.
 
-## Current legacy model
+## Historical: legacy model (removed)
 
-The current source counts connected two-terminal support graphs and assigns
-non-empty component-count bundles to support edges. In `lc` mode a bundle is a
-triple `(r, l, c)` with arbitrary non-negative counts subject to the global
+The legacy counter, now removed in full (`docs/plan/02-cleanup/02-legacy.md`),
+counted connected two-terminal support graphs and assigned non-empty
+component-count bundles to support edges. In `lc` mode a bundle was a triple
+`(r, l, c)` with arbitrary non-negative counts subject to the global
 component budget.
 
-That means the current source treats these as distinct bundle labels:
+That meant the legacy counter treated these as distinct bundle labels:
 
 ```text
 R
@@ -22,8 +24,9 @@ R || R
 R || R || R
 ```
 
-and similarly for `L` and `C`. This behaviour is retained only as a legacy
-reference.
+and similarly for `L` and `C`. This behaviour is documented here only as
+historical background explaining why the reduced model differs; it is not
+retained or reproducible by the current source.
 
 ## Intended reduced model
 
