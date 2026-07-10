@@ -1,6 +1,6 @@
 # 01-dev-env / 05 — Create scripts under `scripts/`
 
-Status: `prog`
+Status: `done`
 
 ## Goal
 
@@ -44,4 +44,12 @@ scripts/
   repository-local `.venv` explicitly, and print the Python executable in use.
 - The Makefile delegates `setup`, `test`, `lint`, `check`, and `clean` to the
   Bash scripts while keeping the existing named validation targets available.
-- Native PowerShell scripts remain pending, so this item stays `prog`.
+- Native PowerShell scripts have been added: `setup.ps1`, `test.ps1`,
+  `lint.ps1`, `check.ps1`, and `clean.ps1`, plus a private `_common.ps1`
+  helper for root validation, venv lookup, checked command invocation, and safe
+  cleanup path resolution.
+- The PowerShell scripts were parsed with the native PowerShell parser, checked
+  from the wrong directory, and executed from a clean native Windows setup path:
+  `clean.ps1`, `setup.ps1`, `test.ps1`, `lint.ps1`, and `check.ps1`.
+- Repeated `setup.ps1` and repeated `clean.ps1` were verified, followed by
+  recreating the final `.venv` with `setup.ps1` and rerunning `test.ps1`.

@@ -14,8 +14,8 @@ Status key: `done`, `prog`, `todo`, `blocked`, `later`.
 - `done` [Make Codex use `.venv` explicitly](01-dev-env/02-codex-venv.md)
 - `done` [Validate WSL2 Ubuntu path](01-dev-env/03-wsl.md)
 - `done` [Run `make setup` and `make test`](01-dev-env/04-make-setup-test.md)
-- `prog` [Create Windows/Linux scripts under `scripts/`](01-dev-env/05-scripts.md)
-- `prog` [Keep Makefile, scripts, README, and AGENTS.md aligned](01-dev-env/06-contract.md)
+- `done` [Create Windows/Linux scripts under `scripts/`](01-dev-env/05-scripts.md)
+- `done` [Keep Makefile, scripts, README, and AGENTS.md aligned](01-dev-env/06-contract.md)
 
 ## 02 — Cleanup and simplification
 
