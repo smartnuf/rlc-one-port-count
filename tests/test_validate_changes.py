@@ -73,6 +73,74 @@ def test_incomplete_policy_rule_fails_safely(tmp_path: Path):
         validate_changes.load_policy(broken)
 
 
+def test_validation_machinery_paths_are_full_even_if_policy_downgrades_them():
+    bad_policy = validate_changes.Policy(
+        order=("docs", "code", "full"),
+        default="full",
+        rules=(
+            validate_changes.Rule(
+                profile="docs",
+                reason="bad local policy edit",
+                patterns=("validation/**", "scripts/**", ".github/**"),
+            ),
+        ),
+    )
+
+    result = validate_changes.classify_paths([ChangedPath("validation/impact.toml")], bad_policy)
+
+    assert result.profile == "full"
+
+
+def write_plan_tree(root: Path, index_text: str) -> Path:
+    plan = root / "docs" / "plan"
+    (plan / "07-tests").mkdir(parents=True)
+    (plan / "08-docs").mkdir(parents=True)
+    (plan / "07-tests" / "01-ci.md").write_text("# CI\n", encoding="utf-8")
+    (plan / "08-docs" / "01-readme.md").write_text("# README\n", encoding="utf-8")
+    index = plan / "00-index.md"
+    index.write_text(index_text, encoding="utf-8")
+    return index
+
+
+def test_plan_index_reports_missing_group_heading(tmp_path: Path):
+    index = write_plan_tree(
+        tmp_path,
+        "\n".join(
+            [
+                "# Plan",
+                "## 08 — Docs",
+                "- [README](08-docs/01-readme.md)",
+                "",
+            ]
+        ),
+    )
+
+    errors = validate_changes.plan_index_errors(index)
+
+    assert "Plan index missing heading groups: ['07']" in errors
+
+
+def test_plan_index_reports_cross_group_links(tmp_path: Path):
+    index = write_plan_tree(
+        tmp_path,
+        "\n".join(
+            [
+                "# Plan",
+                "## 07 — Tests",
+                "- [CI](07-tests/01-ci.md)",
+                "## 08 — Docs",
+                "- [README](08-docs/01-readme.md)",
+                "- [Wrong group](07-tests/01-ci.md)",
+                "",
+            ]
+        ),
+    )
+
+    errors = validate_changes.plan_index_errors(index)
+
+    assert "Plan index group 08 lists cross-group links: ['07-tests/01-ci.md']" in errors
+
+
 def test_docs_profile_uses_explicit_commit_range_for_whitespace_check():
     commands = validate_changes.command_for_profile("docs", ("BASE", "HEAD"))
 

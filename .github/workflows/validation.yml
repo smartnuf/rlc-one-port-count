@@ -39,7 +39,30 @@ jobs:
           else
             args=(--full)
           fi
-          python3 scripts/validate_changes.py "${args[@]}" --dry-run | tee selection.txt
+
+          trusted_profile=""
+          if [ "${args[0]}" = "--base" ]; then
+            if git diff --name-only "${args[1]}" "${args[3]}" -- \
+              pyproject.toml 'requirements*.txt' 'constraints*.txt' '*lock*' \
+              Makefile AGENTS.md .codex scripts .github validation \
+              | grep -q .; then
+              trusted_profile="full"
+            fi
+          elif [ "${args[0]}" = "--full" ]; then
+            trusted_profile="full"
+          fi
+
+          if [ "$trusted_profile" = "full" ]; then
+            {
+              echo "Selected validation profile: full"
+              echo "Changed paths:"
+              echo "  <trusted workflow preflight forced full validation>"
+              echo "Reasons:"
+              echo "  - validation machinery path changed; hard-coded full validation before invoking PR-edited validator"
+            } | tee selection.txt
+          else
+            python3 scripts/validate_changes.py "${args[@]}" --dry-run | tee selection.txt
+          fi
           profile=$(awk -F': ' '/^Selected validation profile:/ {print $2}' selection.txt)
           echo "profile=$profile" >> "$GITHUB_OUTPUT"
           cat selection.txt >> "$GITHUB_STEP_SUMMARY"

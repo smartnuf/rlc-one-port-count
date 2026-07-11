@@ -17,6 +17,18 @@ from typing import Iterable, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = REPO_ROOT / "validation" / "impact.toml"
+VALIDATION_MACHINERY_PATTERNS = (
+    "pyproject.toml",
+    "requirements*.txt",
+    "constraints*.txt",
+    "*lock*",
+    "Makefile",
+    "AGENTS.md",
+    ".codex/**",
+    "scripts/**",
+    ".github/**",
+    "validation/**",
+)
 
 
 @dataclass(frozen=True)
@@ -118,6 +130,12 @@ def classify_paths(paths: Sequence[ChangedPath], policy: Policy) -> Classificati
             candidate_reason = "unclassified path; conservative full validation"
             candidate_pattern = candidate
             candidate_matched = False
+            hardcoded_pattern = next((p for p in VALIDATION_MACHINERY_PATTERNS if _matches(p, candidate)), None)
+            if hardcoded_pattern is not None:
+                candidate_profile = "full"
+                candidate_reason = "validation machinery path; hard-coded full validation"
+                candidate_pattern = hardcoded_pattern
+                candidate_matched = True
             for rule in policy.rules:
                 pattern = next((p for p in rule.patterns if _matches(p, candidate)), None)
                 if pattern is not None and (not candidate_matched or rank[rule.profile] >= rank[candidate_profile]):
@@ -179,27 +197,43 @@ def parse_path_specs(specs: Iterable[str]) -> list[ChangedPath]:
     return paths
 
 
-def check_plan_index() -> int:
-    index = REPO_ROOT / "docs" / "plan" / "00-index.md"
+def plan_index_errors(index: Path) -> list[str]:
     text = index.read_text(encoding="utf-8")
     heading_re = re.compile(r"^## (\d{2}) — .+$", re.MULTILINE)
     headings = list(heading_re.finditer(text))
-    ok = True
+    errors: list[str] = []
+    indexed_groups = {match.group(1) for match in headings}
+    actual_groups = sorted({p.parent.name[:2] for p in index.parent.glob("[0-9][0-9]-*/*.md")})
+    missing_groups = [group for group in actual_groups if group not in indexed_groups]
+    extra_groups = sorted(indexed_groups - set(actual_groups))
+    if missing_groups:
+        errors.append(f"Plan index missing heading groups: {missing_groups}")
+    if extra_groups:
+        errors.append(f"Plan index has headings without matching plan directories: {extra_groups}")
     for i, match in enumerate(headings):
         group = match.group(1)
         start = match.end()
         end = headings[i + 1].start() if i + 1 < len(headings) else len(text)
         section = text[start:end]
-        links = sorted(re.findall(r"\]\((%s-[^/]+/[^)]+\.md)\)" % group, section))
+        all_links = sorted(re.findall(r"\]\((\d{2}-[^/]+/[^)]+\.md)\)", section))
+        foreign_links = [link for link in all_links if not link.startswith(f"{group}-")]
+        links = [link for link in all_links if link.startswith(f"{group}-")]
         dirs = sorted(p.relative_to(index.parent).as_posix() for p in (index.parent).glob(f"{group}-*/*.md"))
+        if foreign_links:
+            errors.append(f"Plan index group {group} lists cross-group links: {foreign_links}")
         if links != dirs:
-            ok = False
-            print(f"Plan index mismatch for group {group}:", file=sys.stderr)
-            print(f"  listed: {links}", file=sys.stderr)
-            print(f"  actual: {dirs}", file=sys.stderr)
-    if ok:
+            errors.append(f"Plan index mismatch for group {group}: listed {links}; actual {dirs}")
+    return errors
+
+
+def check_plan_index() -> int:
+    index = REPO_ROOT / "docs" / "plan" / "00-index.md"
+    errors = plan_index_errors(index)
+    if not errors:
         print("Plan index structure is consistent.")
         return 0
+    for error in errors:
+        print(error, file=sys.stderr)
     return 1
 
 
