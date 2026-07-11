@@ -30,8 +30,10 @@ Classification*, SIAM, 2019. RICE keeps three historical layers distinct:
   `L+C <= 2`, after the historical structural treatment using graph
   2-isomorphism and exclusion of trivially same-kind series/parallel-reducible
   candidates;
-- **108** canonical Ladenheim catalogue members after further electrical-network
-  transformations and realizability considerations;
+- **108** canonical Ladenheim catalogue members, a later subset of the 148 whose
+  members satisfy `R <= 3`, `L+C <= 2`, and `R+L+C <= 5`, after forty further
+  exclusions for simpler realizations, Zobel transformations, and related
+  source-specific realizability reasoning;
 - **62** realizability-set equivalence classes, a later behavioural
   classification of the 108 members rather than a stronger graph signature.
 
@@ -41,7 +43,10 @@ will later augment it with admissible star-delta and delta-star transformations.
 The second will implement a colour-preserving, two-terminal graph
 2-isomorphism relation for primitive R/L/C networks, also with a planned
 star-delta augmentation. The two partitions are different operations and will be
-compared empirically rather than ranked in advance.
+compared empirically rather than ranked in advance. The nearby implemented RICE
+comparison result for `R <= 3`, `L+C <= 2`, and `max_edges = 5` counts 140 local
+series/parallel signatures; historical 108 members lie in that budget region,
+but their mapping to those signatures has not yet been measured.
 
 Catalogue descriptors are part of that plan. A textual SP/bridge descriptor
 language will provide stable fixtures, round-trippable representations, and

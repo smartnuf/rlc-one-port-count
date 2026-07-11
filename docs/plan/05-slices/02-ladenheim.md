@@ -11,10 +11,11 @@ R + L + C <= 5
 L + C <= 2
 ```
 
-There is no independent initial `R <= 3` bound in this scope. The generated
-primitive candidates feed the colour-preserving two-terminal 2-isomorphism
-contract planned in `docs/plan/04-ladenheim/01-148.md` and the comparison study
-planned in `docs/plan/04-ladenheim/07-compare-reductions.md`.
+The generated primitive candidates feed the colour-preserving two-terminal
+2-isomorphism contract planned in `docs/plan/04-ladenheim/01-148.md` and the
+comparison study planned in `docs/plan/04-ladenheim/07-compare-reductions.md`.
+The related canonical 108-network catalogue is a later subset whose members
+satisfy `R <= 3`, `L+C <= 2`, and `R+L+C <= 5`.
 
 ## Done means
 

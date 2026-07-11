@@ -286,11 +286,12 @@ L + C <= 2
 
 The 148-network structural catalogue is already quotiented by the historical
 structural treatment, including graph 2-isomorphism and rejection of trivially
-same-kind series/parallel-reducible candidates. The 108-network canonical
-Ladenheim catalogue is reached after further electrical-network transformations
-and realizability considerations. The 62 classes are later realizability-set
-equivalence classes of the 108 catalogue members, distinct from the reported 35
-group-action orbits and 24 subfamilies.
+same-kind series/parallel-reducible candidates. It includes eight networks with
+four resistors and one reactive element. The canonical 108-network Ladenheim
+catalogue is a subset of the 148 after forty further exclusions; its members
+satisfy `R <= 3`, `L+C <= 2`, and `R+L+C <= 5`. The 62 classes are later
+realizability-set equivalence classes of the 108 catalogue members, distinct
+from the reported 35 group-action orbits and 24 subfamilies.
 
 Source context: A. Morelli and M. C. Smith, *Passive Network Synthesis: An
 Approach to Classification*, SIAM, 2019, especially Chapter 3 Section 3.1,

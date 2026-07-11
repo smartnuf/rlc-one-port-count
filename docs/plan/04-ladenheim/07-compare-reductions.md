@@ -6,7 +6,11 @@ Status: `todo`
 
 Run an executable comparison study for the RICE local series/parallel track and
 the colour-preserving two-terminal 2-isomorphism track, both before and after
-admissible star-delta augmentation.
+admissible star-delta augmentation. The central RICE comparison point is the
+current `R <= 3`, `L+C <= 2`, `max_edges = 5` result with 140 local
+series/parallel signatures; historical 108 catalogue members lie within that
+component-budget region, but their mapping to those signatures has not yet been
+measured.
 
 ## Tasks
 

@@ -17,17 +17,28 @@ R + L + C <= 5
 L + C <= 2
 ```
 
-There is no separate initial `R <= 3` bound; it follows from the total and
-reactive bounds for non-empty networks. The 148 are already essentially distinct
-primitive RLC networks under the historical structural treatment, including
-colour-preserving graph 2-isomorphism and exclusion of trivially same-kind
-series/parallel-reducible candidates.
+The 148 are essentially distinct primitive RLC networks obtained under the
+historical structural treatment, including graph 2-isomorphism and exclusion of
+trivially same-kind series/parallel-reducible candidates. This starting set
+includes eight networks with four resistors and one reactive element.
 
-The 108-network canonical Ladenheim catalogue is a later catalogue obtained
-after further removals or identifications involving electrical-network
-transformations and realizability considerations. The 62 classes are a later
+The canonical 108-network Ladenheim catalogue is a subset of the 148 after forty
+further exclusions. Its members satisfy `R <= 3`, `L+C <= 2`, and
+`R+L+C <= 5`. The forty exclusions comprise eight four-resistor/one-reactive
+networks whose bilinear impedances have simpler realizations, four four-element
+networks reducible by Zobel transformation, twenty five-element series-parallel
+networks reducible by Zobel transformation, and eight further O/O-dual and
+bridge cases excluded using the source's Cauer-Foster, regularity,
+realizability, and related Y-delta reasoning. The 62 classes are a later
 realizability-set classification of the 108 catalogue members, not another graph
 signature count.
+
+The documented RICE local series/parallel result for `R <= 3`, `L+C <= 2`, and
+`max_edges = 5` is 140 signatures. Every historical 108 catalogue member lies
+within that component-budget region; after historical representatives are
+imported, each can be assigned a RICE local series/parallel signature. Multiple
+historical members may map to one RICE signature, and the mapping has not yet
+been measured.
 
 Source context: A. Morelli and M. C. Smith, *Passive Network Synthesis: An
 Approach to Classification*, SIAM, 2019, especially Chapter 3 Section 3.1,

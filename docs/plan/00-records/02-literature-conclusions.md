@@ -37,9 +37,10 @@ The plan must frame the following as investigations, not established facts:
 
 Use the following distinctions when promoting historical claims into public docs:
 
-- 148 structural primitive RLC networks in the scope `R+L+C <= 5`, `L+C <= 2`;
-- 108 canonical catalogue members after further electrical-network
-  transformations and realizability considerations;
+- 148 structural primitive RLC networks in the scope `R+L+C <= 5`, `L+C <= 2`,
+  including eight four-resistor/one-reactive networks;
+- 108 canonical catalogue members, a subset of the 148 after forty further
+  exclusions, whose members satisfy `R <= 3`, `L+C <= 2`, and `R+L+C <= 5`;
 - 62 realizability-set equivalence classes of the 108 members, distinct from the
   reported 35 group-action orbits and 24 subfamilies.
 

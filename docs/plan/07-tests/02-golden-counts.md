@@ -10,8 +10,9 @@ Use stable generated counts to detect accidental changes.
 
 - Very small hand-checkable cases.
 - Explicit subset: `R <= 2`, `L+C <= 3`.
-- Ladenheim structural slice: `R+L+C <= 5` and `L+C <= 2`,
-  including the `R=3`, `L+C=2` boundary.
+- Ladenheim structural slice: `R+L+C <= 5` and `L+C <= 2`, including the
+  four-resistor/one-reactive cases present in the historical 148 starting set.
+- Ladenheim 108 comparison budget: `R <= 3`, `L+C <= 2`, and `R+L+C <= 5`.
 
 ## Done means
 
