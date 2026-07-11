@@ -300,15 +300,15 @@ Chapter 5, the Chapter 6 classification discussion, and Theorem 7.4.
 ## Implementation stages
 
 1. Support-graph census and terminal-relevance filtering: implemented as
-   `rice supports` / `support_census`. See
+   `rice count supports` / `support_census`. See
    `docs/support_graph_enumeration.md`.
-2. Simple primitive bundle assignment: implemented as `rice bundles` /
-   `simple_bundle_assignment_census`.
+2. Simple primitive bundle assignment: implemented as `rice count assignments` /
+   `assignment_census`.
 3. Canonical reduced signatures with local series and parallel reductions for
    individual assigned networks: implemented as `canonical_reduced_signature`.
 4. Phase-3 orbit representatives merged by reduced signature into final
-   reduced-topology counts: implemented as `rice reduced` /
-   `reduced_topology_census`, currently computed and committed for the small
+   reduced-topology counts: implemented as `rice count networks` /
+   `network_census`, currently computed and committed for the small
    golden slice `R <= 2`, `L+C <= 3`. Running the full `R <= 3`, `L+C <= 5`
    scope through this same enumeration is remaining work
    (`docs/plan/05-slices/04-r3-x5.md`), not an unimplemented stage.

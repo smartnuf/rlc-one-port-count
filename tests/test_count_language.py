@@ -184,7 +184,7 @@ def test_scope_errors_profiles_and_empty_queries(capsys):
     assert_error(capsys, ["count", "supports", "--max-supp", "5"], "unrecognized arguments")
 
 
-def test_help_and_compatibility_commands(capsys):
+def test_help_and_removed_staged_commands(capsys):
     top = subprocess.run([sys.executable, "-m", "rice", "--help"], check=True, text=True, capture_output=True).stdout
     assert "count" in top
     assert "enum" not in top
@@ -193,10 +193,8 @@ def test_help_and_compatibility_commands(capsys):
     target = subprocess.run([sys.executable, "-m", "rice", "count", "bundle-sets", "--help"], check=True, text=True, capture_output=True).stdout
     assert "--max-lc" in target and "--group-by" in target
     assert_error(capsys, ["count"], "required")
-    assert main(["supports", "--max-edges", "1"]) == 0
-    assert main(["bundles", "--max-r", "1", "--max-reactive", "1"]) == 0
-    assert main(["labelings", "--max-r", "1", "--max-reactive", "1"]) == 0
-    assert main(["reduced", "--max-r", "1", "--max-reactive", "1"]) == 0
+    for command in ("supports", "bundles", "labelings", "reduced"):
+        assert_error(capsys, [command], "invalid choice")
 
 
 def test_assignment_assigned_support_and_network_pr2_golden_results(capsys):

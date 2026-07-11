@@ -106,10 +106,10 @@ python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip setuptools wheel
 .venv/bin/python -m pip install -e ".[dev]"
 .venv/bin/python -m pytest -q
-.venv/bin/python -m rice supports --max-edges 8
-.venv/bin/python -m rice bundles --max-r 3 --max-reactive 5
-.venv/bin/python -m rice labelings --max-r 3 --max-reactive 5
-.venv/bin/python -m rice reduced --max-r 2 --max-reactive 3
+.venv/bin/python -m rice count supports --max-support-edges 8
+.venv/bin/python -m rice count assignments --profile main
+.venv/bin/python -m rice count assigned-supports --profile main
+.venv/bin/python -m rice count networks --profile golden
 ```
 
 Do not run these ambiguous commands in Codex tasks:
@@ -160,14 +160,13 @@ changed subcommand help, for example:
 
 ```bash
 .venv/bin/python -m rice --help
-.venv/bin/python -m rice supports --help
-.venv/bin/python -m rice reduced --help
+.venv/bin/python -m rice count --help
+.venv/bin/python -m rice count networks --help
 ```
 
 Whenever CLI syntax changes, update README and docs examples in the same
 change. Keep examples explicit about option placement: subcommand options go
-after the subcommand name; a subcommand (`supports`, `bundles`, `labelings`,
-or `reduced`) is always required, and there is no no-subcommand form.
+after the subcommand name; a subcommand (`count <object>`) is always required, and there is no no-subcommand form.
 
 ## Codex cloud expectations
 
@@ -195,8 +194,7 @@ current project direction. The current implementation uses NetworkX only. The su
 
 These validate the current source as it stands. make check, ./scripts/check.sh, and
 .\scripts\check.ps1 are the full currently documented validation paths and run
-lint/static checks, tests, support census, bundle assignment census, labeling
-census, and the small golden reduced-topology census.
+lint/static checks, tests, support, bundle-type, bundle-set, assignment, assigned-support, and golden network object-language counts.
 
 ```bash
 make check
@@ -206,10 +204,10 @@ or explicitly:
 
 ```bash
 .venv/bin/python -m pytest -q
-.venv/bin/python -m rice supports --max-edges 8
-.venv/bin/python -m rice bundles --max-r 3 --max-reactive 5
-.venv/bin/python -m rice labelings --max-r 3 --max-reactive 5
-.venv/bin/python -m rice reduced --max-r 2 --max-reactive 3
+.venv/bin/python -m rice count supports --max-support-edges 8
+.venv/bin/python -m rice count assignments --profile main
+.venv/bin/python -m rice count assigned-supports --profile main
+.venv/bin/python -m rice count networks --profile golden
 ```
 
 The legacy multiset-bundle counter (`count_networks`, `CountResult`,
@@ -226,16 +224,16 @@ validation contract.
 
 All five reduced-model stages described below are implemented:
 
-1. Phase 1 — support graph census (`rice supports` / `support_census`).
-2. Phase 2 — raw simple-bundle assignment census (`rice bundles` /
-   `simple_bundle_assignment_census`).
-3. Phase 3 — assigned-support bundle-labeling orbit census (`rice labelings` /
-   `simple_bundle_labeling_census`).
+1. Support graph census (`rice count supports` / `support_census`).
+2. Raw bundle assignment census (`rice count assignments` /
+   `assignment_census`).
+3. Assigned-support orbit census (`rice count assigned-supports` /
+   `assigned_support_census`).
 4. Local canonical reduced signatures for individual assigned two-terminal
    networks (`canonical_reduced_signature`, `ReducedFactor`,
    `ReducedSignature`).
-5. End-to-end reduced-topology census for the committed small golden slice
-   `R <= 2`, `L+C <= 3` (`rice reduced` / `reduced_topology_census`).
+5. End-to-end local-SP network census for the committed small golden slice
+   `R <= 2`, `L+C <= 3` (`rice count networks` / `network_census`).
 
 The definitions and golden tables below remain the normative reference for
 each stage's contract; they are not prospective instructions.
@@ -254,7 +252,7 @@ detail):
 
 ### Phase 1: support graph census
 
-Implemented as `rice supports` / `support_census`. It:
+Implemented as `rice count supports` / `support_census`. It:
 
 1. enumerates connected unlabelled simple support graphs up to a configurable
    edge bound;
@@ -297,7 +295,7 @@ make check
 
 ### Phase 2: simple bundle assignment
 
-Implemented as `rice bundles` / `simple_bundle_assignment_census`. It assigns
+Implemented as `rice count assignments` / `assignment_census`. It assigns
 only valid simple primitive bundles to support edges:
 
 ```text
@@ -330,7 +328,7 @@ isomorphism/signature merging is:
 
 ### Phase 3: assigned-support bundle-labeling orbits
 
-Phase 3 is implemented as `rice labelings`. It removes assigned-support
+Assigned-support counting is implemented as `rice count assigned-supports`. It removes assigned-support
 isomorphism only: simple-bundle assignments are quotiented by support
 automorphisms that preserve the unordered terminal pair, including terminal
 reversal. For `R <= 3, L+C <= 5`, this preserves `1,166,714` raw leaves and
@@ -340,8 +338,8 @@ reduced-topology count.
 ### Local canonical reduced signatures and end-to-end census
 
 Implemented as `canonical_reduced_signature` (per-network local series/parallel
-reduction) and `rice reduced` / `reduced_topology_census` (full enumeration
-and signature merging across a budget slice). `rice reduced` currently
+reduction) and `rice count networks` / `network_census` (full enumeration
+and signature merging across a budget slice). `rice count networks` currently
 enumerates and merges the committed small golden slice `R <= 2`, `L+C <= 3`
 by default (see `docs/results.md`); running it against the full `R <= 3`,
 `L+C <= 5` slice is tracked as remaining work

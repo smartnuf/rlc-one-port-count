@@ -177,14 +177,14 @@ The support census is exposed as the `supports` subcommand. Subcommand options
 must go after `supports`:
 
 ```bash
-.venv/bin/python -m rice supports --max-edges 8
+.venv/bin/python -m rice count supports --max-support-edges 8
 ```
 
 For the main component-budget problem, the CLI can derive the support-edge bound
 from `max_edges = max_r + max_reactive`:
 
 ```bash
-.venv/bin/python -m rice supports --max-r 3 --max-reactive 5
+.venv/bin/python -m rice count supports --profile main
 ```
 
 Use either `--max-edges` or the `--max-r`/`--max-reactive` pair. Supplying

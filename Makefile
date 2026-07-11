@@ -1,41 +1,40 @@
 VENV_PYTHON := .venv/bin/python
 
-.PHONY: setup install ensure-venv test lint supports bundles labelings reduced check validate-changed print-env clean
+.PHONY: setup test lint check validate-changed count-supports count-bundle-types count-bundle-sets count-assignments count-assigned-supports count-networks clean install
 
 setup:
-	bash scripts/setup.sh
-
-install: setup
-
-ensure-venv:
-	@test -x $(VENV_PYTHON) || (echo "Missing $(VENV_PYTHON). Run 'make setup' first." >&2; exit 1)
+	./scripts/setup.sh
 
 test:
-	bash scripts/test.sh
+	$(VENV_PYTHON) -m pytest -q
 
 lint:
-	bash scripts/lint.sh
+	$(VENV_PYTHON) -m ruff check .
 
-supports: ensure-venv
-	$(VENV_PYTHON) -m rice supports --max-edges 8
+count-supports:
+	$(VENV_PYTHON) -m rice count supports --max-support-edges 8
 
-bundles: ensure-venv
-	$(VENV_PYTHON) -m rice bundles --max-r 3 --max-reactive 5
+count-bundle-types:
+	$(VENV_PYTHON) -m rice count bundle-types
 
-labelings: ensure-venv
-	$(VENV_PYTHON) -m rice labelings --max-r 3 --max-reactive 5
+count-bundle-sets:
+	$(VENV_PYTHON) -m rice count bundle-sets --profile main
 
-reduced: ensure-venv
-	$(VENV_PYTHON) -m rice reduced --max-r 2 --max-reactive 3
+count-assignments:
+	$(VENV_PYTHON) -m rice count assignments --profile main
 
-check:
-	bash scripts/check.sh
+count-assigned-supports:
+	$(VENV_PYTHON) -m rice count assigned-supports --profile main
 
-validate-changed: ensure-venv
-	$(VENV_PYTHON) scripts/validate_changes.py --worktree
+count-networks:
+	$(VENV_PYTHON) -m rice count networks --profile golden
 
-print-env: ensure-venv
-	$(VENV_PYTHON) -c 'import sys, networkx, pytest, rice; print("python", sys.executable); print("networkx", networkx.__version__); print("pytest", pytest.__version__); print("rice", rice.__file__)'
+check: lint test count-supports count-bundle-types count-bundle-sets count-assignments count-assigned-supports count-networks
+
+validate-changed:
+	$(VENV_PYTHON) scripts/validate_changes.py
 
 clean:
-	bash scripts/clean.sh
+	./scripts/clean.sh
+
+install: setup
