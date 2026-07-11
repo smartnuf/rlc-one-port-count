@@ -213,3 +213,11 @@ pendant blob causes whole terminal-labelled graph rejection
 series chain is accepted
 parallel/cyclic alternatives are accepted
 ```
+
+## `rice count supports`
+
+`rice count supports` is the object-language form of the support census. It
+reuses the same support enumeration logic and can report `basic`, `terminal`,
+`relevant`, or `all` support columns grouped by support-edge count. Component
+constraints on this target are finite-scope constraints for hypothetical bundle
+inventories only; they do not change the definition of a support graph.

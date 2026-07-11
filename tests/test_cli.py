@@ -104,7 +104,7 @@ def test_top_level_help_lists_only_surviving_subcommands_and_no_global_options()
     assert "bundles" in result.stdout
     assert "labelings" in result.stdout
     assert "reduced" in result.stdout
-    assert "count" not in result.stdout
+    assert "count" in result.stdout
     assert "--max-edges" not in result.stdout
     assert "--max-r" not in result.stdout
     assert "--max-reactive" not in result.stdout
@@ -200,7 +200,7 @@ def test_subcommand_options_before_the_subcommand_are_rejected(capsys):
 
         assert excinfo.value.code == 2
         err = capsys.readouterr().err
-        assert "rice: error:" in err
+        assert "error:" in err
         assert "Traceback" not in err
 
 
@@ -214,9 +214,8 @@ def test_bare_rice_requires_a_subcommand(capsys):
     assert "Traceback" not in err
 
 
-def test_removed_count_interface_is_rejected_cleanly(capsys):
+def test_removed_legacy_count_forms_are_rejected_cleanly(capsys):
     for argv in (
-        ["count"],
         ["count", "--max-r", "2"],
         ["--mode", "lc"],
         ["--max-r", "2", "--max-reactive", "3"],
@@ -226,7 +225,7 @@ def test_removed_count_interface_is_rejected_cleanly(capsys):
 
         assert excinfo.value.code == 2
         err = capsys.readouterr().err
-        assert "rice: error:" in err
+        assert "error:" in err
         assert "Traceback" not in err
 
 

@@ -312,3 +312,21 @@ Chapter 5, the Chapter 6 classification discussion, and Theorem 7.4.
    golden slice `R <= 2`, `L+C <= 3`. Running the full `R <= 3`, `L+C <= 5`
    scope through this same enumeration is remaining work
    (`docs/plan/05-slices/04-r3-x5.md`), not an unimplemented stage.
+
+## Object-oriented count objects
+
+The object language is defined in `docs/counting_language.md`. Its stages are:
+basic supports, terminal supports, relevant supports, bundle types, bundle sets,
+support-bundle pairs, assignments, assigned supports, networks, and reductions.
+This terminology preserves the current mathematical model while separating raw
+bundle inventories from placements on support edges and from the later
+automorphism quotient.
+
+A bundle set is a multiset/inventory, despite the CLI spelling
+`bundle-sets`; repeated bundle types across different support edges are valid.
+Repeated same-type primitives inside one simple bundle remain invalid.
+
+Component limits intersect by logical AND and are part of a shared finite-query
+contract. For `count supports`, component limits only bound the compatible
+bundle-inventory region used to obtain a finite support-edge range; they do not
+component-label the support graphs.

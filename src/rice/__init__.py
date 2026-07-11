@@ -1,6 +1,14 @@
 """Utilities for counting small two-terminal RLC one-port topologies."""
 
 from .core import (
+    iter_bundle_sets,
+    bundle_set_census,
+    IntegerRange,
+    CountQuery,
+    ComponentConstraints,
+    COUNT_PROFILES,
+    BundleSetCensusResult,
+    BundleSet,
     BundleAssignmentCensusResult,
     BundleLabelingCensusResult,
     ReducedFactor,
@@ -25,6 +33,14 @@ from .core import (
 )
 
 __all__ = [
+    "iter_bundle_sets",
+    "bundle_set_census",
+    "IntegerRange",
+    "CountQuery",
+    "ComponentConstraints",
+    "COUNT_PROFILES",
+    "BundleSetCensusResult",
+    "BundleSet",
     "BundleAssignmentCensusResult",
     "BundleLabelingCensusResult",
     "ReducedFactor",

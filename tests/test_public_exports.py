@@ -11,6 +11,14 @@ documented role of every name here.
 import rice
 
 PUBLIC_EXPORTS = {
+    "iter_bundle_sets",
+    "bundle_set_census",
+    "IntegerRange",
+    "CountQuery",
+    "ComponentConstraints",
+    "COUNT_PROFILES",
+    "BundleSetCensusResult",
+    "BundleSet",
     "BundleAssignmentCensusResult",
     "BundleLabelingCensusResult",
     "ReducedFactor",

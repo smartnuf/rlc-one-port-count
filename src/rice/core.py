@@ -57,22 +57,341 @@ class SupportCensusResult:
 
 @dataclass(frozen=True)
 class SimplePrimitiveBundle:
-    """A reduced-model primitive bundle label and its component-budget weight."""
+    """A reduced-model primitive bundle label and exact component weights.
+
+    ``reactive_count`` remains the public ``L+C`` weight.  When callers use the
+    historical three-argument construction style, exact ``l_count`` and
+    ``c_count`` weights are inferred from the validated bundle label.
+    """
 
     label: str
     r_count: int
     reactive_count: int
+    l_count: int | None = None
+    c_count: int | None = None
+
+    def __post_init__(self) -> None:
+        pieces = tuple(self.label.split("||"))
+        if not pieces or any(piece not in {"R", "L", "C"} for piece in pieces):
+            raise ValueError(f"unknown simple primitive bundle {self.label!r}")
+        if len(set(pieces)) != len(pieces):
+            raise ValueError(f"simple primitive bundle repeats a primitive type: {self.label!r}")
+        inferred_r = 1 if "R" in pieces else 0
+        inferred_l = 1 if "L" in pieces else 0
+        inferred_c = 1 if "C" in pieces else 0
+        inferred_x = inferred_l + inferred_c
+        l_count = inferred_l if self.l_count is None else self.l_count
+        c_count = inferred_c if self.c_count is None else self.c_count
+        if (self.r_count, self.reactive_count, l_count, c_count) != (
+            inferred_r,
+            inferred_x,
+            inferred_l,
+            inferred_c,
+        ):
+            raise ValueError(f"component weights do not match bundle label {self.label!r}")
+        object.__setattr__(self, "l_count", l_count)
+        object.__setattr__(self, "c_count", c_count)
 
 
 SIMPLE_PRIMITIVE_BUNDLES: tuple[SimplePrimitiveBundle, ...] = (
-    SimplePrimitiveBundle("R", 1, 0),
-    SimplePrimitiveBundle("L", 0, 1),
-    SimplePrimitiveBundle("C", 0, 1),
-    SimplePrimitiveBundle("R||L", 1, 1),
-    SimplePrimitiveBundle("R||C", 1, 1),
-    SimplePrimitiveBundle("L||C", 0, 2),
-    SimplePrimitiveBundle("R||L||C", 1, 2),
+    SimplePrimitiveBundle("R", 1, 0, 0, 0),
+    SimplePrimitiveBundle("L", 0, 1, 1, 0),
+    SimplePrimitiveBundle("C", 0, 1, 0, 1),
+    SimplePrimitiveBundle("R||L", 1, 1, 1, 0),
+    SimplePrimitiveBundle("R||C", 1, 1, 0, 1),
+    SimplePrimitiveBundle("L||C", 0, 2, 1, 1),
+    SimplePrimitiveBundle("R||L||C", 1, 2, 1, 1),
 )
+
+
+@dataclass(frozen=True)
+class IntegerRange:
+    """Inclusive integer range, with ``None`` denoting an open side."""
+
+    minimum: int | None = None
+    maximum: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.minimum is not None and self.minimum < 0:
+            raise ValueError("range minimum must be non-negative")
+        if self.maximum is not None and self.maximum < 0:
+            raise ValueError("range maximum must be non-negative")
+        # Empty effective intersections such as requested edge 2 with a
+        # component-derived maximum of 1 are valid finite queries.
+
+    def to_json(self) -> dict[str, int | None]:
+        return {"min": self.minimum, "max": self.maximum}
+
+
+@dataclass(frozen=True)
+class ComponentConstraints:
+    """Intersecting upper bounds on exact ``(R,L,C)`` component counts."""
+
+    max_rlc: int | None = None
+    max_r: int | None = None
+    max_l: int | None = None
+    max_c: int | None = None
+    max_lc: int | None = None
+
+    def __post_init__(self) -> None:
+        for name, value in self.to_json().items():
+            if value is not None and value < 0:
+                raise ValueError(f"{name} must be non-negative")
+
+    def to_json(self) -> dict[str, int | None]:
+        return {
+            "max_rlc": self.max_rlc,
+            "max_r": self.max_r,
+            "max_l": self.max_l,
+            "max_c": self.max_c,
+            "max_lc": self.max_lc,
+        }
+
+    def accepts(self, r: int, l: int, c: int) -> bool:
+        return (
+            (self.max_rlc is None or r + l + c <= self.max_rlc)
+            and (self.max_r is None or r <= self.max_r)
+            and (self.max_l is None or l <= self.max_l)
+            and (self.max_c is None or c <= self.max_c)
+            and (self.max_lc is None or l + c <= self.max_lc)
+        )
+
+    def max_total_components(self) -> int | None:
+        upper_bounds = []
+        if self.max_rlc is not None:
+            upper_bounds.append(self.max_rlc)
+        r_bound = self.max_r
+        lc_bound = self.max_lc
+        if lc_bound is None and self.max_l is not None and self.max_c is not None:
+            lc_bound = self.max_l + self.max_c
+        if r_bound is not None and lc_bound is not None:
+            upper_bounds.append(r_bound + lc_bound)
+        if self.max_l is not None and self.max_c is not None and r_bound is not None:
+            upper_bounds.append(r_bound + self.max_l + self.max_c)
+        if upper_bounds:
+            return min(upper_bounds)
+        return None
+
+
+COUNT_PROFILES: dict[str, ComponentConstraints] = {
+    "golden": ComponentConstraints(max_r=2, max_lc=3),
+    "main": ComponentConstraints(max_r=3, max_lc=5),
+    "ladenheim-structural-region": ComponentConstraints(max_rlc=5, max_lc=2),
+    "ladenheim-108-region": ComponentConstraints(max_rlc=5, max_r=3, max_lc=2),
+}
+
+
+@dataclass(frozen=True)
+class CountQuery:
+    """Shared finite counting query for source support-edge objects."""
+
+    component_constraints: ComponentConstraints = ComponentConstraints()
+    support_edges: int | None = None
+    min_support_edges: int | None = None
+    max_support_edges: int | None = None
+    profile: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.profile is not None:
+            if self.profile not in COUNT_PROFILES:
+                raise ValueError(f"unknown profile {self.profile!r}")
+            if self.component_constraints != ComponentConstraints():
+                raise ValueError("profile is mutually exclusive with explicit component constraints")
+            object.__setattr__(self, "component_constraints", COUNT_PROFILES[self.profile])
+        if self.support_edges is not None:
+            if self.support_edges <= 0:
+                raise ValueError("support_edges must be a positive integer")
+            if self.min_support_edges is not None or self.max_support_edges is not None:
+                raise ValueError("support_edges is mutually exclusive with min/max support edges")
+        for name in ("min_support_edges", "max_support_edges"):
+            value = getattr(self, name)
+            if value is not None and value <= 0:
+                raise ValueError(f"{name} must be a positive integer")
+        if (
+            self.min_support_edges is not None
+            and self.max_support_edges is not None
+            and self.min_support_edges > self.max_support_edges
+        ):
+            raise ValueError("min_support_edges cannot exceed max_support_edges")
+
+    def component_max_edges(self) -> int | None:
+        return self.component_constraints.max_total_components()
+
+    def effective_support_edge_range(self) -> IntegerRange:
+        if self.support_edges is not None:
+            requested_min = requested_max = self.support_edges
+        else:
+            requested_min = self.min_support_edges or 1
+            requested_max = self.max_support_edges
+        component_max = self.component_max_edges()
+        if requested_max is None:
+            if component_max is None:
+                raise ValueError("query has no finite maximum support-edge count; add --max-rlc, a finite component profile, --support-edges, or --max-support-edges")
+            effective_max = component_max
+        elif component_max is None:
+            effective_max = requested_max
+        else:
+            effective_max = min(requested_max, component_max)
+        return IntegerRange(requested_min, effective_max)
+
+    def requested_support_edge_range(self) -> IntegerRange:
+        if self.support_edges is not None:
+            return IntegerRange(self.support_edges, self.support_edges)
+        return IntegerRange(self.min_support_edges or 1, self.max_support_edges)
+
+    def accepts_components(self, r: int, l: int, c: int) -> bool:
+        return self.component_constraints.accepts(r, l, c)
+
+    def to_json(self) -> dict[str, object]:
+        return {
+            "profile": self.profile,
+            "component_constraints": self.component_constraints.to_json(),
+            "requested_support_edges": self.requested_support_edge_range().to_json(),
+            "effective_support_edges": self.effective_support_edge_range().to_json(),
+        }
+
+
+@dataclass(frozen=True)
+class BundleSet:
+    """A multiset inventory of simple primitive bundle types."""
+
+    multiplicities: tuple[int, ...]
+
+    def __post_init__(self) -> None:
+        if len(self.multiplicities) != len(SIMPLE_PRIMITIVE_BUNDLES):
+            raise ValueError(
+                "multiplicities must include one entry per simple primitive bundle type"
+            )
+        for index, value in enumerate(self.multiplicities):
+            if not isinstance(value, int):
+                raise ValueError(f"multiplicities[{index}] must be integers")
+            if value < 0:
+                raise ValueError(f"multiplicities[{index}] must be non-negative")
+
+    @property
+    def source_support_edges(self) -> int:
+        return sum(self.multiplicities)
+
+    @property
+    def r_count(self) -> int:
+        return sum(n * b.r_count for n, b in zip(self.multiplicities, SIMPLE_PRIMITIVE_BUNDLES))
+
+    @property
+    def l_count(self) -> int:
+        return sum(n * int(b.l_count) for n, b in zip(self.multiplicities, SIMPLE_PRIMITIVE_BUNDLES))
+
+    @property
+    def c_count(self) -> int:
+        return sum(n * int(b.c_count) for n, b in zip(self.multiplicities, SIMPLE_PRIMITIVE_BUNDLES))
+
+    @property
+    def lc_count(self) -> int:
+        return self.l_count + self.c_count
+
+    @property
+    def rlc_count(self) -> int:
+        return self.r_count + self.lc_count
+
+    @property
+    def raw_placement_count(self) -> int:
+        from math import factorial
+        total = factorial(self.source_support_edges)
+        for n in self.multiplicities:
+            total //= factorial(n)
+        return total
+
+    def to_json(self) -> dict[str, object]:
+        return {
+            "multiplicities": dict(zip((b.label for b in SIMPLE_PRIMITIVE_BUNDLES), self.multiplicities)),
+            "source_support_edges": self.source_support_edges,
+            "r": self.r_count,
+            "l": self.l_count,
+            "c": self.c_count,
+            "lc": self.lc_count,
+            "rlc": self.rlc_count,
+            "raw_placements": self.raw_placement_count,
+        }
+
+
+@dataclass(frozen=True)
+class BundleSetCensusResult:
+    query: CountQuery
+    group_by: tuple[str, ...]
+    records: tuple[dict[str, int], ...]
+    bundle_sets: tuple[BundleSet, ...]
+
+    @property
+    def distinct_bundle_sets_total(self) -> int:
+        return len(self.bundle_sets)
+
+    @property
+    def raw_placements_total(self) -> int:
+        return sum(bs.raw_placement_count for bs in self.bundle_sets)
+
+    def to_json(self) -> dict[str, object]:
+        return {
+            "format_version": 1,
+            "object": "bundle-sets",
+            "query": self.query.to_json(),
+            "group_by": list(self.group_by),
+            "records": list(self.records),
+            "totals": {
+                "distinct_bundle_sets": self.distinct_bundle_sets_total,
+                "raw_placements": self.raw_placements_total,
+            },
+        }
+
+
+def _multiplicity_tuples(total: int, parts: int) -> Iterable[tuple[int, ...]]:
+    if parts == 1:
+        yield (total,)
+        return
+    for n in range(total + 1):
+        for rest in _multiplicity_tuples(total - n, parts - 1):
+            yield (n,) + rest
+
+
+def iter_bundle_sets(query: CountQuery) -> Iterable[BundleSet]:
+    edge_range = query.effective_support_edge_range()
+    if edge_range.maximum is None or edge_range.minimum is None or edge_range.minimum > edge_range.maximum:
+        return
+    for edge_count in range(edge_range.minimum, edge_range.maximum + 1):
+        for multiplicities in _multiplicity_tuples(edge_count, len(SIMPLE_PRIMITIVE_BUNDLES)):
+            bundle_set = BundleSet(multiplicities)
+            if query.accepts_components(bundle_set.r_count, bundle_set.l_count, bundle_set.c_count):
+                yield bundle_set
+
+
+def bundle_set_census(query: CountQuery, group_by: tuple[str, ...] = ("support-edges",)) -> BundleSetCensusResult:
+    allowed = {"support-edges", "r", "l", "c", "lc", "rlc"}
+    if group_by == ("none",):
+        dims: tuple[str, ...] = ()
+    else:
+        if any(dim not in allowed for dim in group_by):
+            raise ValueError("unsupported bundle-set grouping dimension")
+        dims = group_by
+    bundle_sets = tuple(iter_bundle_sets(query))
+    grouped: DefaultDict[tuple[int, ...], list[BundleSet]] = defaultdict(list)
+    def value(bs: BundleSet, dim: str) -> int:
+        return {
+            "support-edges": bs.source_support_edges,
+            "r": bs.r_count,
+            "l": bs.l_count,
+            "c": bs.c_count,
+            "lc": bs.lc_count,
+            "rlc": bs.rlc_count,
+        }[dim]
+    for bs in bundle_sets:
+        grouped[tuple(value(bs, dim) for dim in dims)].append(bs)
+    records = []
+    for key in sorted(grouped):
+        row = {dim: key[i] for i, dim in enumerate(dims)}
+        row["distinct_bundle_sets"] = len(grouped[key])
+        row["raw_placements"] = sum(bs.raw_placement_count for bs in grouped[key])
+        records.append(row)
+    if not dims and not records:
+        records.append({"distinct_bundle_sets": 0, "raw_placements": 0})
+    return BundleSetCensusResult(query, dims, tuple(records), bundle_sets)
 
 
 @dataclass(frozen=True)

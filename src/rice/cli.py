@@ -11,8 +11,13 @@ from typing import Any
 from .core import (
     BundleAssignmentCensusResult,
     BundleLabelingCensusResult,
+    COUNT_PROFILES,
+    ComponentConstraints,
+    CountQuery,
     ReducedTopologyCensusResult,
     SupportCensusResult,
+    SIMPLE_PRIMITIVE_BUNDLES,
+    bundle_set_census,
     simple_bundle_assignment_census,
     reduced_topology_census,
     simple_bundle_labeling_census,
@@ -41,6 +46,40 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(
         dest="command", parser_class=RiceArgumentParser, required=True
     )
+
+    count_parser = subparsers.add_parser(
+        "count", help="count object-oriented RICE objects (supports, bundle-types, bundle-sets)"
+    )
+    count_subparsers = count_parser.add_subparsers(
+        dest="count_object", parser_class=RiceArgumentParser, required=True
+    )
+
+    def add_count_scope_options(target_parser: argparse.ArgumentParser) -> None:
+        profile_group = target_parser.add_mutually_exclusive_group()
+        profile_group.add_argument("--profile", choices=tuple(COUNT_PROFILES), default=argparse.SUPPRESS)
+        profile_group.add_argument("--max-rlc", type=int, default=argparse.SUPPRESS, help="maximum total R+L+C components")
+        # argparse cannot put multiple explicit options in one mutual-exclusion slot;
+        # cross-option profile conflicts are validated centrally after parsing.
+        target_parser.add_argument("--max-r", type=int, default=argparse.SUPPRESS, help="maximum resistors")
+        target_parser.add_argument("--max-l", type=int, default=argparse.SUPPRESS, help="maximum inductors")
+        target_parser.add_argument("--max-c", type=int, default=argparse.SUPPRESS, help="maximum capacitors")
+        target_parser.add_argument("--max-lc", type=int, default=argparse.SUPPRESS, help="maximum L+C reactive components")
+        edge_group = target_parser.add_mutually_exclusive_group()
+        edge_group.add_argument("--support-edges", type=int, default=argparse.SUPPRESS, help="exact source support-edge count")
+        edge_group.add_argument("--min-support-edges", type=int, default=argparse.SUPPRESS, help="minimum source support-edge count")
+        target_parser.add_argument("--max-support-edges", type=int, default=argparse.SUPPRESS, help="maximum source support-edge count")
+        target_parser.add_argument("--format", choices=("markdown", "json"), default=argparse.SUPPRESS, help="output format, default: markdown")
+
+    count_supports = count_subparsers.add_parser("supports", help="count basic, terminal, and relevant supports")
+    add_count_scope_options(count_supports)
+    count_supports.add_argument("--support-kind", choices=("basic", "terminal", "relevant", "all"), default="all")
+
+    count_bundle_types = count_subparsers.add_parser("bundle-types", help="list and count the fixed simple primitive bundle types")
+    count_bundle_types.add_argument("--format", choices=("markdown", "json"), default=argparse.SUPPRESS, help="output format, default: markdown")
+
+    count_bundle_sets = count_subparsers.add_parser("bundle-sets", help="count simple primitive bundle multisets/inventories")
+    add_count_scope_options(count_bundle_sets)
+    count_bundle_sets.add_argument("--group-by", default="support-edges", help="comma-separated dimensions: support-edges,r,l,c,lc,rlc or none")
 
     supports_parser = subparsers.add_parser(
         "supports", help="run the phase-1 support graph census"
@@ -305,12 +344,128 @@ def _resolve_support_max_edges(parser: argparse.ArgumentParser, args: argparse.N
     return 8
 
 
+def _query_from_count_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> CountQuery:
+    explicit_names = ("max_rlc", "max_r", "max_l", "max_c", "max_lc")
+    if hasattr(args, "profile") and any(hasattr(args, name) for name in explicit_names):
+        parser.error("--profile is mutually exclusive with explicit component-limit options")
+    try:
+        constraints = ComponentConstraints(
+            max_rlc=getattr(args, "max_rlc", None),
+            max_r=getattr(args, "max_r", None),
+            max_l=getattr(args, "max_l", None),
+            max_c=getattr(args, "max_c", None),
+            max_lc=getattr(args, "max_lc", None),
+        )
+        query = CountQuery(
+            component_constraints=constraints,
+            support_edges=getattr(args, "support_edges", None),
+            min_support_edges=getattr(args, "min_support_edges", None),
+            max_support_edges=getattr(args, "max_support_edges", None),
+            profile=getattr(args, "profile", None),
+        )
+        query.effective_support_edge_range()
+        return query
+    except ValueError as exc:
+        parser.error(str(exc))
+
+
+def _support_count_json(result: SupportCensusResult, query: CountQuery, support_kind: str) -> dict[str, Any]:
+    eff = query.effective_support_edge_range()
+    records = []
+    start = eff.minimum or 1
+    stop = eff.maximum or 0
+    for edge_count in range(start, stop + 1):
+        row: dict[str, int] = {"support_edges": edge_count}
+        if support_kind in {"basic", "all"}:
+            row["basic"] = result.basic_by_edges.get(edge_count, 0)
+        if support_kind in {"terminal", "all"}:
+            row["terminal"] = result.terminal_labelings_by_edges.get(edge_count, 0)
+        if support_kind in {"relevant", "all"}:
+            row["relevant"] = result.relevant_by_edges.get(edge_count, 0)
+        records.append(row)
+    totals = {k: sum(r.get(k, 0) for r in records) for k in ("basic", "terminal", "relevant") if support_kind in {k, "all"}}
+    return {"format_version": 1, "object": "supports", "support_kind": support_kind, "query": query.to_json(), "group_by": ["support-edges"], "records": records, "totals": totals}
+
+
+def _bundle_types_json() -> dict[str, Any]:
+    records = [{"label": b.label, "r": b.r_count, "l": b.l_count, "c": b.c_count, "lc": b.reactive_count, "rlc": b.r_count + b.reactive_count} for b in SIMPLE_PRIMITIVE_BUNDLES]
+    return {"format_version": 1, "object": "bundle-types", "records": records, "totals": {"bundle_types": len(records)}}
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     parser = build_parser()
     args = parser.parse_args(argv)
 
     output_format = getattr(args, "format", "markdown")
+
+
+    if args.command == "count":
+        output_format = getattr(args, "format", "markdown")
+        if args.count_object == "bundle-types":
+            payload = _bundle_types_json()
+            if output_format == "json":
+                print(json.dumps(payload, indent=2, sort_keys=True))
+            else:
+                print("Simple primitive bundle types")
+                print("| Label | R count | L count | C count | L+C count | Total components |")
+                print("|---|---:|---:|---:|---:|---:|")
+                for row in payload["records"]:
+                    print(f"| {row['label']} | {row['r']} | {row['l']} | {row['c']} | {row['lc']} | {row['rlc']} |")
+                print(f"| Total | {payload['totals']['bundle_types']} |  |  |  |  |")
+            return 0
+        query = _query_from_count_args(parser, args)
+        if args.count_object == "supports":
+            eff = query.effective_support_edge_range()
+            max_edges = eff.maximum or 0
+            if max_edges == 0 or (eff.minimum or 1) > max_edges:
+                result = SupportCensusResult(max_edges=0, basic_by_edges={}, terminal_labelings_by_edges={}, relevant_by_edges={})
+            else:
+                result = support_census(max_edges=max_edges)
+            if output_format == "json":
+                print(json.dumps(_support_count_json(result, query, args.support_kind), indent=2, sort_keys=True))
+            else:
+                print("Support object census")
+                print("Component constraints bound compatible bundle inventories only; supports are not component-labelled.")
+                headers = ["Support edges"]
+                if args.support_kind in {"basic", "all"}: headers.append("Basic supports")
+                if args.support_kind in {"terminal", "all"}: headers.append("Terminal supports")
+                if args.support_kind in {"relevant", "all"}: headers.append("Relevant supports")
+                print("| " + " | ".join(headers) + " |")
+                print("|" + "---:|" * len(headers))
+                payload = _support_count_json(result, query, args.support_kind)
+                for row in payload["records"]:
+                    vals = [row.get("support_edges"), row.get("basic"), row.get("terminal"), row.get("relevant")]
+                    vals = [v for v in vals if v is not None]
+                    print("| " + " | ".join(str(v) for v in vals) + " |")
+                totals = payload["totals"]
+                print("| Total | " + " | ".join(str(totals[k]) for k in ("basic", "terminal", "relevant") if k in totals) + " |")
+            return 0
+        if args.count_object == "bundle-sets":
+            group_by = tuple(part.strip() for part in args.group_by.split(","))
+            try:
+                result = bundle_set_census(query, group_by=group_by)
+            except ValueError as exc:
+                parser.error(str(exc))
+            if output_format == "json":
+                print(json.dumps(result.to_json(), indent=2, sort_keys=True))
+            else:
+                print("Bundle-set census")
+                dims = result.group_by
+                if dims == ("support-edges",):
+                    print("| Support edges / bundle count | Distinct bundle sets | Raw placements represented |")
+                    print("|---:|---:|---:|")
+                    for row in result.records:
+                        print(f"| {row['support-edges']} | {row['distinct_bundle_sets']} | {row['raw_placements']} |")
+                else:
+                    headers = list(dims) + ["Distinct bundle sets", "Raw placements represented"]
+                    print("| " + " | ".join(headers) + " |")
+                    print("|" + "---:|" * len(headers))
+                    for row in result.records:
+                        values = [*(row[dim] for dim in dims), row["distinct_bundle_sets"], row["raw_placements"]]
+                        print("| " + " | ".join(str(value) for value in values) + " |")
+                print(f"| Total | {result.distinct_bundle_sets_total} | {result.raw_placements_total} |")
+            return 0
 
     if args.command == "supports":
         max_edges = _resolve_support_max_edges(parser, args)

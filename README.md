@@ -360,3 +360,20 @@ environment.
 
 
 The `labelings` command reports phase-3 canonical bundle-labeling orbits. It preserves the phase-2 raw leaf total and additionally quotients assignments by automorphisms of each terminal-relevant support that preserve the unordered terminal pair, including automorphisms that swap the terminals. For `R <= 3, L+C <= 5`, the standard slice has **1,166,714** raw leaves and **830,094** canonical bundle-labeling orbits. This is still not a final reduced-topology count: local series-span reductions and canonical reduced signatures are applied, and full signature enumeration and merging across a budget slice is implemented as `rice reduced`. Running the full standard `R <= 3`, `L+C <= 5` slice through that enumeration remains future work (`docs/plan/05-slices/04-r3-x5.md`); the committed small golden slice `R <= 2`, `L+C <= 3` is fully computed today.
+
+## Object-oriented counting language
+
+The repository now has the first slice of the planned object-oriented language:
+
+```bash
+rice count supports --profile main
+rice count bundle-types
+rice count bundle-sets --max-r 3 --max-lc 5
+```
+
+The implemented `count` targets are `supports`, `bundle-types`, and
+`bundle-sets`; `rice enum ...` and later count targets are documented as future
+work, not registered as CLI placeholders. Existing staged commands (`supports`,
+`bundles`, `labelings`, and `reduced`) remain supported compatibility commands.
+See `docs/counting_language.md` for the full object model, finite-query rules,
+profiles, bundle-set multiplicities, JSON shape, and migration mapping.

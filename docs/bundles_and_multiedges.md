@@ -242,3 +242,16 @@ The reduced-model implementation is staged:
 The legacy `count_networks` path that previously used multiset
 component-count bundles, and overcounted relative to the reduced-topology
 model, has been removed in full (`docs/plan/02-cleanup/02-legacy.md`).
+
+## Bundle types and bundle sets in the count language
+
+`rice count bundle-types` reports the fixed seven simple primitive bundle types
+with exact `(R,L,C)` weights. `reactive_count` in the Python API remains
+`L+C`, but exact `l_count` and `c_count` are now exposed from the same validated
+bundle-weight source of truth.
+
+`rice count bundle-sets` counts multisets of these seven bundle types. A bundle
+set's cardinality is the number of source support edges it can fill. Its raw
+placement count on distinguishable edges is the multinomial coefficient of its
+multiplicities. This is deliberately separate from `rice bundles`, which counts
+ordered raw assignments per relevant support shape.

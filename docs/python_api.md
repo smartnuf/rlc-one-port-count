@@ -319,3 +319,22 @@ out-of-scope transforms.
 Each census function has a matching CLI subcommand that prints the same data
 as markdown or JSON: `rice supports`, `rice bundles`, `rice labelings`,
 `rice reduced`. See the README's "Use" section for CLI examples.
+
+## Count-language API foundations
+
+The supported public API now includes:
+
+- `IntegerRange` for inclusive requested/effective integer ranges;
+- `ComponentConstraints` for intersecting `R`, `L`, `C`, `L+C`, and `R+L+C`
+  upper bounds;
+- `CountQuery` for profile expansion, finite-query validation, and effective
+  source support-edge range resolution;
+- `BundleSet` for multiset inventories of the seven simple primitive bundle
+  types;
+- `BundleSetCensusResult`, `iter_bundle_sets(...)`, and
+  `bundle_set_census(...)` for exact bundle-set facts and grouped summaries;
+- `COUNT_PROFILES` for `golden`, `main`, `ladenheim-structural-region`, and
+  `ladenheim-108-region`.
+
+`SimplePrimitiveBundle` retains `reactive_count == l_count + c_count` and now
+also exposes exact `l_count` and `c_count` weights.
