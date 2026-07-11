@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+import importlib.util
+import sys
 from pathlib import Path
 
 import pytest
-
-import importlib.util
-import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location("validate_changes", REPO_ROOT / "scripts" / "validate_changes.py")
@@ -70,3 +69,31 @@ def test_incomplete_policy_rule_fails_safely(tmp_path: Path):
 
     with pytest.raises(ValueError):
         validate_changes.load_policy(broken)
+
+
+def test_unclassified_old_path_in_rename_preserves_full_validation():
+    result = validate_changes.classify_paths(
+        [ChangedPath("docs/notes.md", status="R100", old_path="NOTES.md")], policy()
+    )
+
+    assert result.profile == "full"
+
+
+def test_plan_index_check_is_included_for_mixed_plan_and_code_changes():
+    result = validate_changes.classify_paths(
+        [ChangedPath("docs/plan/00-index.md"), ChangedPath("src/rice/core.py")], policy()
+    )
+
+    commands = validate_changes.command_for_profile(
+        result.profile,
+        include_plan_index=validate_changes.has_plan_path(result.paths),
+    )
+
+    assert result.profile == "code"
+    assert [sys.executable, "scripts/validate_changes.py", "--check-plan-index"] in commands
+
+
+def test_docs_diff_check_uses_explicit_base_head_range():
+    commands = validate_changes.command_for_profile("docs", diff_check_args=("BASE", "HEAD"))
+
+    assert commands[0] == ["git", "diff", "--check", "BASE", "HEAD"]

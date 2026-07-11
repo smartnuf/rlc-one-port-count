@@ -101,6 +101,24 @@ def _matches(pattern: str, path: str) -> bool:
     return fnmatch.fnmatchcase(path, pattern)
 
 
+def _classify_one_path(path: str, policy: Policy) -> tuple[str, str, str]:
+    rank = policy.rank
+    selected_profile: str | None = None
+    selected_reason = "unclassified path; conservative full validation"
+    selected_pattern = path
+
+    for rule in policy.rules:
+        pattern = next((p for p in rule.patterns if _matches(p, path)), None)
+        if pattern is not None and (selected_profile is None or rank[rule.profile] > rank[selected_profile]):
+            selected_profile = rule.profile
+            selected_reason = rule.reason
+            selected_pattern = pattern
+
+    if selected_profile is None:
+        return policy.default, selected_reason, selected_pattern
+    return selected_profile, selected_reason, selected_pattern
+
+
 def classify_paths(paths: Sequence[ChangedPath], policy: Policy) -> Classification:
     rank = policy.rank
     selected = policy.order[0]
@@ -110,18 +128,15 @@ def classify_paths(paths: Sequence[ChangedPath], policy: Policy) -> Classificati
         return Classification(profile="docs", reasons=("no changed paths; running lightweight checks",), paths=tuple())
 
     for changed in paths:
-        path_profile = policy.default
-        path_reason = "unclassified path; conservative full validation"
-        matched_pattern = "<default>"
+        path_profile = policy.order[0]
+        path_reason = ""
+        matched_pattern = ""
         for candidate in changed.classification_paths():
-            for rule in policy.rules:
-                pattern = next((p for p in rule.patterns if _matches(p, candidate)), None)
-                if pattern is not None and rank[rule.profile] >= rank[path_profile if path_profile != policy.default else policy.order[0]]:
-                    path_profile = rule.profile
-                    path_reason = rule.reason
-                    matched_pattern = pattern
-            if path_profile == policy.default and path_reason.startswith("unclassified"):
-                matched_pattern = candidate
+            candidate_profile, candidate_reason, candidate_pattern = _classify_one_path(candidate, policy)
+            if not path_reason or rank[candidate_profile] > rank[path_profile]:
+                path_profile = candidate_profile
+                path_reason = candidate_reason
+                matched_pattern = candidate_pattern
         if rank[path_profile] > rank[selected]:
             selected = path_profile
         reasons.append(f"{changed.display()}: {path_profile} ({path_reason}; matched {matched_pattern})")
@@ -196,15 +211,29 @@ def check_plan_index() -> int:
     return 1
 
 
-def command_for_profile(profile: str) -> list[list[str]]:
+def has_plan_path(paths: Sequence[ChangedPath]) -> bool:
+    return any(_matches("docs/plan/**", path) for changed in paths for path in changed.classification_paths())
+
+
+def command_for_profile(
+    profile: str,
+    *,
+    include_plan_index: bool = False,
+    diff_check_args: Sequence[str] = (),
+) -> list[list[str]]:
     py = sys.executable
+    plan_index_command = [py, str(Path("scripts") / "validate_changes.py"), "--check-plan-index"]
     if profile == "docs":
-        return [["git", "diff", "--check"], [py, str(Path("scripts") / "validate_changes.py"), "--check-plan-index"]]
-    if profile == "code":
-        return [["bash", "scripts/lint.sh"], ["bash", "scripts/test.sh"]]
-    if profile == "full":
-        return [["make", "check"]]
-    raise ValueError(f"unknown profile {profile}")
+        commands = [["git", "diff", "--check", *diff_check_args], plan_index_command]
+    elif profile == "code":
+        commands = [["bash", "scripts/lint.sh"], ["bash", "scripts/test.sh"]]
+    elif profile == "full":
+        commands = [["make", "check"]]
+    else:
+        raise ValueError(f"unknown profile {profile}")
+    if include_plan_index and plan_index_command not in commands:
+        commands.append(plan_index_command)
+    return commands
 
 
 def run_commands(commands: Sequence[Sequence[str]]) -> int:
@@ -250,6 +279,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Validation policy error: {exc}", file=sys.stderr)
         return run_commands(command_for_profile("full")) if args.full else 2
 
+    diff_check_args: tuple[str, ...] = ()
     if args.full:
         classification = Classification("full", ("forced by --full",), tuple())
     elif args.paths is not None:
@@ -258,11 +288,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not args.head:
             parser.error("--base requires --head")
         classification = classify_paths(changed_paths_between(args.base, args.head), policy)
+        diff_check_args = (args.base, args.head)
     else:
         classification = classify_paths(changed_paths_worktree(), policy)
 
     print_classification(classification)
-    commands = command_for_profile(classification.profile)
+    commands = command_for_profile(
+        classification.profile,
+        include_plan_index=has_plan_path(classification.paths),
+        diff_check_args=diff_check_args,
+    )
     print("Checks:")
     for command in commands:
         print("  - " + " ".join(command))
