@@ -1,6 +1,18 @@
 """Utilities for counting small two-terminal RLC one-port topologies."""
 
 from .core import (
+    LOCAL_SP_RELATION,
+    NetworkRelation,
+    NetworkFact,
+    NetworkCensusResult,
+    AssignedSupportFact,
+    AssignedSupportCensusResult,
+    AssignmentFact,
+    AssignmentCensusResult,
+    assignment_census,
+    validate_network_relation,
+    network_census,
+    assigned_support_census,
     iter_bundle_sets,
     bundle_set_census,
     IntegerRange,
@@ -33,6 +45,18 @@ from .core import (
 )
 
 __all__ = [
+    "LOCAL_SP_RELATION",
+    "NetworkRelation",
+    "NetworkFact",
+    "NetworkCensusResult",
+    "AssignedSupportFact",
+    "AssignedSupportCensusResult",
+    "AssignmentFact",
+    "AssignmentCensusResult",
+    "validate_network_relation",
+    "network_census",
+    "assigned_support_census",
+    "assignment_census",
     "iter_bundle_sets",
     "bundle_set_census",
     "IntegerRange",

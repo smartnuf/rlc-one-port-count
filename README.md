@@ -377,3 +377,33 @@ work, not registered as CLI placeholders. Existing staged commands (`supports`,
 `bundles`, `labelings`, and `reduced`) remain supported compatibility commands.
 See `docs/counting_language.md` for the full object model, finite-query rules,
 profiles, bundle-set multiplicities, JSON shape, and migration mapping.
+
+### Object-language counting targets
+
+The shared `rice count <object>` language supports six objects:
+
+```bash
+rice count supports --max-support-edges 8
+rice count bundle-types
+rice count bundle-sets --profile main
+rice count assignments --profile main
+rice count assigned-supports --profile main
+rice count networks --profile golden
+```
+
+`assignments` are raw source placements of the seven simple primitive bundles on
+terminal-relevant supports. `assigned-supports` quotient those assignments only
+by terminal-set-preserving support automorphisms. `networks` counts unique
+reduced signatures under `--relation local-sp` (the default), using source query
+constraints for generation and final reduced `(R,L,C)` facts for component
+grouping. The staged compatibility commands `rice bundles`, `rice labelings`,
+and `rice reduced` remain available.
+
+A nearby local-SP slice can be run with:
+
+```bash
+rice count networks --relation local-sp --max-r 3 --max-lc 2 --max-support-edges 5
+```
+
+This is a RICE local series/parallel count, not the historical Ladenheim 108
+relation.

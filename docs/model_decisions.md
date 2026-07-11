@@ -330,3 +330,21 @@ Component limits intersect by logical AND and are part of a shared finite-query
 contract. For `count supports`, component limits only bound the compatible
 bundle-inventory region used to obtain a finite support-edge range; they do not
 component-label the support graphs.
+
+## Object-language count target semantics
+
+`assignments` are raw source placements of the seven simple primitive bundle
+labels on terminal-relevant supports. They are not quotiented by support
+symmetry and are not locally reduced.
+
+`assigned-supports` are assignment orbits under source-support automorphisms
+that preserve the unordered terminal pair, including terminal swaps. They do not
+apply local series/parallel reduction or any broader electrical equivalence.
+
+`networks` count unique reduced signatures under a named relation. The only
+implemented relation is `local-sp`, definition
+`canonical-reduced-topology-local-series-parallel-v1`. Count queries constrain
+source generation; component records for `networks` describe final reduced
+signatures. Source-edge attribution for reduced networks is deferred to the
+reduction-analysis work because one reduced network may be reached from multiple
+source edge counts.

@@ -394,6 +394,412 @@ def bundle_set_census(query: CountQuery, group_by: tuple[str, ...] = ("support-e
     return BundleSetCensusResult(query, dims, tuple(records), bundle_sets)
 
 
+
+
+# Shared exact grouping/projection helpers for object-language count results.
+_GROUPING_DIMS = {"support-edges", "r", "l", "c", "lc", "rlc"}
+_COMPONENT_GROUPING_DIMS = {"r", "l", "c", "lc", "rlc"}
+
+
+def _normalise_group_by(group_by: tuple[str, ...], allowed: set[str], object_name: str) -> tuple[str, ...]:
+    if group_by == ("none",):
+        return ()
+    seen: set[str] = set()
+    dims: list[str] = []
+    for dim in group_by:
+        if dim not in allowed:
+            raise ValueError(f"unsupported {object_name} grouping dimension: {dim}")
+        if dim in seen:
+            raise ValueError(f"duplicate {object_name} grouping dimension: {dim}")
+        seen.add(dim)
+        dims.append(dim)
+    return tuple(dims)
+
+
+def _fact_value(fact: object, dim: str) -> int:
+    if dim == "support-edges":
+        return getattr(fact, "source_support_edges")
+    if dim == "r":
+        return getattr(fact, "r")
+    if dim == "l":
+        return getattr(fact, "l")
+    if dim == "c":
+        return getattr(fact, "c")
+    if dim == "lc":
+        return getattr(fact, "l") + getattr(fact, "c")
+    if dim == "rlc":
+        return getattr(fact, "r") + getattr(fact, "l") + getattr(fact, "c")
+    raise KeyError(dim)
+
+
+@dataclass(frozen=True)
+class AssignmentFact:
+    source_support_edges: int
+    r: int
+    l: int
+    c: int
+    relevant_supports: int
+    distinct_bundle_sets: int
+    assignments_per_support: int
+
+    @property
+    def raw_assignments(self) -> int:
+        return self.relevant_supports * self.assignments_per_support
+
+    def to_json(self) -> dict[str, int]:
+        return {
+            "source_support_edges": self.source_support_edges,
+            "r": self.r,
+            "l": self.l,
+            "c": self.c,
+            "lc": self.l + self.c,
+            "rlc": self.r + self.l + self.c,
+            "relevant_supports": self.relevant_supports,
+            "distinct_bundle_sets": self.distinct_bundle_sets,
+            "assignments_per_support": self.assignments_per_support,
+            "raw_assignments": self.raw_assignments,
+        }
+
+
+@dataclass(frozen=True)
+class AssignmentCensusResult:
+    query: CountQuery
+    group_by: tuple[str, ...]
+    records: tuple[dict[str, int | str], ...]
+    facts: tuple[AssignmentFact, ...]
+
+    @property
+    def raw_assignments_total(self) -> int:
+        return sum(f.raw_assignments for f in self.facts)
+
+    @property
+    def distinct_bundle_sets_total(self) -> int:
+        return sum(f.distinct_bundle_sets for f in self.facts)
+
+    @property
+    def relevant_supports_total(self) -> int:
+        return sum(r.get("relevant_supports", 0) for r in self.records if isinstance(r.get("relevant_supports", 0), int))
+
+    def to_json(self) -> dict[str, object]:
+        return {
+            "format_version": 1,
+            "object": "assignments",
+            "query": self.query.to_json(),
+            "group_by": list(self.group_by),
+            "records": list(self.records),
+            "facts": [f.to_json() for f in self.facts],
+            "totals": {
+                "distinct_bundle_sets": self.distinct_bundle_sets_total,
+                "raw_assignments": self.raw_assignments_total,
+            },
+        }
+
+
+@dataclass(frozen=True)
+class AssignedSupportFact:
+    source_support_edges: int
+    r: int
+    l: int
+    c: int
+    relevant_supports: int
+    raw_assignments: int
+    assigned_support_classes: int
+
+    def to_json(self) -> dict[str, int]:
+        return {
+            "source_support_edges": self.source_support_edges,
+            "r": self.r,
+            "l": self.l,
+            "c": self.c,
+            "lc": self.l + self.c,
+            "rlc": self.r + self.l + self.c,
+            "relevant_supports": self.relevant_supports,
+            "raw_assignments": self.raw_assignments,
+            "assigned_support_classes": self.assigned_support_classes,
+        }
+
+
+@dataclass(frozen=True)
+class AssignedSupportCensusResult:
+    query: CountQuery
+    group_by: tuple[str, ...]
+    records: tuple[dict[str, int], ...]
+    facts: tuple[AssignedSupportFact, ...]
+
+    @property
+    def raw_assignments_total(self) -> int:
+        return sum(f.raw_assignments for f in self.facts)
+
+    @property
+    def assigned_support_classes_total(self) -> int:
+        return sum(f.assigned_support_classes for f in self.facts)
+
+    def to_json(self) -> dict[str, object]:
+        return {
+            "format_version": 1,
+            "object": "assigned-supports",
+            "query": self.query.to_json(),
+            "group_by": list(self.group_by),
+            "records": list(self.records),
+            "facts": [f.to_json() for f in self.facts],
+            "totals": {
+                "raw_assignments": self.raw_assignments_total,
+                "assigned_support_classes": self.assigned_support_classes_total,
+            },
+        }
+
+
+@dataclass(frozen=True)
+class NetworkRelation:
+    name: str
+    definition: str
+    description: str
+
+
+LOCAL_SP_RELATION = NetworkRelation(
+    name="local-sp",
+    definition="canonical-reduced-topology-local-series-parallel-v1",
+    description=(
+        "internal node renaming, terminal reversal, local commutative series/parallel "
+        "normalisation, and duplicate primitive singleton merging; not rational immittance equivalence"
+    ),
+)
+NETWORK_RELATIONS = {LOCAL_SP_RELATION.name: LOCAL_SP_RELATION}
+
+
+def validate_network_relation(relation: str | NetworkRelation = "local-sp") -> NetworkRelation:
+    if isinstance(relation, NetworkRelation):
+        relation = relation.name
+    try:
+        return NETWORK_RELATIONS[relation]
+    except KeyError as exc:
+        raise ValueError(f"unknown network relation {relation!r}") from exc
+
+
+@dataclass(frozen=True)
+class NetworkFact:
+    r: int
+    l: int
+    c: int
+    networks: int
+
+    def to_json(self) -> dict[str, int]:
+        return {"r": self.r, "l": self.l, "c": self.c, "lc": self.l + self.c, "rlc": self.r + self.l + self.c, "networks": self.networks}
+
+
+@dataclass(frozen=True)
+class NetworkCensusResult:
+    query: CountQuery
+    relation: NetworkRelation
+    group_by: tuple[str, ...]
+    records: tuple[dict[str, int], ...]
+    facts: tuple[NetworkFact, ...]
+    diagnostics: dict[str, int]
+
+    @property
+    def total(self) -> int:
+        return sum(f.networks for f in self.facts)
+
+    def matrix(self) -> tuple[tuple[int, ...], ...]:
+        max_r = max((f.r for f in self.facts), default=0)
+        max_lc = max((f.l + f.c for f in self.facts), default=0)
+        counts: Counter[tuple[int, int]] = Counter()
+        for f in self.facts:
+            counts[(f.r, f.l + f.c)] += f.networks
+        return tuple(tuple(counts.get((r, x), 0) for x in range(max_lc + 1)) for r in range(max_r + 1))
+
+    def as_markdown_table(self) -> str:
+        table = self.matrix()
+        max_lc = len(table[0]) - 1 if table else 0
+        headers = ["R \\ L+C"] + [str(x) for x in range(max_lc + 1)] + ["Row total"]
+        lines = ["| " + " | ".join(headers) + " |", "|" + "---:|" * len(headers)]
+        for r, row in enumerate(table):
+            lines.append("| " + " | ".join([str(r), *(str(v) for v in row), str(sum(row))]) + " |")
+        return "\n".join(lines)
+
+    def to_json(self) -> dict[str, object]:
+        return {
+            "format_version": 1,
+            "object": "networks",
+            "query": self.query.to_json(),
+            "relation": self.relation.name,
+            "definition": self.relation.definition,
+            "group_by": list(self.group_by),
+            "records": list(self.records),
+            "facts": [f.to_json() for f in self.facts],
+            "totals": {"networks": self.total},
+            "diagnostics": self.diagnostics,
+        }
+
+
+
+
+def _assignment_facts(query: CountQuery) -> tuple[AssignmentFact, ...]:
+    edge_range = query.effective_support_edge_range()
+    if edge_range.maximum is None or (edge_range.minimum or 1) > edge_range.maximum:
+        return ()
+    max_edges = edge_range.maximum
+    supports = support_census(max_edges=max_edges).relevant_by_edges if max_edges >= 1 else {}
+    grouped: DefaultDict[tuple[int, int, int, int], list[BundleSet]] = defaultdict(list)
+    for bs in iter_bundle_sets(query):
+        grouped[(bs.source_support_edges, bs.r_count, bs.l_count, bs.c_count)].append(bs)
+    facts=[]
+    for (e,r,l,c), sets in sorted(grouped.items()):
+        facts.append(AssignmentFact(e,r,l,c,supports.get(e,0),len(sets),sum(bs.raw_placement_count for bs in sets)))
+    return tuple(facts)
+
+
+def _group_assignment_facts(facts: tuple[AssignmentFact, ...], dims: tuple[str, ...]) -> tuple[dict[str, int | str], ...]:
+    grouped: DefaultDict[tuple[int, ...], list[AssignmentFact]] = defaultdict(list)
+    for fact in facts:
+        grouped[tuple(_fact_value(fact, d) for d in dims)].append(fact)
+    records=[]
+    for key in sorted(grouped):
+        bucket=grouped[key]
+        row: dict[str,int|str]={d:key[i] for i,d in enumerate(dims)}
+        row["distinct_bundle_sets"]=sum(f.distinct_bundle_sets for f in bucket)
+        row["raw_assignments"]=sum(f.raw_assignments for f in bucket)
+        if dims == ("support-edges",):
+            row["source_support_edges"]=row.pop("support-edges")
+            row["relevant_supports"]=bucket[0].relevant_supports if bucket else 0
+            row["assignments_per_support"]=sum(f.assignments_per_support for f in bucket)
+        records.append(row)
+    if not dims:
+        records=[{"distinct_bundle_sets":sum(f.distinct_bundle_sets for f in facts),"raw_assignments":sum(f.raw_assignments for f in facts)}]
+    return tuple(records)
+
+
+def assignment_census(query: CountQuery, group_by: tuple[str, ...] = ("support-edges",)) -> AssignmentCensusResult:
+    dims=_normalise_group_by(group_by,_GROUPING_DIMS,"assignment")
+    facts=_assignment_facts(query)
+    return AssignmentCensusResult(query,dims,_group_assignment_facts(facts,dims),facts)
+
+
+def _fixed_simple_bundle_labeling_distribution_for_cycles(cycle_lengths: tuple[int,...], query: CountQuery) -> dict[tuple[int,int,int],int]:
+    dp: dict[tuple[int,int,int],int] = {(0,0,0):1}
+    for cycle_length in cycle_lengths:
+        nxt: DefaultDict[tuple[int,int,int],int]=defaultdict(int)
+        for (old_r,old_l,old_c), count in dp.items():
+            for bundle in SIMPLE_PRIMITIVE_BUNDLES:
+                nr=old_r+cycle_length*bundle.r_count
+                nl=old_l+cycle_length*int(bundle.l_count)
+                nc=old_c+cycle_length*int(bundle.c_count)
+                if query.accepts_components(nr,nl,nc):
+                    nxt[(nr,nl,nc)] += count
+        dp=dict(nxt)
+    return dp
+
+
+def _assigned_support_distribution_for_support(graph: nx.Graph, terminals: tuple[int,int], query: CountQuery, graph_automorphisms: Iterable[dict[int,int]]|None=None) -> dict[tuple[int,int,int],int]:
+    autos = automorphisms(graph) if graph_automorphisms is None else list(graph_automorphisms)
+    perms=edge_permutations_preserving_terminal_set(graph, terminals, autos)
+    if not perms:
+        raise ValueError("no automorphism preserves the terminal pair")
+    sums: DefaultDict[tuple[int,int,int],int]=defaultdict(int)
+    cache: dict[tuple[int,...],dict[tuple[int,int,int],int]]={}
+    for perm in perms:
+        cyc=permutation_cycle_lengths(perm)
+        dist=cache.get(cyc)
+        if dist is None:
+            dist=_fixed_simple_bundle_labeling_distribution_for_cycles(cyc, query)
+            cache[cyc]=dist
+        for k,v in dist.items():
+            sums[k]+=v
+    out={}
+    g=len(perms)
+    for k,v in sums.items():
+        if v % g:
+            raise ArithmeticError(f"Burnside coefficient {v} for {k} is not divisible by group size {g}")
+        out[k]=v//g
+    return out
+
+
+def assigned_support_census(query: CountQuery, group_by: tuple[str,...] = ("support-edges",)) -> AssignedSupportCensusResult:
+    dims=_normalise_group_by(group_by,_GROUPING_DIMS,"assigned-support")
+    raw_by_key={(f.source_support_edges,f.r,f.l,f.c):f.raw_assignments for f in _assignment_facts(query)}
+    eff=query.effective_support_edge_range()
+    max_edges=eff.maximum or 0
+    if (eff.minimum or 1) > max_edges:
+        facts=()
+    else:
+        rel=support_census(max_edges=max_edges).relevant_by_edges if max_edges else {}
+        counts: DefaultDict[tuple[int,int,int,int],int]=defaultdict(int)
+        for graph,terminals,autos in iter_two_terminal_supports(max_edges):
+            e=graph.number_of_edges()
+            if e < (eff.minimum or 1) or e > max_edges:
+                continue
+            for (r,l,c), n in _assigned_support_distribution_for_support(graph,terminals,query,autos).items():
+                counts[(e,r,l,c)] += n
+        facts=tuple(AssignedSupportFact(e,r,l,c,rel.get(e,0),raw_by_key.get((e,r,l,c),0),n) for (e,r,l,c),n in sorted(counts.items()))
+    grouped: DefaultDict[tuple[int,...], list[AssignedSupportFact]]=defaultdict(list)
+    for f in facts:
+        grouped[tuple(_fact_value(f,d) for d in dims)].append(f)
+    records=[]
+    for key in sorted(grouped):
+        bucket=grouped[key]
+        row={d:key[i] for i,d in enumerate(dims)}
+        row["raw_assignments"]=sum(f.raw_assignments for f in bucket)
+        row["assigned_support_classes"]=sum(f.assigned_support_classes for f in bucket)
+        if dims == ("support-edges",):
+            row["source_support_edges"]=row.pop("support-edges")
+            row["relevant_supports"]=bucket[0].relevant_supports if bucket else 0
+        records.append(row)
+    if not dims:
+        records=[{"raw_assignments":sum(f.raw_assignments for f in facts),"assigned_support_classes":sum(f.assigned_support_classes for f in facts)}]
+    return AssignedSupportCensusResult(query,dims,tuple(records),facts)
+
+
+def _iter_query_edge_assignments(edges: tuple[tuple[int,int],...], query: CountQuery):
+    options=SIMPLE_PRIMITIVE_BUNDLES
+    def rec(i:int,r:int,l:int,c:int,current:dict[tuple[int,int],SimplePrimitiveBundle]):
+        if i == len(edges):
+            if query.accepts_components(r,l,c):
+                yield dict(current)
+            return
+        edge=edges[i]
+        for b in options:
+            nr=r+b.r_count; nl=l+int(b.l_count); nc=c+int(b.c_count)
+            if query.accepts_components(nr,nl,nc):
+                current[edge]=b
+                yield from rec(i+1,nr,nl,nc,current)
+                del current[edge]
+    yield from rec(0,0,0,0,{})
+
+
+def network_census(query: CountQuery, relation: str | NetworkRelation = "local-sp", group_by: tuple[str,...] = ("r","lc")) -> NetworkCensusResult:
+    rel=validate_network_relation(relation)
+    dims=_normalise_group_by(group_by,_COMPONENT_GROUPING_DIMS,"network")
+    eff=query.effective_support_edge_range()
+    max_edges=eff.maximum or 0
+    signatures: dict[str, tuple[int,int,int]]={}
+    if (eff.minimum or 1) <= max_edges:
+        for graph,terminals,_autos in iter_two_terminal_supports(max_edges):
+            e=graph.number_of_edges()
+            if e < (eff.minimum or 1) or e > max_edges:
+                continue
+            edges=tuple(tuple(sorted(edge)) for edge in graph.edges())
+            for assignment in _iter_query_edge_assignments(edges, query):
+                sig=canonical_reduced_signature(graph,terminals,assignment)
+                r,l,c=reduced_signature_component_counts(sig)
+                if query.accepts_components(r,l,c):
+                    signatures.setdefault(sig.stable_string(), (r,l,c))
+    counts: Counter[tuple[int,int,int]]=Counter(signatures.values())
+    facts=tuple(NetworkFact(r,l,c,n) for (r,l,c),n in sorted(counts.items()))
+    grouped: DefaultDict[tuple[int,...], list[NetworkFact]]=defaultdict(list)
+    for f in facts:
+        grouped[tuple(_fact_value(f,d) for d in dims)].append(f)
+    records=[]
+    for key in sorted(grouped):
+        row={d:key[i] for i,d in enumerate(dims)}
+        row["networks"]=sum(f.networks for f in grouped[key])
+        records.append(row)
+    if not dims:
+        records=[{"networks":sum(f.networks for f in facts)}]
+    raw=assignment_census(query, group_by=("none",)).raw_assignments_total
+    assigned=assigned_support_census(query, group_by=("none",)).assigned_support_classes_total
+    return NetworkCensusResult(query,rel,dims,tuple(records),facts,{"raw_assignments":raw,"assigned_support_classes":assigned,"unique_reduced_networks":sum(f.networks for f in facts)})
+
+
 @dataclass(frozen=True)
 class BundleAssignmentCensusResult:
     """Raw phase-2 simple-bundle assignment census.

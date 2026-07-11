@@ -1,6 +1,6 @@
 # PR2 — migrate assignments, assigned supports and reduced networks beneath `rice count`
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -10,7 +10,6 @@ mathematical semantics casually:
 - `rice count assignments`
 - `rice count assigned-supports`
 - `rice count networks`
-- `rice count reductions`
 
 ## Notes
 
@@ -22,3 +21,7 @@ Map existing staged commands to object names:
 
 The implementation should reuse PR1 query, profile, grouping, JSON metadata, and
 exact bundle-weight foundations.
+
+## Progress notes
+
+Implemented in PR2: `rice count assignments`, `rice count assigned-supports`, and `rice count networks --relation local-sp` using `CountQuery`, exact sparse facts, reusable grouping, weighted Burnside assigned-support distributions, and query-aware local-SP network counting. `rice count reductions` is deliberately deferred to PR3 because meaningful reduction analysis needs provenance and fibre data.

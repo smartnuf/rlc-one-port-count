@@ -26,3 +26,7 @@ Ladenheim representatives and generated examples.
 - The implementation provenance is recorded.
 - The descriptor syntax covers the reproduced Ladenheim representatives or lists
   unsupported cases explicitly.
+
+## PR2 note
+
+Before `enum networks` depends on textual descriptors, assess the earlier `network-theory` and `pynntt` implementations, record provenance and compatibility, distinguish graph-based RICE interchange from human-readable SP/bridge syntax, support legacy SPB import where useful rather than copying a parser unchanged, and keep source descriptors distinct from reduced descriptors.

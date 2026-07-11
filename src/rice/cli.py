@@ -9,6 +9,8 @@ from dataclasses import asdict
 from typing import Any
 
 from .core import (
+    AssignmentCensusResult,
+    AssignedSupportCensusResult,
     BundleAssignmentCensusResult,
     BundleLabelingCensusResult,
     COUNT_PROFILES,
@@ -17,7 +19,10 @@ from .core import (
     ReducedTopologyCensusResult,
     SupportCensusResult,
     SIMPLE_PRIMITIVE_BUNDLES,
+    assignment_census,
+    assigned_support_census,
     bundle_set_census,
+    network_census,
     simple_bundle_assignment_census,
     reduced_topology_census,
     simple_bundle_labeling_census,
@@ -48,7 +53,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     count_parser = subparsers.add_parser(
-        "count", help="count object-oriented RICE objects (supports, bundle-types, bundle-sets)"
+        "count", help="count object-oriented RICE objects (supports, bundle-types, bundle-sets, assignments, assigned-supports, networks)"
     )
     count_subparsers = count_parser.add_subparsers(
         dest="count_object", parser_class=RiceArgumentParser, required=True
@@ -80,6 +85,19 @@ def build_parser() -> argparse.ArgumentParser:
     count_bundle_sets = count_subparsers.add_parser("bundle-sets", help="count simple primitive bundle multisets/inventories")
     add_count_scope_options(count_bundle_sets)
     count_bundle_sets.add_argument("--group-by", default="support-edges", help="comma-separated dimensions: support-edges,r,l,c,lc,rlc or none")
+
+    count_assignments = count_subparsers.add_parser("assignments", help="count raw bundle assignments on terminal-relevant supports")
+    add_count_scope_options(count_assignments)
+    count_assignments.add_argument("--group-by", default="support-edges", help="comma-separated dimensions: support-edges,r,l,c,lc,rlc or none")
+
+    count_assigned = count_subparsers.add_parser("assigned-supports", help="count assignments modulo terminal-set-preserving support automorphisms")
+    add_count_scope_options(count_assigned)
+    count_assigned.add_argument("--group-by", default="support-edges", help="comma-separated dimensions: support-edges,r,l,c,lc,rlc or none")
+
+    count_networks = count_subparsers.add_parser("networks", help="count unique networks under a named relation")
+    add_count_scope_options(count_networks)
+    count_networks.add_argument("--relation", default="local-sp", help="network relation, default: local-sp")
+    count_networks.add_argument("--group-by", default="r,lc", help="comma-separated dimensions: r,l,c,lc,rlc or none")
 
     supports_parser = subparsers.add_parser(
         "supports", help="run the phase-1 support graph census"
@@ -465,6 +483,85 @@ def main(argv: list[str] | None = None) -> int:
                         values = [*(row[dim] for dim in dims), row["distinct_bundle_sets"], row["raw_placements"]]
                         print("| " + " | ".join(str(value) for value in values) + " |")
                 print(f"| Total | {result.distinct_bundle_sets_total} | {result.raw_placements_total} |")
+            return 0
+        if args.count_object == "assignments":
+            group_by = tuple(part.strip() for part in args.group_by.split(","))
+            try:
+                result = assignment_census(query, group_by=group_by)
+            except ValueError as exc:
+                parser.error(str(exc))
+            if output_format == "json":
+                print(json.dumps(result.to_json(), indent=2, sort_keys=True))
+            else:
+                print("Assignment census")
+                print("Assignments are raw placements on terminal-relevant source supports; no support-symmetry quotient or local reduction is applied.")
+                if result.group_by == ("support-edges",):
+                    print("| Support edges | Relevant supports | Distinct bundle sets | Assignments per support | Raw assignments |")
+                    print("|---:|---:|---:|---:|---:|")
+                    for row in result.records:
+                        print(f"| {row['source_support_edges']} | {row['relevant_supports']} | {row['distinct_bundle_sets']} | {row['assignments_per_support']} | {row['raw_assignments']} |")
+                    print(f"| Total | — | {result.distinct_bundle_sets_total} | — | {result.raw_assignments_total} |")
+                else:
+                    headers = list(result.group_by) + ["Distinct bundle sets", "Raw assignments"]
+                    print("| " + " | ".join(headers) + " |")
+                    print("|" + "---:|" * len(headers))
+                    for row in result.records:
+                        values = [*(row[dim] for dim in result.group_by), row["distinct_bundle_sets"], row["raw_assignments"]]
+                        print("| " + " | ".join(str(v) for v in values) + " |")
+                    print(f"| Total | {result.distinct_bundle_sets_total} | {result.raw_assignments_total} |")
+            return 0
+        if args.count_object == "assigned-supports":
+            group_by = tuple(part.strip() for part in args.group_by.split(","))
+            try:
+                result = assigned_support_census(query, group_by=group_by)
+            except ValueError as exc:
+                parser.error(str(exc))
+            if output_format == "json":
+                print(json.dumps(result.to_json(), indent=2, sort_keys=True))
+            else:
+                print("Assigned-support census")
+                print("Assigned-support classes quotient assignments by terminal-set-preserving support automorphisms; no local network reduction is applied.")
+                if result.group_by == ("support-edges",):
+                    print("| Support edges | Relevant supports | Raw assignments | Assigned-support classes |")
+                    print("|---:|---:|---:|---:|")
+                    for row in result.records:
+                        print(f"| {row['source_support_edges']} | {row['relevant_supports']} | {row['raw_assignments']} | {row['assigned_support_classes']} |")
+                    print(f"| Total | — | {result.raw_assignments_total} | {result.assigned_support_classes_total} |")
+                else:
+                    headers=list(result.group_by)+["Raw assignments","Assigned-support classes"]
+                    print("| "+" | ".join(headers)+" |")
+                    print("|"+"---:|"*len(headers))
+                    for row in result.records:
+                        values=[*(row[dim] for dim in result.group_by), row["raw_assignments"], row["assigned_support_classes"]]
+                        print("| "+" | ".join(str(v) for v in values)+" |")
+                    print(f"| Total | {result.raw_assignments_total} | {result.assigned_support_classes_total} |")
+            return 0
+        if args.count_object == "networks":
+            group_by = tuple(part.strip() for part in args.group_by.split(","))
+            try:
+                result = network_census(query, relation=args.relation, group_by=group_by)
+            except ValueError as exc:
+                parser.error(str(exc))
+            if output_format == "json":
+                print(json.dumps(result.to_json(), indent=2, sort_keys=True))
+            else:
+                print("Network census")
+                print(f"Relation: {result.relation.name} ({result.relation.definition})")
+                print("Query constraints select generating source assignments; component table entries are final reduced-signature counts.")
+                print("This is not full rational-immittance equivalence.")
+                print()
+                if result.group_by == ("r", "lc"):
+                    print(result.as_markdown_table())
+                else:
+                    headers=list(result.group_by)+["Networks"]
+                    print("| "+" | ".join(headers)+" |")
+                    print("|"+"---:|"*len(headers))
+                    for row in result.records:
+                        values=[*(row[dim] for dim in result.group_by), row["networks"]]
+                        print("| "+" | ".join(str(v) for v in values)+" |")
+                print()
+                print(f"Unique network total: {result.total}")
+                print("Diagnostics: " + f"raw assignments={result.diagnostics['raw_assignments']}; assigned-support classes={result.diagnostics['assigned_support_classes']}; unique reduced networks={result.diagnostics['unique_reduced_networks']}")
             return 0
 
     if args.command == "supports":

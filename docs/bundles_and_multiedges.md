@@ -255,3 +255,12 @@ set's cardinality is the number of source support edges it can fill. Its raw
 placement count on distinguishable edges is the multinomial coefficient of its
 multiplicities. This is deliberately separate from `rice bundles`, which counts
 ordered raw assignments per relevant support shape.
+
+## Assignment and assigned-support count targets
+
+The object-language `assignments` target uses bundle-set inventories and their
+multinomial raw-placement counts to count distinguishable source-edge placements
+on terminal-relevant supports. `assigned-supports` then quotients those raw
+placements only by terminal-set-preserving support automorphisms. These names are
+preferred in new documentation; the older terms `bundles` and `labelings` remain
+compatibility command names for the staged pipeline.

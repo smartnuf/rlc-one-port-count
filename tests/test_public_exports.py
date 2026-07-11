@@ -11,6 +11,18 @@ documented role of every name here.
 import rice
 
 PUBLIC_EXPORTS = {
+    "assignment_census",
+    "assigned_support_census",
+    "network_census",
+    "validate_network_relation",
+    "AssignmentCensusResult",
+    "AssignmentFact",
+    "AssignedSupportCensusResult",
+    "AssignedSupportFact",
+    "NetworkCensusResult",
+    "NetworkFact",
+    "NetworkRelation",
+    "LOCAL_SP_RELATION",
     "iter_bundle_sets",
     "bundle_set_census",
     "IntegerRange",

@@ -206,3 +206,27 @@ Diagnostic totals for the same slice:
 Machine-readable summary: `data/counts/small-r2-x3.json`. Human-readable summary:
 `docs/counts/small-r2-x3.md`. This slice is a golden regression target and is
 not presented as the full `R <= 3`, `L+C <= 5` project count.
+
+## Object-language PR2 golden counts
+
+Modern commands equivalent to the staged golden results are:
+
+```bash
+rice count assignments --profile main
+rice count assigned-supports --profile main
+rice count networks --profile golden
+```
+
+For `--profile main` (`R <= 3`, `L+C <= 5`), raw assignments total `1,166,714`
+and assigned-support classes total `830,094`. For `--profile golden` (`R <= 2`,
+`L+C <= 3`), the pipeline diagnostics are raw assignments `1,830`,
+assigned-support classes `1,112`, and local-SP networks `313`.
+
+The RICE local-SP slice
+
+```bash
+rice count networks --relation local-sp --max-r 3 --max-lc 2 --max-support-edges 5
+```
+
+has total `140`. This is a RICE local-SP count in that component/source region,
+not the historical Ladenheim 108 relation.

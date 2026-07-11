@@ -4,7 +4,7 @@ Status: `todo`
 
 ## Goal
 
-Introduce the planned enumeration language and reduction-analysis reports:
+Introduce the planned enumeration language and reduction-analysis reports, including `rice count reductions`:
 
 - `rice enum supports`
 - `rice enum bundle-types`
@@ -17,3 +17,7 @@ Introduce the planned enumeration language and reduction-analysis reports:
 to assigned-support classes to reduced networks, including fibre-size
 distributions, source-to-reduced edge transitions, component-count transitions,
 and collision analysis.
+
+## Boundary note
+
+PR2 intentionally did not add a superficial `rice count reductions` command. PR3 remains responsible for source-to-reduced provenance, fibre-size distributions, component/source-edge transitions, collision analysis, and `rice enum ...` catalogue commands.

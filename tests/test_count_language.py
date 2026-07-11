@@ -195,3 +195,65 @@ def test_help_and_compatibility_commands(capsys):
     assert main(["bundles", "--max-r", "1", "--max-reactive", "1"]) == 0
     assert main(["labelings", "--max-r", "1", "--max-reactive", "1"]) == 0
     assert main(["reduced", "--max-r", "1", "--max-reactive", "1"]) == 0
+
+from rice import assignment_census, assigned_support_census, network_census
+
+
+def test_assignment_assigned_support_and_network_pr2_golden_results(capsys):
+    assignments = cli_json(["count", "assignments", "--profile", "main"], capsys)
+    assert [r["source_support_edges"] for r in assignments["records"]] == list(range(1, 9))
+    assert [r["distinct_bundle_sets"] for r in assignments["records"]] == [7, 28, 80, 127, 120, 64, 25, 6]
+    assert [r["assignments_per_support"] for r in assignments["records"]] == [7, 49, 335, 1622, 4602, 7192, 5712, 1792]
+    assert [r["raw_assignments"] for r in assignments["records"]] == [7, 49, 670, 6488, 46020, 194184, 456960, 462336]
+    assert assignments["totals"]["raw_assignments"] == 1166714
+
+    golden_assignments = cli_json(["count", "assignments", "--profile", "golden"], capsys)
+    assert [r["assignments_per_support"] for r in golden_assignments["records"]] == [7, 45, 137, 176, 80]
+    assert golden_assignments["totals"]["raw_assignments"] == 1830
+
+    assigned = cli_json(["count", "assigned-supports", "--profile", "main"], capsys)
+    assert [r["assigned_support_classes"] for r in assigned["records"]] == [7, 28, 380, 3770, 28004, 127627, 323330, 346948]
+    assert assigned["totals"] == {"assigned_support_classes": 830094, "raw_assignments": 1166714}
+
+    networks = cli_json(["count", "networks", "--profile", "golden"], capsys)
+    assert networks["object"] == "networks"
+    assert networks["relation"] == "local-sp"
+    assert networks["definition"] == "canonical-reduced-topology-local-series-parallel-v1"
+    assert "canonical_signatures" not in networks
+    assert networks["totals"]["networks"] == 313
+    assert networks["diagnostics"] == {"raw_assignments": 1830, "assigned_support_classes": 1112, "unique_reduced_networks": 313}
+
+
+def test_pr2_separate_l_c_fixture_across_stages(capsys):
+    args = ["--max-r", "1", "--max-l", "1", "--max-c", "0"]
+    assert cli_json(["count", "assignments", *args], capsys)["totals"]["raw_assignments"] == 5
+    assert cli_json(["count", "assigned-supports", *args], capsys)["totals"]["assigned_support_classes"] == 4
+    networks = cli_json(["count", "networks", *args, "--group-by", "r,l,c"], capsys)
+    assert networks["totals"]["networks"] == 4
+    assert networks["records"] == [
+        {"r": 0, "l": 1, "c": 0, "networks": 1},
+        {"r": 1, "l": 0, "c": 0, "networks": 1},
+        {"r": 1, "l": 1, "c": 0, "networks": 2},
+    ]
+
+
+def test_pr2_ladenheim_nearby_local_sp_slice_and_grouping_errors(capsys):
+    result = network_census(CountQuery(ComponentConstraints(max_r=3, max_lc=2), max_support_edges=5))
+    assert result.total == 140
+    assert result.matrix() == ((0, 2, 2), (1, 4, 12), (0, 4, 34), (0, 4, 77))
+    assert cli_json(["count", "networks", "--max-rlc", "0"], capsys)["totals"]["networks"] == 0
+    edge_only = cli_json(["count", "assignments", "--support-edges", "4"], capsys)
+    assert edge_only["query"]["effective_support_edges"] == {"min": 4, "max": 4}
+    assert_error(capsys, ["count", "networks", "--profile", "golden", "--relation", "bogus"], "unknown network relation")
+    assert_error(capsys, ["count", "networks", "--profile", "golden", "--group-by", "support-edges"], "unsupported network grouping dimension")
+    assert cli_json(["count", "networks", "--profile", "golden", "--group-by", "none"], capsys)["records"] == [{"networks": 313}]
+
+
+def test_pr2_help_lists_objects_without_reductions_or_enum():
+    count = subprocess.run([sys.executable, "-m", "rice", "count", "--help"], check=True, text=True, capture_output=True).stdout
+    for word in ("supports", "bundle-types", "bundle-sets", "assignments", "assigned-supports", "networks"):
+        assert word in count
+    assert "reductions" not in count
+    assert "enum" not in count
+    target = subprocess.run([sys.executable, "-m", "rice", "count", "networks", "--help"], check=True, text=True, capture_output=True).stdout
+    assert "--relation" in target and "--group-by" in target

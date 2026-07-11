@@ -338,3 +338,25 @@ The supported public API now includes:
 
 `SimplePrimitiveBundle` retains `reactive_count == l_count + c_count` and now
 also exposes exact `l_count` and `c_count` weights.
+
+## Object-language count APIs for later stages
+
+The public object-language APIs include:
+
+```python
+assignment_census(query, group_by=("support-edges",))
+assigned_support_census(query, group_by=("support-edges",))
+network_census(query, relation="local-sp", group_by=("r", "lc"))
+```
+
+They require an explicit finite `CountQuery`; no later-stage API applies an
+implicit component profile. Results retain exact sparse facts (`source_support_edges`,
+`r`, `l`, `c` for source assignment objects, and final reduced `r`, `l`, `c` for
+networks), deterministic grouped records, totals, and versioned JSON via
+`to_json()`. `NetworkCensusResult` also reports pipeline diagnostics without
+exposing a signature catalogue; catalogue enumeration remains future work.
+
+Compatibility APIs and commands (`simple_bundle_assignment_census`,
+`simple_bundle_labeling_census`, `reduced_topology_census`, `rice bundles`,
+`rice labelings`, and `rice reduced`) remain supported with their existing
+observable output.
