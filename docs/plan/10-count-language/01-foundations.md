@@ -22,10 +22,14 @@ census results, JSON report metadata, and Python API exports.
   repeated same-type primitives inside one bundle.
 - Component constraints intersect by logical AND. They constrain compatible
   bundle inventories for `count supports`; they do not component-label support
-  graphs.
+  graphs. Effective source support-edge caps use the tightest total-component
+  upper bound implied by all supplied component constraints.
 - A supports or bundle-sets query must have a finite effective source-edge cap
   from an exact/ranged edge option, a finite component region, or a named finite
   profile.
+- `BundleSet` validates that public API callers provide exactly one
+  non-negative multiplicity for each simple primitive bundle type before any
+  component counts, placement counts, or JSON records are derived.
 - The current staged commands remain compatibility interfaces: `supports`,
   `bundles`, `labelings`, and `reduced`.
 

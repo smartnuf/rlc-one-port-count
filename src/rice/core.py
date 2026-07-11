@@ -157,14 +157,19 @@ class ComponentConstraints:
         )
 
     def max_total_components(self) -> int | None:
+        upper_bounds = []
         if self.max_rlc is not None:
-            return self.max_rlc
+            upper_bounds.append(self.max_rlc)
         r_bound = self.max_r
         lc_bound = self.max_lc
         if lc_bound is None and self.max_l is not None and self.max_c is not None:
             lc_bound = self.max_l + self.max_c
         if r_bound is not None and lc_bound is not None:
-            return r_bound + lc_bound
+            upper_bounds.append(r_bound + lc_bound)
+        if self.max_l is not None and self.max_c is not None and r_bound is not None:
+            upper_bounds.append(r_bound + self.max_l + self.max_c)
+        if upper_bounds:
+            return min(upper_bounds)
         return None
 
 
@@ -251,6 +256,14 @@ class BundleSet:
     """A multiset inventory of simple primitive bundle types."""
 
     multiplicities: tuple[int, ...]
+
+    def __post_init__(self) -> None:
+        if len(self.multiplicities) != len(SIMPLE_PRIMITIVE_BUNDLES):
+            raise ValueError("bundle-set multiplicities must have one entry per simple primitive bundle type")
+        if any(not isinstance(n, int) for n in self.multiplicities):
+            raise ValueError("bundle-set multiplicities must be integers")
+        if any(n < 0 for n in self.multiplicities):
+            raise ValueError("bundle-set multiplicities must be non-negative")
 
     @property
     def source_support_edges(self) -> int:
