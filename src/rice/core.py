@@ -259,11 +259,14 @@ class BundleSet:
 
     def __post_init__(self) -> None:
         if len(self.multiplicities) != len(SIMPLE_PRIMITIVE_BUNDLES):
-            raise ValueError("bundle-set multiplicities must have one entry per simple primitive bundle type")
-        if any(not isinstance(n, int) for n in self.multiplicities):
-            raise ValueError("bundle-set multiplicities must be integers")
-        if any(n < 0 for n in self.multiplicities):
-            raise ValueError("bundle-set multiplicities must be non-negative")
+            raise ValueError(
+                "multiplicities must include one entry per simple primitive bundle type"
+            )
+        for index, value in enumerate(self.multiplicities):
+            if not isinstance(value, int):
+                raise ValueError(f"multiplicities[{index}] must be integers")
+            if value < 0:
+                raise ValueError(f"multiplicities[{index}] must be non-negative")
 
     @property
     def source_support_edges(self) -> int:
