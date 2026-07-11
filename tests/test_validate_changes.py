@@ -70,3 +70,15 @@ def test_incomplete_policy_rule_fails_safely(tmp_path: Path):
 
     with pytest.raises(ValueError):
         validate_changes.load_policy(broken)
+
+
+def test_docs_profile_uses_explicit_commit_range_for_whitespace_check():
+    commands = validate_changes.command_for_profile("docs", ("BASE", "HEAD"))
+
+    assert commands[0] == ["git", "diff", "--check", "BASE", "HEAD"]
+
+
+def test_docs_profile_checks_staged_and_unstaged_worktree_whitespace():
+    commands = validate_changes.command_for_profile("docs", tuple())
+
+    assert commands[:2] == [["git", "diff", "--check"], ["git", "diff", "--cached", "--check"]]

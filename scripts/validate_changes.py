@@ -196,10 +196,29 @@ def check_plan_index() -> int:
     return 1
 
 
-def command_for_profile(profile: str) -> list[list[str]]:
+def whitespace_check_commands(diff_source: Sequence[str] | None = None) -> list[list[str]]:
+    """Return git diff --check commands for the selected change source.
+
+    Commit-range validation must check that exact range. Local worktree
+    validation covers both unstaged and staged changes because `git status`
+    reports both. Explicit --paths inputs have no associated patch, so fall
+    back to the current unstaged diff for backward-compatible local use.
+    """
+
+    if diff_source is None:
+        return [["git", "diff", "--check"]]
+    if diff_source:
+        return [["git", "diff", "--check", *diff_source]]
+    return [["git", "diff", "--check"], ["git", "diff", "--cached", "--check"]]
+
+
+def command_for_profile(profile: str, diff_source: Sequence[str] | None = None) -> list[list[str]]:
     py = sys.executable
     if profile == "docs":
-        return [["git", "diff", "--check"], [py, str(Path("scripts") / "validate_changes.py"), "--check-plan-index"]]
+        return [
+            *whitespace_check_commands(diff_source),
+            [py, str(Path("scripts") / "validate_changes.py"), "--check-plan-index"],
+        ]
     if profile == "code":
         return [["bash", "scripts/lint.sh"], ["bash", "scripts/test.sh"]]
     if profile == "full":
@@ -250,6 +269,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Validation policy error: {exc}", file=sys.stderr)
         return run_commands(command_for_profile("full")) if args.full else 2
 
+    diff_source: tuple[str, ...] | None = None
     if args.full:
         classification = Classification("full", ("forced by --full",), tuple())
     elif args.paths is not None:
@@ -258,11 +278,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not args.head:
             parser.error("--base requires --head")
         classification = classify_paths(changed_paths_between(args.base, args.head), policy)
+        diff_source = (args.base, args.head)
     else:
         classification = classify_paths(changed_paths_worktree(), policy)
+        diff_source = tuple()
 
     print_classification(classification)
-    commands = command_for_profile(classification.profile)
+    commands = command_for_profile(classification.profile, diff_source)
     print("Checks:")
     for command in commands:
         print("  - " + " ".join(command))
