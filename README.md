@@ -31,13 +31,14 @@ make setup
 .venv/bin/python -m rice count networks --profile golden
 ```
 
-The supported counting grammar is:
+The supported provisional command grammars are:
 
 ```text
 rice count <object> [options]
+rice enum <object> [options]
 ```
 
-Implemented count objects are:
+Implemented count and enum objects are:
 
 - `supports` — connected unlabelled support graphs, unordered terminal choices,
   and terminal-relevant two-terminal supports.
@@ -51,6 +52,12 @@ Implemented count objects are:
   unordered terminal set.
 - `networks` — unique local-series/parallel reduced networks under the current
   relation `canonical-reduced-topology-local-series-parallel-v1`.
+
+`rice count reductions` analyses the provenance maps from raw assignments to
+assigned-support classes to local-SP networks, including fibre distributions,
+source-edge transitions, exact source-to-reduced component transitions, and
+collision summaries. Enumeration output uses provisional SHA-256-derived IDs and
+a default `--max-records 10000` guard for catalogue-producing commands.
 
 Detailed semantics are in `docs/counting_language.md`; the provisional Python
 API is documented in `docs/python_api.md`.

@@ -25,3 +25,25 @@ from rice import normalise_series_factor, normalise_parallel_factor
 Removed staged census wrappers and staged result dataclasses are not part of the
 public API. Shared algorithms such as support enumeration, Burnside counting and
 local canonical reduction may remain as internal implementation machinery.
+
+Enumeration and provenance entry points are also exported provisionally:
+
+```python
+from rice import enum_supports, enum_bundle_types, enum_bundle_sets
+from rice import enum_assignments, enum_assigned_supports, enum_networks
+from rice import reduction_census
+```
+
+The enumeration APIs accept `CountQuery` objects and return immutable record
+objects such as `SupportRecord`, `BundleSetRecord`, `AssignmentRecord`,
+`AssignedSupportRecord`, and `NetworkRecord`. IDs use a readable prefix plus a
+truncated SHA-256 digest of the current canonical representation; this is
+repeatable within the current provisional definition but is not a promise of
+permanent ID continuity. `enum_assignments`, `enum_assigned_supports`, and
+`enum_networks` accept `max_records` and default to 10,000 records.
+
+`reduction_census(query, relation="local-sp")` returns a
+`ReductionCensusResult` with pipeline totals, fibre distributions,
+source-edge/component transitions, collision summaries, and conservation
+diagnostics for the many-to-one maps from assignments to assigned-support
+classes to reduced networks.

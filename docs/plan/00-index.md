@@ -95,5 +95,5 @@ files' numeric prefixes; the files were not renamed/renumbered to match):
 
 - `done` [PR1 — counting-language foundations and bundle-set census](10-count-language/01-foundations.md)
 - `done` [PR2 — migrate assignments, assigned supports and reduced networks beneath `rice count`](10-count-language/02-count-migration.md)
-- `todo` [PR3 — enumeration and reduction mapping/analysis](10-count-language/03-enum-reductions.md)
+- `done` [PR3 — enumeration and reduction mapping/analysis](10-count-language/03-enum-reductions.md)
 - `done` [Interface consolidation](10-count-language/04-interface-consolidation.md)

@@ -1,6 +1,6 @@
 # PR3 — enumeration and reduction mapping/analysis
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -21,3 +21,8 @@ and collision analysis.
 ## Boundary note
 
 PR2 intentionally did not add a superficial `rice count reductions` command. PR3 remains responsible for source-to-reduced provenance, fibre-size distributions, component/source-edge transitions, collision analysis, and `rice enum ...` catalogue commands.
+
+
+## PR3 completion notes
+
+Implemented all six `rice enum` targets, provisional stable IDs, guarded assignment/assigned-support/network enumeration, and `rice count reductions` provenance reports with fibre distributions, source-edge transitions, component transitions, collision summaries, and golden conservation checks. Remaining limitations are intentional non-goals: no rational immittance equality, 2-isomorphism, star-delta transforms, descriptor conversion, database storage, or full main-slice network catalogue.

@@ -187,7 +187,7 @@ def test_scope_errors_profiles_and_empty_queries(capsys):
 def test_help_and_removed_staged_commands(capsys):
     top = subprocess.run([sys.executable, "-m", "rice", "--help"], check=True, text=True, capture_output=True).stdout
     assert "count" in top
-    assert "enum" not in top
+    assert "enum" in top
     count = subprocess.run([sys.executable, "-m", "rice", "count", "--help"], check=True, text=True, capture_output=True).stdout
     assert "supports" in count and "bundle-types" in count and "bundle-sets" in count
     target = subprocess.run([sys.executable, "-m", "rice", "count", "bundle-sets", "--help"], check=True, text=True, capture_output=True).stdout
@@ -296,7 +296,7 @@ def test_pr2_help_lists_objects_without_reductions_or_enum():
     count = subprocess.run([sys.executable, "-m", "rice", "count", "--help"], check=True, text=True, capture_output=True).stdout
     for word in ("supports", "bundle-types", "bundle-sets", "assignments", "assigned-supports", "networks"):
         assert word in count
-    assert "reductions" not in count
+    assert "reductions" in count
     assert "enum" not in count
     target = subprocess.run([sys.executable, "-m", "rice", "count", "networks", "--help"], check=True, text=True, capture_output=True).stdout
     assert "--relation" in target and "--group-by" in target

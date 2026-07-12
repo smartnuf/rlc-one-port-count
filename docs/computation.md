@@ -136,3 +136,21 @@ particular, do not collapse networks via:
 - Foster/Cauer equivalence;
 - duality;
 - algebraic equality of rational impedances.
+
+## Enumeration and provenance implementation
+
+The `rice enum` commands materialize the same exact object stages used by the
+count commands. Supports are canonically relabelled before IDs and edge ordering
+are assigned. Assignment records place simple primitive bundle labels on that
+canonical edge order. Assigned-support records then choose deterministic orbit
+representatives using the terminal-set-preserving support automorphism action.
+Network records group assigned-support representatives by the local-SP canonical
+reduced signature and retain aggregate provenance counts rather than embedding
+all sources.
+
+`rice count reductions` aggregates those records instead of reconstructing
+provenance from presentation tables. It checks conservation of raw assignments,
+assigned-support classes, unique network IDs, and provenance references for the
+small/golden queries used in tests. Duplicate primitive reductions such as
+`R--R -> R`, `R||R -> R`, and `R--L--R -> R--L` appear as component transitions
+from larger exact source tuples to smaller reduced tuples.

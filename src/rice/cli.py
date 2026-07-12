@@ -18,6 +18,9 @@ from .core import (
     bundle_set_census,
     network_census,
     support_census,
+    DEFAULT_ENUM_MAX_RECORDS,
+    enum_supports, enum_bundle_types, enum_bundle_sets, enum_assignments, enum_assigned_supports, enum_networks,
+    reduction_census,
 )
 
 
@@ -86,6 +89,24 @@ def build_parser() -> argparse.ArgumentParser:
     count_networks.add_argument("--relation", default="local-sp", help="network relation, default: local-sp")
     count_networks.add_argument("--group-by", default="r,lc", help="comma-separated dimensions: r,l,c,lc,rlc or none")
 
+    count_reductions = count_subparsers.add_parser("reductions", help="analyse assignments to assigned-supports to networks reductions")
+    add_count_scope_options(count_reductions)
+    count_reductions.add_argument("--relation", default="local-sp", help="network relation, default: local-sp")
+    count_reductions.add_argument("--max-records", type=int, default=DEFAULT_ENUM_MAX_RECORDS, help="maximum intermediate enumeration records, default: 10000")
+
+    enum_parser = subparsers.add_parser("enum", help="enumerate provisional RICE objects")
+    enum_subparsers = enum_parser.add_subparsers(dest="enum_object", parser_class=RiceArgumentParser, required=True)
+    for name in ("supports", "bundle-types", "bundle-sets", "assignments", "assigned-supports", "networks"):
+        ep = enum_subparsers.add_parser(name, help=f"enumerate {name}")
+        if name != "bundle-types":
+            add_count_scope_options(ep)
+        else:
+            ep.add_argument("--format", choices=("markdown", "json"), default=argparse.SUPPRESS)
+        if name in {"assignments", "assigned-supports", "networks"}:
+            ep.add_argument("--max-records", type=int, default=DEFAULT_ENUM_MAX_RECORDS, help="maximum records to emit, default: 10000")
+        if name == "networks":
+            ep.add_argument("--relation", default="local-sp", help="network relation, default: local-sp")
+
     return parser
 
 
@@ -137,6 +158,25 @@ def _bundle_types_json() -> dict[str, Any]:
     return {"format_version": 1, "object": "bundle-types", "records": records, "totals": {"bundle_types": len(records)}}
 
 
+
+def _enum_payload(object_name: str, query: CountQuery | None, records: list[dict[str, Any]], relation: str | None = None, definition: str | None = None) -> dict[str, Any]:
+    return {"format_version": 1, "operation": "enum", "object": object_name, "query": query.to_json() if query else {}, "relation": relation, "definition": definition, "records": records, "totals": {"records": len(records)}, "diagnostics": {"provisional_formats": True}}
+
+def _print_enum_markdown(title: str, payload: dict[str, Any]) -> None:
+    print(f"{title} (provisional enumeration format)")
+    if payload.get("relation"):
+        print(f"Relation: {payload['relation']} ({payload.get('definition')})")
+        print("Not rational immittance equivalence; stable strings are provisional structural serializations.")
+    print(f"Records shown: {payload['totals']['records']}")
+    records = payload["records"]
+    if not records:
+        print("No records."); return
+    keys = list(records[0].keys())
+    print("| " + " | ".join(keys) + " |")
+    print("|" + "---|" * len(keys))
+    for row in records:
+        print("| " + " | ".join(str(row.get(k, "")) for k in keys) + " |")
+
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     parser = build_parser()
@@ -144,6 +184,26 @@ def main(argv: list[str] | None = None) -> int:
 
     output_format = getattr(args, "format", "markdown")
 
+
+    if args.command == "enum":
+        output_format = getattr(args, "format", "markdown")
+        try:
+            query = None if args.enum_object == "bundle-types" else _query_from_count_args(parser, args)
+            rel = None; definition = None
+            if args.enum_object == "supports": recs=[r.to_json() for r in enum_supports(query)]
+            elif args.enum_object == "bundle-types": recs=[r.to_json() for r in enum_bundle_types()]
+            elif args.enum_object == "bundle-sets": recs=[r.to_json() for r in enum_bundle_sets(query)]
+            elif args.enum_object == "assignments": recs=[r.to_json() for r in enum_assignments(query, max_records=args.max_records)]
+            elif args.enum_object == "assigned-supports": recs=[r.to_json() for r in enum_assigned_supports(query, max_records=args.max_records)]
+            elif args.enum_object == "networks":
+                nets=enum_networks(query, relation=args.relation, max_records=args.max_records); recs=[r.to_json() for r in nets]; rel=args.relation; definition=nets[0].definition if nets else "canonical-reduced-topology-local-series-parallel-v1"
+            else: raise AssertionError(args.enum_object)
+        except ValueError as exc:
+            parser.error(str(exc))
+        payload=_enum_payload(args.enum_object, query, recs, rel, definition)
+        if output_format == "json": print(json.dumps(payload, indent=2, sort_keys=True))
+        else: _print_enum_markdown(f"Enum {args.enum_object}", payload)
+        return 0
 
     if args.command == "count":
         output_format = getattr(args, "format", "markdown")
@@ -264,6 +324,22 @@ def main(argv: list[str] | None = None) -> int:
                         print("| "+" | ".join(str(v) for v in values)+" |")
                     total_values = (["Total", *("—" for _ in result.group_by[1:])] if result.group_by else []) + [result.raw_assignments_total, result.assigned_support_classes_total]
                     print("| " + " | ".join(str(v) for v in total_values) + " |")
+            return 0
+        if args.count_object == "reductions":
+            try:
+                result = reduction_census(query, relation=args.relation, max_records=args.max_records)
+            except ValueError as exc:
+                parser.error(str(exc))
+            if output_format == "json":
+                print(json.dumps(result.to_json(), indent=2, sort_keys=True))
+            else:
+                print("Reduction provenance census (provisional format)")
+                print(f"Relation: {result.relation.name} ({result.relation.definition})")
+                print("This analyses many-to-one source mappings; it is not rational immittance equivalence and not a new network relation.")
+                print("Distinct networks reached in transition rows are provenance facts and are not additive across rows.")
+                print("| Stage | Objects |")
+                print("|---|---:|")
+                for k,v in result.pipeline_totals.items(): print(f"| {k} | {v} |")
             return 0
         if args.count_object == "networks":
             group_by = tuple(part.strip() for part in args.group_by.split(","))

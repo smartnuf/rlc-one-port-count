@@ -10,6 +10,10 @@ PUBLIC_EXPORTS = {
     "canonical_reduced_signature", "factor_from_simple_primitive_bundle", "normalise_parallel_factor",
     "normalise_reduced_factor", "normalise_series_factor", "primitive_factor",
     "reduced_signature_component_counts", "support_census",
+    "SupportRecord", "BundleTypeRecord", "BundleSetRecord", "AssignmentRecord",
+    "AssignedSupportRecord", "NetworkRecord", "ReductionCensusResult",
+    "enum_supports", "enum_bundle_types", "enum_bundle_sets", "enum_assignments",
+    "enum_assigned_supports", "enum_networks", "reduction_census",
 }
 
 REMOVED_NAMES = {

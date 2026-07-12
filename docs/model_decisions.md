@@ -348,3 +348,18 @@ source generation; component records for `networks` describe final reduced
 signatures. Source-edge attribution for reduced networks is deferred to the
 reduction-analysis work because one reduced network may be reached from multiple
 source edge counts.
+
+## Provisional catalogue IDs and provenance
+
+Enumeration commands assign deterministic provisional IDs using a prefix plus a
+truncated SHA-256 digest over the current canonical representation. Support IDs
+are based on terminal-normalized support edges, assignment IDs on canonical
+support-edge order and bundle placement, assigned-support IDs on canonical orbit
+representatives, and network IDs on relation plus local-SP reduced signature.
+These IDs are intended for joining records within current reports; permanent ID
+continuity is not yet part of the public contract.
+
+`count reductions` reports provenance of the reductions already defined by the
+model. It is not an additional equivalence relation and it does not add
+rational immittance equality, 2-isomorphism, star-delta transforms, descriptor
+conversion, or value-dependent reductions.

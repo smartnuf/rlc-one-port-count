@@ -230,3 +230,17 @@ rice count networks --relation local-sp --max-r 3 --max-lc 2 --max-support-edges
 
 has total `140`. This is a RICE local-SP count in that component/source region,
 not the historical Ladenheim 108 relation.
+
+## PR3 enumeration and reduction-provenance checks
+
+For the hand-checkable exact fixture `--max-r 1 --max-l 1 --max-c 0`, the
+enumerated pipeline has 5 raw assignments, 4 assigned-support classes, and 4
+local-SP networks. The two placements of the two-edge `R--L` path are one
+assigned-support orbit. Final reduced exact facts are one `(0,1,0)`, one
+`(1,0,0)`, and two `(1,1,0)` networks.
+
+For `--profile golden`, `rice count reductions --profile golden` preserves the
+established pipeline totals: 1,830 raw assignments, 1,112 assigned-support
+classes, and 313 local-SP networks. The nearby local-SP region
+`--max-r 3 --max-lc 2 --max-support-edges 5` remains 140 networks; this is a
+RICE local-SP result, not the historical Ladenheim 108 relation.
