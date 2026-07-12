@@ -2,7 +2,7 @@ import pytest
 
 from rice.core import (
     SIMPLE_PRIMITIVE_BUNDLES,
-    simple_bundle_assignment_census,
+    _simple_bundle_assignment_census,
     simple_bundle_assignment_count_by_edge_count,
 )
 
@@ -51,8 +51,8 @@ def test_assignment_counts_per_support_match_phase_2_reference():
     ) == EXPECTED_ASSIGNMENTS_PER_SUPPORT
 
 
-def test_simple_bundle_assignment_census_matches_phase_2_reference():
-    result = simple_bundle_assignment_census(max_r=3, max_reactive=5)
+def test__simple_bundle_assignment_census_matches_phase_2_reference():
+    result = _simple_bundle_assignment_census(max_r=3, max_reactive=5)
 
     assert result.max_edges == 8
     assert result.assignments_per_support_by_edges == EXPECTED_ASSIGNMENTS_PER_SUPPORT
@@ -61,20 +61,20 @@ def test_simple_bundle_assignment_census_matches_phase_2_reference():
     assert result.leaf_assignments_total == 1166714
 
 
-def test_simple_bundle_assignment_census_allows_truncated_max_edges():
-    result = simple_bundle_assignment_census(max_r=3, max_reactive=5, max_edges=7)
+def test__simple_bundle_assignment_census_allows_truncated_max_edges():
+    result = _simple_bundle_assignment_census(max_r=3, max_reactive=5, max_edges=7)
 
     assert result.max_edges == 7
     assert result.leaf_assignments_total == sum(EXPECTED_LEAVES[i] for i in range(1, 8))
 
 
-def test_simple_bundle_assignment_census_rejects_max_edges_above_budget():
+def test__simple_bundle_assignment_census_rejects_max_edges_above_budget():
     with pytest.raises(ValueError, match="cannot exceed"):
-        simple_bundle_assignment_census(max_r=3, max_reactive=5, max_edges=9)
+        _simple_bundle_assignment_census(max_r=3, max_reactive=5, max_edges=9)
 
 
-def test_simple_bundle_assignment_census_zero_budget_is_empty():
-    result = simple_bundle_assignment_census(max_r=0, max_reactive=0)
+def test__simple_bundle_assignment_census_zero_budget_is_empty():
+    result = _simple_bundle_assignment_census(max_r=0, max_reactive=0)
 
     assert result.max_edges == 0
     assert result.relevant_supports_by_edges == {}
@@ -84,10 +84,10 @@ def test_simple_bundle_assignment_census_zero_budget_is_empty():
     assert result.leaf_assignments_total == 0
 
 
-def test_simple_bundle_assignment_census_rejects_negative_budgets_and_zero_edges_when_nonempty():
+def test__simple_bundle_assignment_census_rejects_negative_budgets_and_zero_edges_when_nonempty():
     with pytest.raises(ValueError, match="non-negative"):
-        simple_bundle_assignment_census(max_r=-1, max_reactive=0)
+        _simple_bundle_assignment_census(max_r=-1, max_reactive=0)
     with pytest.raises(ValueError, match="non-negative"):
-        simple_bundle_assignment_census(max_r=0, max_reactive=-1)
+        _simple_bundle_assignment_census(max_r=0, max_reactive=-1)
     with pytest.raises(ValueError, match="at least 1"):
-        simple_bundle_assignment_census(max_r=1, max_reactive=0, max_edges=0)
+        _simple_bundle_assignment_census(max_r=1, max_reactive=0, max_edges=0)

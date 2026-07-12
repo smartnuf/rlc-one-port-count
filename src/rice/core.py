@@ -1,17 +1,13 @@
-"""Enumerate small two-terminal RLC one-port support graphs and reduced topologies.
+"""Enumerate small two-terminal RLC one-port support graphs and networks.
 
-The reduced-model pipeline starts with a support-only census: connected
-unlabelled simple support graphs, unordered terminal-pair orbits, and
-terminal-relevant two-terminal supports (:func:`support_census`). Phase 2 adds
-a raw simple-bundle assignment census over those supports
-(:func:`simple_bundle_assignment_census`); series spans and reduced
-signatures are intentionally outside that census. Phase 3 quotients those
-assigned supports by support automorphisms preserving the unordered terminal
-pair (:func:`simple_bundle_labeling_census`). The module also exposes focused
-per-network local reduction and canonical reduced-signature helpers
-(:func:`canonical_reduced_signature`), and combines every stage into an
-end-to-end canonical reduced-topology census
-(:func:`reduced_topology_census`, :func:`iter_reduced_topology_signatures`).
+The public provisional counting API is query based: support, bundle-set,
+assignment, assigned-support, and network censuses are expressed through
+object-language functions such as :func:`assignment_census`,
+:func:`assigned_support_census`, and :func:`network_census`. Focused local
+series/parallel reduction helpers such as :func:`canonical_reduced_signature`
+remain public model primitives. Older staged census wrappers are retained only
+as private implementation/test machinery where their algorithms are still
+useful.
 """
 
 from __future__ import annotations
@@ -801,7 +797,7 @@ def network_census(query: CountQuery, relation: str | NetworkRelation = "local-s
 
 
 @dataclass(frozen=True)
-class BundleAssignmentCensusResult:
+class _BundleAssignmentCensusResult:
     """Raw phase-2 simple-bundle assignment census.
 
     ``assignments_per_support_by_edges`` counts assignments of the seven
@@ -828,7 +824,7 @@ class BundleAssignmentCensusResult:
 
 
 @dataclass(frozen=True)
-class BundleLabelingCensusResult:
+class _BundleLabelingCensusResult:
     """Phase-3 canonical simple-bundle labeling-orbit census.
 
     Counts are keyed by support-edge count. ``raw_leaf_assignments_by_edges``
@@ -1132,7 +1128,7 @@ def canonical_reduced_signature(
 
 
 @dataclass(frozen=True)
-class ReducedTopologyCensusResult:
+class _ReducedTopologyCensusResult:
     """End-to-end reduced-topology census result.
 
     ``exact_table`` is indexed as ``exact_table[r][x]`` where ``x = L+C`` in
@@ -1348,9 +1344,8 @@ def permutation_cycle_lengths(permutation: tuple[int, ...]) -> tuple[int, ...]:
 def iter_two_terminal_supports(max_edges: int):
     """Yield terminal-relevant support representatives for every enumeration stage.
 
-    This is the shared support-enumeration entry point used by
-    :func:`simple_bundle_labeling_census` and
-    :func:`iter_reduced_topology_signatures`.
+    This is the shared support-enumeration entry point used by object-language
+    assignment, assigned-support, and network counting implementations.
     """
 
     levels = generate_connected_unlabelled_simple_graphs(max_edges)
@@ -1425,9 +1420,9 @@ def simple_bundle_assignment_count_by_edge_count(
     return counts_by_edges
 
 
-def simple_bundle_assignment_census(
+def _simple_bundle_assignment_census(
     max_r: int = 3, max_reactive: int = 5, max_edges: int | None = None
-) -> BundleAssignmentCensusResult:
+) -> _BundleAssignmentCensusResult:
     """Run the phase-2 raw simple primitive bundle-assignment census."""
 
     if max_r < 0 or max_reactive < 0:
@@ -1443,7 +1438,7 @@ def simple_bundle_assignment_census(
     if resolved_max_edges > natural_max_edges:
         raise ValueError("max_edges cannot exceed max_r + max_reactive")
     if resolved_max_edges == 0:
-        return BundleAssignmentCensusResult(
+        return _BundleAssignmentCensusResult(
             max_r=max_r,
             max_reactive=max_reactive,
             max_edges=0,
@@ -1461,7 +1456,7 @@ def simple_bundle_assignment_census(
         for edge_count in range(1, resolved_max_edges + 1)
     }
 
-    return BundleAssignmentCensusResult(
+    return _BundleAssignmentCensusResult(
         max_r=max_r,
         max_reactive=max_reactive,
         max_edges=resolved_max_edges,
@@ -1494,7 +1489,7 @@ def _fixed_simple_bundle_labelings_for_cycles(
     return sum(dp.values())
 
 
-def simple_bundle_labeling_orbit_count(
+def _simple_bundle_labeling_orbit_count(
     graph: nx.Graph,
     terminals: tuple[int, int],
     max_r: int = 3,
@@ -1540,9 +1535,9 @@ def simple_bundle_labeling_orbit_count(
     return total_fixed // group_size
 
 
-def simple_bundle_labeling_census(
+def _simple_bundle_labeling_census(
     max_r: int = 3, max_reactive: int = 5, max_edges: int | None = None
-) -> BundleLabelingCensusResult:
+) -> _BundleLabelingCensusResult:
     """Run the phase-3 canonical simple-bundle labeling-orbit census."""
 
     if max_r < 0 or max_reactive < 0:
@@ -1558,7 +1553,7 @@ def simple_bundle_labeling_census(
     if resolved_max_edges > natural_max_edges:
         raise ValueError("max_edges cannot exceed max_r + max_reactive")
     if resolved_max_edges == 0:
-        return BundleLabelingCensusResult(
+        return _BundleLabelingCensusResult(
             max_r=max_r,
             max_reactive=max_reactive,
             max_edges=0,
@@ -1567,13 +1562,13 @@ def simple_bundle_labeling_census(
             canonical_labeling_orbits_by_edges={},
         )
 
-    raw = simple_bundle_assignment_census(
+    raw = _simple_bundle_assignment_census(
         max_r=max_r, max_reactive=max_reactive, max_edges=resolved_max_edges
     )
     canonical_by_edges: Counter[int] = Counter()
 
     for graph, terminals, autos in iter_two_terminal_supports(resolved_max_edges):
-        canonical_by_edges[graph.number_of_edges()] += simple_bundle_labeling_orbit_count(
+        canonical_by_edges[graph.number_of_edges()] += _simple_bundle_labeling_orbit_count(
             graph,
             terminals,
             max_r=max_r,
@@ -1581,7 +1576,7 @@ def simple_bundle_labeling_census(
             graph_automorphisms=autos,
         )
 
-    return BundleLabelingCensusResult(
+    return _BundleLabelingCensusResult(
         max_r=max_r,
         max_reactive=max_reactive,
         max_edges=resolved_max_edges,
@@ -1660,7 +1655,7 @@ def _iter_budgeted_edge_assignments(
     yield from rec(0, 0, 0, {})
 
 
-def iter_reduced_topology_signatures(
+def _iter_reduced_topology_signatures(
     max_r: int = 3, max_reactive: int = 5, max_edges: int | None = None
 ):
     """Yield unique canonical reduced signatures deterministically for a budget slice."""
@@ -1687,9 +1682,9 @@ def iter_reduced_topology_signatures(
         yield signatures[key]
 
 
-def reduced_topology_census(
+def _reduced_topology_census(
     max_r: int = 3, max_reactive: int = 5, max_edges: int | None = None
-) -> ReducedTopologyCensusResult:
+) -> _ReducedTopologyCensusResult:
     """Run the first end-to-end canonical reduced-topology census."""
 
     if max_r < 0 or max_reactive < 0:
@@ -1701,16 +1696,16 @@ def reduced_topology_census(
     if resolved_max_edges > natural_max_edges:
         raise ValueError("max_edges cannot exceed max_r + max_reactive")
 
-    raw = simple_bundle_assignment_census(
+    raw = _simple_bundle_assignment_census(
         max_r=max_r, max_reactive=max_reactive, max_edges=resolved_max_edges
     )
-    labelings = simple_bundle_labeling_census(
+    labelings = _simple_bundle_labeling_census(
         max_r=max_r, max_reactive=max_reactive, max_edges=resolved_max_edges
     )
     counts: DefaultDict[tuple[int, int], int] = defaultdict(int)
     stable_strings: list[str] = []
 
-    for signature in iter_reduced_topology_signatures(
+    for signature in _iter_reduced_topology_signatures(
         max_r=max_r, max_reactive=max_reactive, max_edges=resolved_max_edges
     ):
         r, l, c = reduced_signature_component_counts(signature)
@@ -1722,7 +1717,7 @@ def reduced_topology_census(
         tuple(counts.get((r, x), 0) for x in range(max_reactive + 1))
         for r in range(max_r + 1)
     )
-    return ReducedTopologyCensusResult(
+    return _ReducedTopologyCensusResult(
         max_r=max_r,
         max_reactive=max_reactive,
         max_edges=resolved_max_edges,

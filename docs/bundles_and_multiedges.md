@@ -32,7 +32,7 @@ as historical background.
 ## Simple primitive bundles
 
 The reduced model uses only simple primitive bundles. Phase 2 implements these
-bundles for the raw assignment census exposed as `rice bundles`. A bundle is a
+bundles for the raw assignment census exposed as `rice count assignments`. A bundle is a
 non-empty subset of `{R, L, C}` between the same two support nodes.
 
 Allowed bundles:
@@ -111,7 +111,7 @@ R || L != R -- L
 
 A series span is the local series analogue of a parallel bundle. Series spans
 are part of the staged reduced-signature model; local series-span reduction
-and canonical reduced signatures are implemented (see `rice reduced` and
+and canonical reduced signatures are implemented (see `rice count networks` and
 `docs/model_decisions.md`).
 
 A span is a maximal local chain of two-terminal factors separated by internal nodes
@@ -223,19 +223,19 @@ Support graphs provide the structural skeleton for the staged reduced model:
 
 The reduced-model implementation is staged:
 
-- Phase 1 support census is implemented as `rice supports`: it performs steps 1
+- Phase 1 support census is implemented as `rice count supports`: it performs steps 1
   through 3 and reports basic support graphs, unordered two-terminal labellings,
   and terminal-relevant two-terminal supports.
 - Phase 2 raw simple primitive bundle-assignment census is implemented as
-  `rice bundles`: it assigns the seven simple primitive bundles above to
+  `rice count assignments`: it assigns the seven simple primitive bundles above to
   terminal-relevant supports under the component budgets and reports raw leaf
   assignments before assigned-support isomorphism or signature merging.
 - Phase 3 canonical bundle-labeling orbit census is implemented as
-  `rice labelings`: it quotients the simple-bundle assignments by
+  `rice count assigned-supports`: it quotients the simple-bundle assignments by
   automorphisms of each terminal-relevant support that preserve the unordered
   terminal pair, including terminal reversal.
 - Local series spans, recursive reduced signatures, and full standard-slice
-  signature enumeration and merging are implemented as `rice reduced`,
+  signature enumeration and merging are implemented as `rice count networks`,
   currently exposed for the small golden slice `R <= 2`, `L+C <= 3`; the full
   `R <= 3`, `L+C <= 5` reduced catalogue remains future work.
 
@@ -253,7 +253,7 @@ bundle-weight source of truth.
 `rice count bundle-sets` counts multisets of these seven bundle types. A bundle
 set's cardinality is the number of source support edges it can fill. Its raw
 placement count on distinguishable edges is the multinomial coefficient of its
-multiplicities. This is deliberately separate from `rice bundles`, which counts
+multiplicities. This is deliberately separate from `rice count assignments`, which counts
 ordered raw assignments per relevant support shape.
 
 ## Assignment and assigned-support count targets

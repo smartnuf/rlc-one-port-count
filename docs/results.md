@@ -80,7 +80,7 @@ L||C
 R||L||C
 ```
 
-This target is implemented by `rice bundles --max-r 3 --max-reactive 5`. The command derives the natural support bound `max_edges = max_r + max_reactive`; optional `--max-edges` is only for debugging/truncation and cannot exceed that bound. For `R <= 3, L+C <= 5`, the raw assignment leaves before isomorphism/signature merging are:
+This target is implemented by `rice count assignments --profile main`. The command derives the natural support bound `max_support_edges = max_r + max_lc`; optional `--max-support-edges` is only for debugging/truncation and cannot exceed that bound. For `R <= 3, L+C <= 5`, the raw assignment leaves before isomorphism/signature merging are:
 
 | Support edges | Relevant supports | Valid bundle assignments per support | Leaf assignments |
 |---:|---:|---:|---:|
@@ -101,7 +101,7 @@ targets for the next implementation phases.
 ## Canonical simple-bundle labeling orbit target
 
 The next reduced-model phase is implemented by
-`rice labelings --max-r 3 --max-reactive 5`. It preserves the phase-2 raw
+`rice count assigned-supports --profile main`. It preserves the phase-2 raw
 assignment leaves and counts canonical bundle labelings modulo automorphisms of
 each terminal-relevant support that preserve the unordered terminal pair. Such
 automorphisms may swap the two terminals. This phase removes only
@@ -145,10 +145,10 @@ RICE signature, and that mapping has not yet been measured.
 Reproduced with:
 
 ```bash
-.venv/bin/python -m rice reduced \
+.venv/bin/python -m rice count networks \
     --max-r 3 \
-    --max-reactive 2 \
-    --max-edges 5 \
+    --max-lc 2 \
+    --max-support-edges 5 \
     --format json
 ```
 
@@ -170,11 +170,11 @@ Cumulative RICE local series/parallel reduced total for `R <= 3`, `L+C <= 2`,
 ## First complete reduced-topology golden slice
 
 The first end-to-end reduced-topology census is implemented for the deliberately
-small regression slice. This slice is also the default for `rice reduced`; pass
+small regression slice. Select this slice explicitly with `--profile golden`; pass
 explicit limits only when intentionally exploring a larger slice:
 
 ```bash
-.venv/bin/python -m rice reduced --max-r 2 --max-reactive 3
+.venv/bin/python -m rice count networks --profile golden
 ```
 
 The equivalence relation is the documented canonical reduced-topology relation:

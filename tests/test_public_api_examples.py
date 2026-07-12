@@ -8,11 +8,8 @@ rice.__all__, not to duplicate the golden-count regression suite.
 import networkx as nx
 
 from rice import (
-    BundleAssignmentCensusResult,
-    BundleLabelingCensusResult,
     ReducedFactor,
     ReducedSignature,
-    ReducedTopologyCensusResult,
     SIMPLE_PRIMITIVE_BUNDLES,
     SimplePrimitiveBundle,
     SupportCensusResult,
@@ -23,10 +20,15 @@ from rice import (
     normalise_series_factor,
     primitive_factor,
     reduced_signature_component_counts,
-    reduced_topology_census,
-    simple_bundle_assignment_census,
-    simple_bundle_labeling_census,
     support_census,
+)
+from rice.core import (
+    _BundleAssignmentCensusResult,
+    _BundleLabelingCensusResult,
+    _ReducedTopologyCensusResult,
+    _reduced_topology_census,
+    _simple_bundle_assignment_census,
+    _simple_bundle_labeling_census,
 )
 
 
@@ -38,18 +40,18 @@ def test_support_census_example_matches_documented_output():
     assert result.relevant_total == 4
 
 
-def test_simple_bundle_assignment_census_example_matches_documented_output():
-    result = simple_bundle_assignment_census(max_r=1, max_reactive=1)
+def test__simple_bundle_assignment_census_example_matches_documented_output():
+    result = _simple_bundle_assignment_census(max_r=1, max_reactive=1)
 
-    assert isinstance(result, BundleAssignmentCensusResult)
+    assert isinstance(result, _BundleAssignmentCensusResult)
     assert result.leaf_assignments_total == 9
     assert result.leaf_assignments_by_edges == {1: 5, 2: 4}
 
 
-def test_simple_bundle_labeling_census_example_matches_documented_output():
-    result = simple_bundle_labeling_census(max_r=1, max_reactive=1)
+def test__simple_bundle_labeling_census_example_matches_documented_output():
+    result = _simple_bundle_labeling_census(max_r=1, max_reactive=1)
 
-    assert isinstance(result, BundleLabelingCensusResult)
+    assert isinstance(result, _BundleLabelingCensusResult)
     assert result.canonical_labeling_orbits_total == 7
     assert result.canonical_labeling_orbits_by_edges == {1: 5, 2: 2}
 
@@ -120,10 +122,10 @@ def test_canonical_reduced_signature_example_is_deterministic():
     assert reduced_signature_component_counts(signature) == (1, 1, 0)
 
 
-def test_reduced_topology_census_example_matches_documented_output():
-    result = reduced_topology_census(max_r=1, max_reactive=1)
+def test__reduced_topology_census_example_matches_documented_output():
+    result = _reduced_topology_census(max_r=1, max_reactive=1)
 
-    assert isinstance(result, ReducedTopologyCensusResult)
+    assert isinstance(result, _ReducedTopologyCensusResult)
     assert result.exact_table == ((0, 2), (1, 4))
     assert result.total == 7
     assert result.canonical_signatures == (

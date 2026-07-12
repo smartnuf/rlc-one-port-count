@@ -3,12 +3,15 @@ $ErrorActionPreference = 'Stop'
 
 . "$PSScriptRoot\_common.ps1"
 
+Set-Location (Split-Path -Parent $PSScriptRoot)
 Assert-RiceRepoRoot -ScriptName 'check.ps1'
 $venvPython = Require-VenvPython
 
-Invoke-CheckedCommand -FilePath (Join-Path (Get-Location) 'scripts\lint.ps1') -Stage 'lint.ps1'
-Invoke-CheckedCommand -FilePath (Join-Path (Get-Location) 'scripts\test.ps1') -Stage 'test.ps1'
-Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', 'supports', '--max-edges', '8') -Stage 'rice supports'
-Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', 'bundles', '--max-r', '3', '--max-reactive', '5') -Stage 'rice bundles'
-Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', 'labelings', '--max-r', '3', '--max-reactive', '5') -Stage 'rice labelings'
-Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m', 'rice', 'reduced', '--max-r', '2', '--max-reactive', '3') -Stage 'rice reduced'
+Invoke-CheckedCommand -FilePath "$PSScriptRoot\lint.ps1" -Arguments @() -Stage 'lint'
+Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m','pytest','-q') -Stage 'pytest'
+Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m','rice','count','supports','--max-support-edges','8') -Stage 'count supports'
+Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m','rice','count','bundle-types') -Stage 'count bundle-types'
+Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m','rice','count','bundle-sets','--profile','main') -Stage 'count bundle-sets'
+Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m','rice','count','assignments','--profile','main') -Stage 'count assignments'
+Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m','rice','count','assigned-supports','--profile','main') -Stage 'count assigned-supports'
+Invoke-CheckedCommand -FilePath $venvPython -Arguments @('-m','rice','count','networks','--profile','golden') -Stage 'count networks'

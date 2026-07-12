@@ -1,37 +1,282 @@
 {
   "definition": "canonical-reduced-topology-local-series-parallel-v1",
   "diagnostics": {
-    "canonical_reduced_signatures_total": 313,
-    "phase3_assigned_support_labeling_orbits_total": 1112,
-    "raw_phase2_assignments_total": 1830
+    "assigned_support_classes": 1112,
+    "raw_assignments": 1830,
+    "unique_reduced_networks": 313
   },
-  "equivalence": "internal node renaming, terminal reversal, local commutative series/parallel normalisation, and duplicate primitive singleton merging; not rational immittance equivalence",
-  "exact_counts_by_r_x": [
-    [
-      0,
-      2,
-      2,
-      4
-    ],
-    [
-      1,
-      4,
-      12,
-      40
-    ],
-    [
-      0,
-      4,
-      34,
-      210
-    ]
+  "facts": [
+    {
+      "c": 1,
+      "l": 0,
+      "lc": 1,
+      "networks": 1,
+      "r": 0,
+      "rlc": 1
+    },
+    {
+      "c": 0,
+      "l": 1,
+      "lc": 1,
+      "networks": 1,
+      "r": 0,
+      "rlc": 1
+    },
+    {
+      "c": 1,
+      "l": 1,
+      "lc": 2,
+      "networks": 2,
+      "r": 0,
+      "rlc": 2
+    },
+    {
+      "c": 2,
+      "l": 1,
+      "lc": 3,
+      "networks": 2,
+      "r": 0,
+      "rlc": 3
+    },
+    {
+      "c": 1,
+      "l": 2,
+      "lc": 3,
+      "networks": 2,
+      "r": 0,
+      "rlc": 3
+    },
+    {
+      "c": 0,
+      "l": 0,
+      "lc": 0,
+      "networks": 1,
+      "r": 1,
+      "rlc": 1
+    },
+    {
+      "c": 1,
+      "l": 0,
+      "lc": 1,
+      "networks": 2,
+      "r": 1,
+      "rlc": 2
+    },
+    {
+      "c": 2,
+      "l": 0,
+      "lc": 2,
+      "networks": 2,
+      "r": 1,
+      "rlc": 3
+    },
+    {
+      "c": 3,
+      "l": 0,
+      "lc": 3,
+      "networks": 2,
+      "r": 1,
+      "rlc": 4
+    },
+    {
+      "c": 0,
+      "l": 1,
+      "lc": 1,
+      "networks": 2,
+      "r": 1,
+      "rlc": 2
+    },
+    {
+      "c": 1,
+      "l": 1,
+      "lc": 2,
+      "networks": 8,
+      "r": 1,
+      "rlc": 3
+    },
+    {
+      "c": 2,
+      "l": 1,
+      "lc": 3,
+      "networks": 18,
+      "r": 1,
+      "rlc": 4
+    },
+    {
+      "c": 0,
+      "l": 2,
+      "lc": 2,
+      "networks": 2,
+      "r": 1,
+      "rlc": 3
+    },
+    {
+      "c": 1,
+      "l": 2,
+      "lc": 3,
+      "networks": 18,
+      "r": 1,
+      "rlc": 4
+    },
+    {
+      "c": 0,
+      "l": 3,
+      "lc": 3,
+      "networks": 2,
+      "r": 1,
+      "rlc": 4
+    },
+    {
+      "c": 1,
+      "l": 0,
+      "lc": 1,
+      "networks": 2,
+      "r": 2,
+      "rlc": 3
+    },
+    {
+      "c": 2,
+      "l": 0,
+      "lc": 2,
+      "networks": 8,
+      "r": 2,
+      "rlc": 4
+    },
+    {
+      "c": 3,
+      "l": 0,
+      "lc": 3,
+      "networks": 20,
+      "r": 2,
+      "rlc": 5
+    },
+    {
+      "c": 0,
+      "l": 1,
+      "lc": 1,
+      "networks": 2,
+      "r": 2,
+      "rlc": 3
+    },
+    {
+      "c": 1,
+      "l": 1,
+      "lc": 2,
+      "networks": 18,
+      "r": 2,
+      "rlc": 4
+    },
+    {
+      "c": 2,
+      "l": 1,
+      "lc": 3,
+      "networks": 85,
+      "r": 2,
+      "rlc": 5
+    },
+    {
+      "c": 0,
+      "l": 2,
+      "lc": 2,
+      "networks": 8,
+      "r": 2,
+      "rlc": 4
+    },
+    {
+      "c": 1,
+      "l": 2,
+      "lc": 3,
+      "networks": 85,
+      "r": 2,
+      "rlc": 5
+    },
+    {
+      "c": 0,
+      "l": 3,
+      "lc": 3,
+      "networks": 20,
+      "r": 2,
+      "rlc": 5
+    }
   ],
   "format_version": 1,
-  "regeneration_command": ".venv/bin/python -m rice reduced --max-r 2 --max-reactive 3 --format json",
-  "scope": {
-    "max_edges": 5,
-    "max_r": 2,
-    "max_reactive": 3
+  "group_by": [
+    "r",
+    "lc"
+  ],
+  "object": "networks",
+  "query": {
+    "component_constraints": {
+      "max_c": null,
+      "max_l": null,
+      "max_lc": 3,
+      "max_r": 2,
+      "max_rlc": null
+    },
+    "effective_support_edges": {
+      "max": 5,
+      "min": 1
+    },
+    "profile": "golden",
+    "requested_support_edges": {
+      "max": null,
+      "min": 1
+    }
   },
-  "total": 313
+  "records": [
+    {
+      "lc": 1,
+      "networks": 2,
+      "r": 0
+    },
+    {
+      "lc": 2,
+      "networks": 2,
+      "r": 0
+    },
+    {
+      "lc": 3,
+      "networks": 4,
+      "r": 0
+    },
+    {
+      "lc": 0,
+      "networks": 1,
+      "r": 1
+    },
+    {
+      "lc": 1,
+      "networks": 4,
+      "r": 1
+    },
+    {
+      "lc": 2,
+      "networks": 12,
+      "r": 1
+    },
+    {
+      "lc": 3,
+      "networks": 40,
+      "r": 1
+    },
+    {
+      "lc": 1,
+      "networks": 4,
+      "r": 2
+    },
+    {
+      "lc": 2,
+      "networks": 34,
+      "r": 2
+    },
+    {
+      "lc": 3,
+      "networks": 210,
+      "r": 2
+    }
+  ],
+  "relation": "local-sp",
+  "totals": {
+    "networks": 313
+  }
 }

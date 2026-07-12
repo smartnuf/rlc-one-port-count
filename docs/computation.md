@@ -44,7 +44,7 @@ The reduced model is implemented in stages.
 
 ## Stage 1: support graph census
 
-Implemented as `rice supports` / `support_census`, a support-only census:
+Implemented as `rice count supports` / `support_census`, a support-only census:
 
 1. enumerate basic connected unlabelled simple support graphs;
 2. enumerate unordered two-terminal labellings of each basic graph;
@@ -71,8 +71,8 @@ smaller accepted graph.
 Run the census with subcommand options after `supports`:
 
 ```bash
-.venv/bin/python -m rice supports --max-edges 8
-.venv/bin/python -m rice supports --max-r 3 --max-reactive 5
+.venv/bin/python -m rice count supports --max-support-edges 8
+.venv/bin/python -m rice count supports --profile main
 ```
 
 The second form derives `max_edges = max_r + max_reactive`. Subcommand
@@ -80,7 +80,7 @@ options must go after `supports`; there is no no-subcommand form.
 
 ## Stage 2: simple bundle assignment
 
-Implemented as `rice bundles` / `simple_bundle_assignment_census`, assigning
+Implemented as `rice count assignments` / `assignment_census`, assigning
 only simple primitive bundles:
 
 ```text
@@ -93,7 +93,7 @@ L||C
 R||L||C
 ```
 
-For `R <= 3, L+C <= 5`, run `.venv/bin/python -m rice bundles --max-r 3 --max-reactive 5`. The command derives `max_edges = max_r + max_reactive`; optional `--max-edges` is only for debugging/truncation and cannot exceed that derived bound. Zero/zero budgets are a valid empty bundle or labeling census with no support-edge rows; negative budgets are invalid. The raw assignment leaf bound before isomorphism or reduced-signature merging is **1,166,714**.
+For `R <= 3, L+C <= 5`, run `.venv/bin/python -m rice count assignments --profile main`. The command derives `max_edges = max_r + max_reactive`; optional `--max-edges` is only for debugging/truncation and cannot exceed that derived bound. Zero/zero budgets are a valid empty bundle or labeling census with no support-edge rows; negative budgets are invalid. The raw assignment leaf bound before isomorphism or reduced-signature merging is **1,166,714**.
 
 This is small enough to permit straightforward enumeration for the first reduced
 implementation.
@@ -103,7 +103,7 @@ implementation.
 The final reduced count uses canonical signatures rather than raw graph
 assignment counts, implemented as `canonical_reduced_signature` for one
 assigned network and, for full enumeration and merging across a budget slice,
-`rice reduced` / `reduced_topology_census` — currently computed and
+`rice count networks` / `network_census` — currently computed and
 committed for the small golden slice `R <= 2`, `L+C <= 3`
 (`docs/plan/05-slices/04-r3-x5.md` tracks running the full `R <= 3`,
 `L+C <= 5` scope through the same enumeration).

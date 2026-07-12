@@ -177,27 +177,29 @@ The support census is exposed as the `supports` subcommand. Subcommand options
 must go after `supports`:
 
 ```bash
-.venv/bin/python -m rice supports --max-edges 8
+.venv/bin/python -m rice count supports --max-support-edges 8
 ```
 
 For the main component-budget problem, the CLI can derive the support-edge bound
-from `max_edges = max_r + max_reactive`:
+from the selected profile or from object-language component-budget options such
+as `--max-r` and `--max-lc`:
 
 ```bash
-.venv/bin/python -m rice supports --max-r 3 --max-reactive 5
+.venv/bin/python -m rice count supports --profile main
 ```
 
-Use either `--max-edges` or the `--max-r`/`--max-reactive` pair. Supplying
-`--max-edges` together with component-budget options is an error rather than an
-implicit precedence choice. Supplying only one of `--max-r` and
-`--max-reactive` is also an error. `--max-edges` must be positive, component
-budgets must be nonnegative, and a supplied component-budget pair must have a
-positive sum.
+Use `--max-support-edges` when setting the support-edge bound directly.
+Object-language component-budget options such as `--max-r` and `--max-lc` may
+also derive the support-edge bound, and named profiles such as `--profile main`
+select the documented component budgets. Exact, minimum, and maximum support
+edge filters are expressed with `--support-edges`, `--min-support-edges`, and
+`--max-support-edges`; component budgets must be nonnegative, and a supplied
+component-budget combination must have a positive derived support bound.
 
 A subcommand is always required, and every option belongs after its own
-subcommand. For example, `rice --max-r 3 --max-reactive 5 supports` is
+object command. For example, `rice --max-r 3 --max-lc 5 count supports` is
 rejected so those options cannot be silently ignored or misapplied to the
-wrong subcommand.
+wrong command; use `rice count supports --max-r 3 --max-lc 5` instead.
 
 ## Required phase-1 tests
 
