@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from itertools import combinations, permutations
+from itertools import combinations, permutations, product
 from typing import DefaultDict, Iterable, Literal
 
 import networkx as nx
@@ -1729,8 +1729,6 @@ def _reduced_topology_census(
 
 # Provisional object enumeration and reduction-provenance API.
 import hashlib
-from itertools import product
-
 DEFAULT_ENUM_MAX_RECORDS = 10000
 
 
@@ -1873,19 +1871,61 @@ def enum_supports(query: CountQuery) -> tuple[SupportRecord, ...]:
 
 
 def enum_bundle_types(query: CountQuery | None = None) -> tuple[BundleTypeRecord, ...]:
-    return tuple(BundleTypeRecord(_digest("bundle-type", b.label), b.label, b.r_count, int(b.l_count), int(b.c_count), b.reactive_count, b.r_count + b.reactive_count) for b in SIMPLE_PRIMITIVE_BUNDLES)
+    del query  # accepted for consistency with the provisional enumeration API
+    return tuple(
+        BundleTypeRecord(
+            _digest("bundle-type", bundle.label),
+            bundle.label,
+            bundle.r_count,
+            int(bundle.l_count),
+            int(bundle.c_count),
+            bundle.reactive_count,
+            bundle.r_count + bundle.reactive_count,
+        )
+        for bundle in SIMPLE_PRIMITIVE_BUNDLES
+    )
 
 
 def enum_bundle_sets(query: CountQuery) -> tuple[BundleSetRecord, ...]:
-    out=[]
-    for bs in iter_bundle_sets(query):
-        out.append(BundleSetRecord(_digest("bundle-set", bs.multiplicities), bs.source_support_edges, bs.multiplicities, bs.r_count, bs.l_count, bs.c_count, bs.lc_count, bs.rlc_count, bs.raw_placement_count, bs))
-    return tuple(sorted(out, key=lambda r:(r.source_support_edges,r.r,r.l,r.c,r.multiplicities)))
+    records = []
+    for bundle_set in iter_bundle_sets(query):
+        records.append(
+            BundleSetRecord(
+                _digest("bundle-set", bundle_set.multiplicities),
+                bundle_set.source_support_edges,
+                bundle_set.multiplicities,
+                bundle_set.r_count,
+                bundle_set.l_count,
+                bundle_set.c_count,
+                bundle_set.lc_count,
+                bundle_set.rlc_count,
+                bundle_set.raw_placement_count,
+                bundle_set,
+            )
+        )
+    return tuple(
+        sorted(
+            records,
+            key=lambda record: (
+                record.source_support_edges,
+                record.r,
+                record.l,
+                record.c,
+                record.multiplicities,
+            ),
+        )
+    )
 
 
-def _enforce_limit(n:int, max_records:int, what:str)->None:
+def _enforce_limit(n: int, max_records: int, what: str) -> None:
+    if max_records < 1:
+        raise ValueError("max_records must be a positive integer")
     if n > max_records:
-        raise ValueError(f"{what} would produce {n} records, exceeding --max-records {max_records}; use tighter limits, a small profile, or an explicit higher --max-records")
+        raise ValueError(
+            f"{what} would produce {n} records, exceeding --max-records "
+            f"{max_records}; use tighter limits, a small profile, or an explicit "
+            "higher --max-records"
+        )
 
 
 def enum_assignments(query: CountQuery, max_records: int = DEFAULT_ENUM_MAX_RECORDS) -> tuple[AssignmentRecord, ...]:

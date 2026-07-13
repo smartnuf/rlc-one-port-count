@@ -9,19 +9,31 @@ from typing import Any
 
 from .core import (
     COUNT_PROFILES,
+    DEFAULT_ENUM_MAX_RECORDS,
+    SIMPLE_PRIMITIVE_BUNDLES,
     ComponentConstraints,
     CountQuery,
     SupportCensusResult,
-    SIMPLE_PRIMITIVE_BUNDLES,
     assignment_census,
     assigned_support_census,
     bundle_set_census,
+    enum_assigned_supports,
+    enum_assignments,
+    enum_bundle_sets,
+    enum_bundle_types,
+    enum_networks,
+    enum_supports,
     network_census,
-    support_census,
-    DEFAULT_ENUM_MAX_RECORDS,
-    enum_supports, enum_bundle_types, enum_bundle_sets, enum_assignments, enum_assigned_supports, enum_networks,
     reduction_census,
+    support_census,
 )
+
+
+def _positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed < 1:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return parsed
 
 
 class RiceArgumentParser(argparse.ArgumentParser):
@@ -92,7 +104,7 @@ def build_parser() -> argparse.ArgumentParser:
     count_reductions = count_subparsers.add_parser("reductions", help="analyse assignments to assigned-supports to networks reductions")
     add_count_scope_options(count_reductions)
     count_reductions.add_argument("--relation", default="local-sp", help="network relation, default: local-sp")
-    count_reductions.add_argument("--max-records", type=int, default=DEFAULT_ENUM_MAX_RECORDS, help="maximum intermediate enumeration records, default: 10000")
+    count_reductions.add_argument("--max-records", type=_positive_int, default=DEFAULT_ENUM_MAX_RECORDS, help="maximum intermediate enumeration records, default: 10000")
 
     enum_parser = subparsers.add_parser("enum", help="enumerate provisional RICE objects")
     enum_subparsers = enum_parser.add_subparsers(dest="enum_object", parser_class=RiceArgumentParser, required=True)
@@ -103,7 +115,7 @@ def build_parser() -> argparse.ArgumentParser:
         else:
             ep.add_argument("--format", choices=("markdown", "json"), default=argparse.SUPPRESS)
         if name in {"assignments", "assigned-supports", "networks"}:
-            ep.add_argument("--max-records", type=int, default=DEFAULT_ENUM_MAX_RECORDS, help="maximum records to emit, default: 10000")
+            ep.add_argument("--max-records", type=_positive_int, default=DEFAULT_ENUM_MAX_RECORDS, help="maximum records to emit, default: 10000")
         if name == "networks":
             ep.add_argument("--relation", default="local-sp", help="network relation, default: local-sp")
 

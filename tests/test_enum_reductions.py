@@ -2,7 +2,7 @@ import json
 import subprocess
 import sys
 
-from rice import CountQuery, ComponentConstraints, enum_assignments, enum_assigned_supports, enum_networks, reduction_census
+from rice import CountQuery, ComponentConstraints, enum_assignments, enum_assigned_supports, enum_bundle_types, enum_networks, reduction_census
 
 
 def run_json(*args):
@@ -29,6 +29,10 @@ def test_small_rl_catalogue_and_reduction_fibres():
     assert result.diagnostics["conservation_checks"] == {"raw_assignments": True, "assigned_supports": True, "network_ids_unique": True}
 
 
+def test_enum_bundle_types_accepts_ignored_query_for_api_consistency():
+    assert enum_bundle_types() == enum_bundle_types(small_query())
+
+
 def test_cli_enum_targets_are_deterministic_json():
     args = ("enum", "assignments", "--max-r", "1", "--max-l", "1", "--max-c", "0", "--format", "json")
     first = run_json(*args)
@@ -52,4 +56,25 @@ def test_output_size_guard_fails_cleanly():
     proc = subprocess.run([sys.executable, "-m", "rice", "enum", "assignments", "--profile", "golden", "--max-records", "10"], text=True, capture_output=True)
     assert proc.returncode == 2
     assert "exceeding --max-records" in proc.stderr
+    assert "Traceback" not in proc.stderr
+
+
+def test_max_records_must_be_positive():
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "rice",
+            "enum",
+            "assignments",
+            "--max-r",
+            "1",
+            "--max-records",
+            "0",
+        ],
+        text=True,
+        capture_output=True,
+    )
+    assert proc.returncode == 2
+    assert "must be a positive integer" in proc.stderr
     assert "Traceback" not in proc.stderr
