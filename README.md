@@ -1,7 +1,10 @@
 # RICE
 
-RICE counts small two-terminal resistor/inductor/capacitor one-port topology
-classes.
+RICE counts and enumerates small two-terminal (or one-port) resistor/inductor/capacitor  
+topology classes.
+
+We were inspired by reading a book by Morelli and Smith, and some of the references 
+they site in their bibliography.
 
 ## Development status: provisional interfaces
 
