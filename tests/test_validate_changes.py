@@ -147,9 +147,22 @@ def test_docs_profile_uses_explicit_commit_range_for_whitespace_check():
     commands = validate_changes.command_for_profile("docs", ("BASE", "HEAD"))
 
     assert commands[0] == ["git", "diff", "--check", "BASE", "HEAD"]
+    assert commands[-1] == [
+        sys.executable,
+        "scripts/check_line_lengths.py",
+        "--base",
+        "BASE",
+        "--head",
+        "HEAD",
+    ]
 
 
 def test_docs_profile_checks_staged_and_unstaged_worktree_whitespace():
     commands = validate_changes.command_for_profile("docs", tuple())
 
     assert commands[:2] == [["git", "diff", "--check"], ["git", "diff", "--cached", "--check"]]
+    assert commands[-1] == [
+        sys.executable,
+        "scripts/check_line_lengths.py",
+        "--changed",
+    ]

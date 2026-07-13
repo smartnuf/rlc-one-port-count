@@ -120,6 +120,33 @@ def changed_files(root: Path = REPO_ROOT) -> list[str]:
     return paths
 
 
+def changed_files_between(
+    base: str,
+    head: str,
+    root: Path = REPO_ROOT,
+) -> list[str]:
+    completed = subprocess.run(
+        ["git", "diff", "--name-status", "--find-renames", base, head],
+        cwd=root,
+        text=True,
+        check=True,
+        capture_output=True,
+    )
+    paths: list[str] = []
+    for line in completed.stdout.splitlines():
+        parts = line.split("\t")
+        if not parts:
+            continue
+        status = parts[0]
+        if status.startswith("D"):
+            continue
+        if status.startswith("R") and len(parts) == 3:
+            paths.append(parts[2])
+        elif len(parts) >= 2:
+            paths.append(parts[-1])
+    return paths
+
+
 def _hash_comment_directive(stripped: str) -> str | None:
     if not stripped.startswith("#"):
         return None
@@ -259,9 +286,13 @@ def check_lines(
     return diagnostics
 
 
-def head_line_counts(path: str, root: Path = REPO_ROOT) -> Counter[str]:
+def ref_line_counts(
+    path: str,
+    root: Path = REPO_ROOT,
+    ref: str = "HEAD",
+) -> Counter[str]:
     completed = subprocess.run(
-        ["git", "show", f"HEAD:{path}"],
+        ["git", "show", f"{ref}:{path}"],
         cwd=root,
         text=True,
         capture_output=True,
@@ -277,6 +308,7 @@ def check_paths(
     root: Path = REPO_ROOT,
     max_columns: int = DEFAULT_MAX_COLUMNS,
     ignore_existing: bool = False,
+    existing_ref: str = "HEAD",
 ) -> CheckResult:
     diagnostics: list[Diagnostic] = []
     for path in sorted(p for p in paths if is_included_path(p)):
@@ -296,7 +328,7 @@ def check_paths(
             continue
         path_diagnostics = check_lines(path, data, max_columns=max_columns)
         if ignore_existing:
-            old_lines = head_line_counts(path, root)
+            old_lines = ref_line_counts(path, root, existing_ref)
             kept: list[Diagnostic] = []
             current_lines = [line.rstrip("\r\n") for line in data]
             for diagnostic in path_diagnostics:
@@ -323,10 +355,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="check changed worktree paths instead of all tracked files",
     )
+    parser.add_argument("--base", help="base ref/SHA for explicit comparison")
+    parser.add_argument("--head", help="head ref/SHA for explicit comparison")
     args = parser.parse_args(argv)
 
     if args.paths:
         paths = args.paths
+    elif args.base:
+        if not args.head:
+            parser.error("--base requires --head")
+        paths = changed_files_between(args.base, args.head)
     elif args.changed:
         paths = changed_files()
     else:
@@ -334,7 +372,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     result = check_paths(
         paths,
         max_columns=args.max_columns,
-        ignore_existing=args.changed,
+        ignore_existing=args.changed or bool(args.base),
+        existing_ref=args.base or "HEAD",
     )
     for diagnostic in result.diagnostics:
         print(diagnostic.format(), file=sys.stderr)

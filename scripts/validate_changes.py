@@ -256,11 +256,25 @@ def whitespace_check_commands(diff_source: Sequence[str] | None = None) -> list[
 
 def command_for_profile(profile: str, diff_source: Sequence[str] | None = None) -> list[list[str]]:
     py = sys.executable
+    line_length_command = [
+        py,
+        str(Path("scripts") / "check_line_lengths.py"),
+        "--changed",
+    ]
+    if diff_source is not None and len(diff_source) == 2:
+        line_length_command = [
+            py,
+            str(Path("scripts") / "check_line_lengths.py"),
+            "--base",
+            diff_source[0],
+            "--head",
+            diff_source[1],
+        ]
     if profile == "docs":
         return [
             *whitespace_check_commands(diff_source),
             [py, str(Path("scripts") / "validate_changes.py"), "--check-plan-index"],
-            [py, str(Path("scripts") / "check_line_lengths.py"), "--changed"],
+            line_length_command,
         ]
     if profile == "code":
         return [["bash", "scripts/lint.sh"], ["bash", "scripts/test.sh"]]

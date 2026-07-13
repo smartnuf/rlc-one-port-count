@@ -4,6 +4,7 @@ from pathlib import Path
 
 from scripts.check_line_lengths import (
     DEFAULT_MAX_COLUMNS,
+    changed_files_between,
     check_lines,
     check_paths,
     is_included_path,
@@ -112,3 +113,45 @@ def test_path_inclusion_and_deliberate_exclusion(tmp_path: Path) -> None:
     assert [diagnostic.format() for diagnostic in result.diagnostics] == [
         "docs/example.md:1: line has 80 characters; maximum is 79"
     ]
+
+
+def test_changed_files_between_ignores_untracked_worktree_files(
+    tmp_path: Path,
+) -> None:
+    import subprocess
+
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        cwd=tmp_path,
+        check=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "Test User"],
+        cwd=tmp_path,
+        check=True,
+    )
+    (tmp_path / "tracked.txt").write_text("short\n", encoding="utf-8")
+    subprocess.run(["git", "add", "tracked.txt"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-m", "base"], cwd=tmp_path, check=True)
+    base = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=tmp_path,
+        text=True,
+        check=True,
+        capture_output=True,
+    ).stdout.strip()
+
+    (tmp_path / "tracked.txt").write_text("changed\n", encoding="utf-8")
+    subprocess.run(["git", "add", "tracked.txt"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-m", "head"], cwd=tmp_path, check=True)
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=tmp_path,
+        text=True,
+        check=True,
+        capture_output=True,
+    ).stdout.strip()
+    (tmp_path / "selection.txt").write_text("x" * 100, encoding="utf-8")
+
+    assert changed_files_between(base, head, tmp_path) == ["tracked.txt"]
