@@ -2,7 +2,7 @@ import json
 import subprocess
 import sys
 
-from rice import CountQuery, ComponentConstraints, enum_assignments, enum_assigned_supports, enum_networks, reduction_census
+from rice import CountQuery, ComponentConstraints, enum_assignments, enum_assigned_supports, enum_bundle_types, enum_networks, reduction_census
 
 
 def run_json(*args):
@@ -27,6 +27,10 @@ def test_small_rl_catalogue_and_reduction_fibres():
     result = reduction_census(q)
     assert result.pipeline_totals == {"raw_assignments": 5, "assigned_support_classes": 4, "reduced_networks": 4}
     assert result.diagnostics["conservation_checks"] == {"raw_assignments": True, "assigned_supports": True, "network_ids_unique": True}
+
+
+def test_enum_bundle_types_accepts_ignored_query_for_api_consistency():
+    assert enum_bundle_types() == enum_bundle_types(small_query())
 
 
 def test_cli_enum_targets_are_deterministic_json():

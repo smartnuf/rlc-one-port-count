@@ -1870,7 +1870,8 @@ def enum_supports(query: CountQuery) -> tuple[SupportRecord, ...]:
     return tuple(sorted(records, key=lambda r: (r.source_support_edges, r.node_count, r.edge_list, r.support_id)))
 
 
-def enum_bundle_types() -> tuple[BundleTypeRecord, ...]:
+def enum_bundle_types(query: CountQuery | None = None) -> tuple[BundleTypeRecord, ...]:
+    del query  # accepted for consistency with the provisional enumeration API
     return tuple(
         BundleTypeRecord(
             _digest("bundle-type", bundle.label),
