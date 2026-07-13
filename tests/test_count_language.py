@@ -192,7 +192,7 @@ def test_help_and_removed_staged_commands(capsys):
     assert "supports" in count and "bundle-types" in count and "bundle-sets" in count
     target = subprocess.run([sys.executable, "-m", "rice", "count", "bundle-sets", "--help"], check=True, text=True, capture_output=True).stdout
     assert "--max-lc" in target and "--group-by" in target
-    assert_error(capsys, ["count"], "required")
+    assert main(["count"]) == 0
     for command in ("supports", "bundles", "labelings", "reduced"):
         assert_error(capsys, [command], "invalid choice")
 
@@ -242,12 +242,12 @@ def test_pr2_ladenheim_nearby_local_sp_slice_and_grouping_errors(capsys):
     assert result.total == 140
     assert result.matrix() == ((0, 2, 2), (1, 4, 12), (0, 4, 34), (0, 4, 77))
     assert cli_json(["count", "networks", "--max-rlc", "0"], capsys)["totals"]["networks"] == 0
-    assert_error(capsys, ["count", "networks", "--max-support-edges", "8"], "network census requires a finite component budget")
-    with pytest.raises(ValueError, match="finite component budget"):
-        network_census(CountQuery(max_support_edges=8))
     edge_only = cli_json(["count", "assignments", "--support-edges", "4"], capsys)
     assert edge_only["query"]["effective_support_edges"] == {"min": 4, "max": 4}
-    assert_error(capsys, ["count", "networks", "--profile", "golden", "--relation", "bogus"], "unknown network relation")
+    edge_only_networks = cli_json(["count", "networks", "--support-edges", "4"], capsys)
+    assert edge_only_networks["query"]["effective_support_edges"] == {"min": 4, "max": 4}
+    assert edge_only_networks["totals"]["networks"] > 0
+    assert_error(capsys, ["count", "networks", "--profile", "golden", "--relation", "bogus"], "invalid choice")
     assert_error(capsys, ["count", "networks", "--profile", "golden", "--group-by", "support-edges"], "unsupported network grouping dimension")
     assert cli_json(["count", "networks", "--profile", "golden", "--group-by", "none"], capsys)["records"] == [{"networks": 313}]
 
@@ -286,7 +286,7 @@ def test_pr2_grouped_json_keys_totals_and_markdown_alignment(capsys):
     assert assignment_census(query, group_by=("none",)).relevant_supports_total == expected
 
     for target, group_by in (("assignments", "none"), ("assignments", "r,lc"), ("assigned-supports", "none"), ("assigned-supports", "r,lc")):
-        assert main(["count", target, "--max-rlc", "1", "--group-by", group_by]) == 0
+        assert main(["count", target, "--max-rlc", "1", "--group-by", group_by, "--format", "table"]) == 0
         rows = _markdown_rows(capsys.readouterr().out)
         header_width = len(rows[0])
         assert len(rows[-1]) == header_width
@@ -297,6 +297,6 @@ def test_pr2_help_lists_objects_without_reductions_or_enum():
     for word in ("supports", "bundle-types", "bundle-sets", "assignments", "assigned-supports", "networks"):
         assert word in count
     assert "reductions" in count
-    assert "enum" not in count
+    assert "enum supports" not in count
     target = subprocess.run([sys.executable, "-m", "rice", "count", "networks", "--help"], check=True, text=True, capture_output=True).stdout
     assert "--relation" in target and "--group-by" in target

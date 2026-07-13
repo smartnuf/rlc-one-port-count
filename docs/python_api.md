@@ -13,7 +13,8 @@ from rice import assigned_support_census, network_census
 
 Use `CountQuery(profile="main")` for the main `R <= 3`, `L+C <= 5` source slice
 and `CountQuery(profile="golden")` for the small committed network slice.
-Network censuses require a finite component budget and fail fast otherwise.
+Network censuses require a finite effective support-edge range, which may come
+from a finite component budget/profile, `support_edges`, or `max_support_edges`.
 
 Focused local-reduction primitives remain supported provisionally:
 

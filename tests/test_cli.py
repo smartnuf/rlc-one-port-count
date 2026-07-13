@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 
@@ -15,36 +16,73 @@ def _assert_cli_error_without_traceback(capsys, argv, expected):
     assert "Traceback" not in err
 
 
+def _run(*args):
+    return subprocess.run([sys.executable, "-m", "rice", *args], text=True, capture_output=True)
+
+
 def test_removed_staged_commands_are_rejected_cleanly(capsys):
     for command in ("supports", "bundles", "labelings", "reduced"):
         _assert_cli_error_without_traceback(capsys, [command], "invalid choice")
 
 
-def test_bare_rice_requires_command():
-    result = subprocess.run([sys.executable, "-m", "rice"], text=True, capture_output=True)
-    assert result.returncode == 2
-    assert "the following arguments are required: command" in result.stderr
-    assert "Traceback" not in result.stderr
+@pytest.mark.parametrize("args", [(), ("-h",), ("--help",), ("help",)])
+def test_top_level_help_forms_succeed(args):
+    result = _run(*args)
+    assert result.returncode == 0
+    assert "Command language map" in result.stdout
+    assert "count reductions" in result.stdout
+    assert "enum supports" in result.stdout
+    assert "Pipeline: supports -> bundle-types" in result.stdout
+    assert "Example finite scope:" in result.stdout
+    assert "count_object" not in result.stdout
+    assert "enum_object" not in result.stdout
 
 
-def test_top_level_help_lists_only_count_subcommand():
-    result = subprocess.run([sys.executable, "-m", "rice", "--help"], check=True, text=True, capture_output=True)
-    assert "usage: rice" in result.stdout
-    assert "count" in result.stdout
-    for removed in ("bundles", "labelings", "reduced"):
-        assert removed not in result.stdout
-    assert "--max-reactive" not in result.stdout
+@pytest.mark.parametrize("args", [("count",), ("count", "--help"), ("help", "count")])
+def test_count_group_help_forms_succeed(args):
+    result = _run(*args)
+    assert result.returncode == 0
+    for obj in ("supports", "bundle-types", "bundle-sets", "assignments", "assigned-supports", "networks", "reductions"):
+        assert obj in result.stdout
+    assert "count_object" not in result.stdout
 
 
-def test_count_help_lists_all_and_only_count_objects():
-    result = subprocess.run([sys.executable, "-m", "rice", "count", "--help"], check=True, text=True, capture_output=True)
+@pytest.mark.parametrize("args", [("enum",), ("enum", "--help"), ("help", "enum")])
+def test_enum_group_help_forms_succeed(args):
+    result = _run(*args)
+    assert result.returncode == 0
     for obj in ("supports", "bundle-types", "bundle-sets", "assignments", "assigned-supports", "networks"):
         assert obj in result.stdout
-    for removed in ("labelings", "reduced", "bundles"):
-        assert removed not in result.stdout
+    assert "enum_object" not in result.stdout
+
+
+@pytest.mark.parametrize("args", [
+    ("count", "supports", "--help"),
+    ("help", "count", "supports"),
+    ("--help", "count", "supports"),
+])
+def test_leaf_help_forms_succeed(args):
+    result = _run(*args)
+    assert result.returncode == 0
+    assert "unlabelled simple shapes" in result.stdout
+    assert "Default: auto" in result.stdout
+    assert "golden (R<=2, L+C<=3)" in result.stdout
+    assert "--support-kind" in result.stdout
 
 
 def test_object_options_remain_on_object_parser(capsys):
-    assert main(["count", "supports", "--max-support-edges", "2"]) == 0
+    assert main(["count", "supports", "--max-support-edges", "2", "--format", "table"]) == 0
     assert "Support object census" in capsys.readouterr().out
     _assert_cli_error_without_traceback(capsys, ["count", "--max-support-edges", "2", "supports"], "invalid choice")
+
+
+def test_auto_output_redirected_is_json_and_table_is_human_readable(capsys, monkeypatch):
+    assert main(["count", "supports", "--max-support-edges", "1"]) == 0
+    redirected = capsys.readouterr().out
+    assert json.loads(redirected)["object"] == "supports"
+
+    monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+    assert main(["count", "supports", "--max-support-edges", "1"]) == 0
+    tty = capsys.readouterr().out
+    assert "Support object census" in tty
+    assert "| Support edges |" in tty

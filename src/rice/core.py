@@ -762,10 +762,11 @@ def _iter_query_edge_assignments(edges: tuple[tuple[int,int],...], query: CountQ
 
 def network_census(query: CountQuery, relation: str | NetworkRelation = "local-sp", group_by: tuple[str,...] = ("r","lc")) -> NetworkCensusResult:
     rel=validate_network_relation(relation)
-    if query.component_max_edges() is None:
-        raise ValueError("network census requires a finite component budget; add --max-rlc, --max-r with --max-lc, or a finite profile before enumerating source assignments")
-    dims=_normalise_group_by(group_by,_COMPONENT_GROUPING_DIMS,"network")
+    # A finite support-edge range is enough for the source space: each edge takes
+    # exactly one of seven simple primitive bundle labels.  Component budgets and
+    # support-edge ranges are both valid ways to make network queries finite.
     eff=query.effective_support_edge_range()
+    dims=_normalise_group_by(group_by,_COMPONENT_GROUPING_DIMS,"network")
     max_edges=eff.maximum or 0
     signatures: dict[str, tuple[int,int,int]]={}
     if (eff.minimum or 1) <= max_edges:
@@ -1929,7 +1930,7 @@ def _enforce_limit(n: int, max_records: int, what: str) -> None:
 
 
 def enum_assignments(query: CountQuery, max_records: int = DEFAULT_ENUM_MAX_RECORDS) -> tuple[AssignmentRecord, ...]:
-    if query.component_max_edges() is None: raise ValueError("assignment enumeration requires a finite component budget")
+    query.effective_support_edge_range()
     est = assignment_census(query, group_by=("none",)).raw_assignments_total; _enforce_limit(est, max_records, "assignment enumeration")
     supports = enum_supports(query); bs_records = enum_bundle_sets(query); bs_by_mult={b.multiplicities:b for b in bs_records}
     out=[]

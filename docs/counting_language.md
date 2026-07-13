@@ -1,15 +1,30 @@
 # Provisional counting language
 
-RICE currently exposes one user-facing counting grammar:
+RICE currently exposes a coherent provisional command language:
 
 ```text
+rice [--help|-h]
+rice help [count|enum [object]]
 rice count <object> [options]
+rice enum <object> [options]
 ```
 
-Implemented objects are `supports`, `bundle-types`, `bundle-sets`,
-`assignments`, `assigned-supports`, and `networks`. The command language, Python
+Bare `rice`, `rice -h`, and `rice --help` all show the top-level command map.
+Bare `rice count` and `rice enum` show group help; they do not restore the
+removed legacy no-object count. Normal trailing `--help` remains supported, and
+`rice --help count supports` is normalized to `rice help count supports`.
+Misspelled verbs or objects remain errors.
+
+Implemented count objects are `supports`, `bundle-types`, `bundle-sets`,
+`assignments`, `assigned-supports`, `networks`, and `reductions`. The command language, Python
 API, JSON fields and report formatting are provisional until a versioned public
 interface is declared.
+
+Pipeline order:
+
+```text
+supports -> bundle-types -> bundle-sets -> assignments -> assigned-supports -> networks
+```
 
 Object meanings:
 
@@ -19,8 +34,11 @@ Object meanings:
 - `assignments`: raw placements of inventories on relevant supports.
 - `assigned-supports`: assignment classes modulo terminal-set-preserving support
   automorphisms.
-- `networks`: final unique networks under the named network relation. The
-  current relation is `canonical-reduced-topology-local-series-parallel-v1`.
+- `networks`: final unique reduced objects under the named network relation.
+  The current relation is `local-sp`, defined as
+  `canonical-reduced-topology-local-series-parallel-v1`.
+- `reductions`: provenance counts for the many-to-one transitions from source
+  assignments through assigned supports to local-SP networks.
 
 Exact facts are the fundamental representation. JSON results use `object`,
 `query`, `group_by`, `records`, `facts`, `totals`, relation metadata and
@@ -43,8 +61,7 @@ rice enum <object> [options]
 The implemented enumeration objects are `supports`, `bundle-types`,
 `bundle-sets`, `assignments`, `assigned-supports`, and `networks`. Enumeration
 uses the same profiles and component/support-edge option names as `count`, and
-supports `--format markdown|json`. Output formats, IDs, and the reduced
-signature serialization are provisional.
+supports `--format auto|table|markdown|json`. `--format auto` writes human-readable tables on an interactive terminal and deterministic JSON when redirected. Explicit `markdown` and `json` are deterministic; `table` is the documented human-readable table form. Output formats, IDs, and the reduced signature serialization are provisional.
 
 Enumeration records are exact source objects unless otherwise stated:
 
@@ -87,3 +104,32 @@ a given fibre size, while `source_objects` is the conserved source total for
 those fibres. Source-edge transition `distinct_networks_reached` values are
 explicit provenance facts and are not additive across rows because one network
 may be reached from multiple source-edge counts.
+
+
+## Finite scope, profiles, grouping, and relations
+
+Profiles are explicit component inequalities:
+
+- `golden`: `R <= 2`, `L+C <= 3`.
+- `main`: `R <= 3`, `L+C <= 5`.
+- `ladenheim-structural-region`: `R+L+C <= 5`, `L+C <= 2`.
+- `ladenheim-108-region`: `R+L+C <= 5`, `R <= 3`, `L+C <= 2`.
+
+Finite source queries require a finite support-edge maximum, derived from a
+finite profile/component budget or supplied by `--support-edges`/
+`--max-support-edges`. A fixed support-edge range is finite and usable for
+assignments, assigned supports, networks, and reductions because each source
+edge receives exactly one of seven simple bundle types. Component budgets and
+support-edge ranges can also be combined; the effective source support-edge
+range is the intersection of the requested support range and any cap implied by
+the component budget.
+
+Valid grouping dimensions for source counts are `support-edges`, `r`, `l`, `c`,
+`lc`, `rlc`, and `none`. Network counts group by reduced component dimensions
+`r`, `l`, `c`, `lc`, `rlc`, or `none`; `support-edges` is not a network grouping
+dimension because reduced networks can be reached from multiple source edge
+counts.
+
+The only implemented network relation is `--relation local-sp`, the local
+series/parallel reduced-topology relation. It is not rational immittance
+equivalence.

@@ -66,6 +66,47 @@ a default `--max-records 10000` guard for catalogue-producing commands.
 Detailed semantics are in `docs/counting_language.md`; the provisional Python
 API is documented in `docs/python_api.md`.
 
+
+### Command map and glossary
+
+The bare command and normal help forms are equivalent:
+
+```bash
+.venv/bin/python -m rice
+.venv/bin/python -m rice -h
+.venv/bin/python -m rice --help
+.venv/bin/python -m rice help count networks
+```
+
+Pipeline glossary (deeper definitions: `docs/counting_language.md` and
+`docs/model_decisions.md`):
+
+```text
+supports -> bundle-types -> bundle-sets -> assignments -> assigned-supports -> networks
+```
+
+- `supports` are source graph shapes and terminal choices before components are
+  attached.
+- `bundle-types` are the seven simple source edge labels.
+- `bundle-sets` are source inventories before support placement.
+- `assignments` are raw component-labelled source placements.
+- `assigned-supports` quotient assignments by terminal-set-preserving support
+  automorphisms.
+- `networks` are final local-SP reduced objects.
+- `reductions` reports provenance for the many-to-one transitions from source
+  assignments to reduced networks.
+
+Help is available as `rice help`, `rice help count`, `rice help count supports`,
+or by trailing `--help`; `rice --help count supports` is normalized to the same
+leaf help. Bare `rice count` and `rice enum` print group help and do not run any
+legacy no-object count.
+
+Output defaults to `--format auto`: an interactive terminal gets a readable
+table, while redirected output is deterministic JSON. Explicit formats are
+`auto`, `table`, `markdown`, and `json`; `table` currently uses the same stable
+plain Markdown table layout as `markdown`. Wide enumeration records should be
+saved as JSON rather than a terminal table.
+
 ## Validation
 
 ```bash

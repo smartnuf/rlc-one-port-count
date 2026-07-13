@@ -16,3 +16,18 @@ Status: done
 - Declared the CLI, Python API and serialisations provisional in user-facing
   documentation.
 - Left PR3 work (`rice enum ...`, reduction provenance and fibre analysis) open.
+
+
+## 2026-07 CLI language review
+
+- Top-level, group-level, and leaf help are now successful discoverability paths:
+  `rice`, `rice -h`, `rice --help`, `rice help count`, and
+  `rice help count supports`.
+- `count reductions` is included in the top-level and count maps, and the top
+  help describes the pipeline order and a finite-scope example.
+- Output has an explicit `auto|table|markdown|json` contract: redirected `auto`
+  is JSON and interactive `auto` is a readable table.
+- Parser destinations are hidden behind user-facing metavars, leaf errors show
+  leaf usage, relation choices are argparse choices, and finite fixed
+  support-edge source ranges are accepted consistently for network counting and
+  enumeration as well as earlier source stages.

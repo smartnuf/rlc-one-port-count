@@ -152,6 +152,19 @@ and small golden reduced-topology census. Codex setup and maintenance scripts
 prepare the environment and run only an import/version smoke test; they do not
 certify a task's changes.
 
+## Current CLI language
+
+The provisional command language is discoverable from help. `rice`, `rice -h`,
+and `rice --help` all print the top-level map. Bare `rice count` and `rice enum`
+print group help; they must not run any legacy no-subcommand count. The preferred
+help convention is `rice help`, `rice help count`, and
+`rice help count supports`, while normal trailing `--help` remains supported and
+`rice --help count supports` is normalized to the same leaf help.
+
+Documented output formats are `auto`, `table`, `markdown`, and `json`. `auto`
+uses a readable table for an interactive terminal and deterministic JSON when
+redirected.
+
 ## CLI changes
 
 After changing argument parsing, run the relevant CLI help commands and check
