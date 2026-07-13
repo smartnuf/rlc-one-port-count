@@ -14,8 +14,9 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from dataclasses import dataclass
+from types import MappingProxyType
 from itertools import combinations, permutations, product
-from typing import DefaultDict, Iterable, Literal
+from typing import DefaultDict, Iterable, Literal, Mapping
 
 import networkx as nx
 from networkx.algorithms import isomorphism as iso
@@ -102,7 +103,14 @@ SIMPLE_PRIMITIVE_BUNDLES: tuple[SimplePrimitiveBundle, ...] = (
 
 @dataclass(frozen=True)
 class IntegerRange:
-    """Inclusive integer range, with ``None`` denoting an open side."""
+    """Inclusive non-negative integer range used in query JSON.
+
+    ``minimum`` and ``maximum`` default to ``None`` to denote an open side.
+    Construction raises ``ValueError`` for negative endpoints.  Empty effective
+    intersections are represented by ``minimum > maximum`` and are allowed so
+    callers can express finite queries that happen to contain no source
+    supports.
+    """
 
     minimum: int | None = None
     maximum: int | None = None
@@ -121,7 +129,13 @@ class IntegerRange:
 
 @dataclass(frozen=True)
 class ComponentConstraints:
-    """Intersecting upper bounds on exact ``(R,L,C)`` component counts."""
+    """Intersecting upper bounds on exact source component counts.
+
+    Bounds default to ``None`` (unbounded) and may constrain ``R+L+C``, ``R``,
+    ``L``, ``C`` or ``L+C``.  These are source-stage budgets for query
+    construction; network facts later report reduced component counts.  Raises
+    ``ValueError`` for negative bounds.
+    """
 
     max_rlc: int | None = None
     max_r: int | None = None
@@ -179,7 +193,17 @@ COUNT_PROFILES: dict[str, ComponentConstraints] = {
 
 @dataclass(frozen=True)
 class CountQuery:
-    """Shared finite counting query for source support-edge objects."""
+    """Shared query object for finite source support-edge slices.
+
+    ``component_constraints`` defaults to no bounds and ``profile`` defaults to
+    ``None``: there is deliberately no default profile.  A named profile from
+    :data:`COUNT_PROFILES` is mutually exclusive with explicit component
+    constraints.  ``support_edges`` requests one exact source edge count and is
+    mutually exclusive with ``min_support_edges``/``max_support_edges``.  Range
+    endpoints must be positive when supplied.  Evaluation raises ``ValueError``
+    if no finite effective support-edge maximum can be derived from either
+    component bounds/profile or support-edge bounds.
+    """
 
     component_constraints: ComponentConstraints = ComponentConstraints()
     support_edges: int | None = None
@@ -249,7 +273,14 @@ class CountQuery:
 
 @dataclass(frozen=True)
 class BundleSet:
-    """A multiset inventory of simple primitive bundle types."""
+    """A multiset inventory of simple primitive bundle types.
+
+    ``multiplicities`` is in :data:`SIMPLE_PRIMITIVE_BUNDLES` order.  Derived
+    properties expose source support-edge count, exact source component counts,
+    and ``raw_placement_count`` before support automorphism quotienting.
+    Construction raises ``ValueError`` for the wrong length, non-integers, or
+    negative multiplicities.
+    """
 
     multiplicities: tuple[int, ...]
 
@@ -311,6 +342,14 @@ class BundleSet:
 
 @dataclass(frozen=True)
 class BundleSetCensusResult:
+    """Grouped inventory census returned by :func:`bundle_set_census`.
+
+    ``query`` is the finite source query, ``group_by`` is the normalized tuple
+    of grouping dimensions (``support-edges``, ``r``, ``l``, ``c``, ``lc``,
+    ``rlc`` or empty for ``none``), ``records`` contains aggregate rows, and
+    ``bundle_sets`` contains every exact source inventory in the slice.
+    """
+
     query: CountQuery
     group_by: tuple[str, ...]
     records: tuple[dict[str, int], ...]
@@ -348,6 +387,17 @@ def _multiplicity_tuples(total: int, parts: int) -> Iterable[tuple[int, ...]]:
 
 
 def iter_bundle_sets(query: CountQuery) -> Iterable[BundleSet]:
+    """Yield exact simple-bundle inventories accepted by ``query``.
+
+    This source-stage helper enumerates multisets of the seven simple primitive
+    bundles before support placement, support automorphism quotienting, or
+    local series/parallel reduction.  ``query`` has no default profile; it must
+    provide a finite effective support-edge maximum through component
+    constraints, a named profile, ``support_edges``, or ``max_support_edges``.
+    ``ValueError`` is raised by :meth:`CountQuery.effective_support_edge_range`
+    when the query is unbounded.
+    """
+
     edge_range = query.effective_support_edge_range()
     if edge_range.maximum is None or edge_range.minimum is None or edge_range.minimum > edge_range.maximum:
         return
@@ -359,6 +409,16 @@ def iter_bundle_sets(query: CountQuery) -> Iterable[BundleSet]:
 
 
 def bundle_set_census(query: CountQuery, group_by: tuple[str, ...] = ("support-edges",)) -> BundleSetCensusResult:
+    """Count exact simple-bundle inventories for one finite source query.
+
+    Parameters are ``query`` and ``group_by``.  Grouping defaults to
+    ``("support-edges",)`` and accepts ``support-edges``, ``r``, ``l``, ``c``,
+    ``lc``, ``rlc`` or ``("none",)``.  Returned records count source bundle
+    inventories and their raw placements on a labelled support; no reduced
+    semantics are applied.  ``ValueError`` is raised for unsupported/duplicate
+    grouping dimensions or an unbounded query.
+    """
+
     allowed = {"support-edges", "r", "l", "c", "lc", "rlc"}
     if group_by == ("none",):
         dims: tuple[str, ...] = ()
@@ -430,6 +490,16 @@ def _fact_value(fact: object, dim: str) -> int:
 
 @dataclass(frozen=True)
 class AssignmentFact:
+    """Exact source assignment fact for one ``(support_edges, R, L, C)`` cell.
+
+    ``source_support_edges`` is the number of edges before reduction.
+    ``relevant_supports`` counts terminal-relevant support classes at that edge
+    count, ``distinct_bundle_sets`` counts inventory multisets with these exact
+    source components, and ``assignments_per_support`` is the raw number of
+    placements of those inventories on one support.  ``raw_assignments`` is
+    their product over relevant supports.
+    """
+
     source_support_edges: int
     r: int
     l: int
@@ -459,6 +529,13 @@ class AssignmentFact:
 
 @dataclass(frozen=True)
 class AssignmentCensusResult:
+    """Result returned by :func:`assignment_census`.
+
+    ``records`` are grouped source-stage aggregates.  ``facts`` retain exact
+    source component cells before support automorphism quotienting and before
+    reduced-network merging.
+    """
+
     query: CountQuery
     group_by: tuple[str, ...]
     records: tuple[dict[str, int | str], ...]
@@ -493,6 +570,14 @@ class AssignmentCensusResult:
 
 @dataclass(frozen=True)
 class AssignedSupportFact:
+    """Assigned-support orbit fact for one exact source component cell.
+
+    ``raw_assignments`` is the source assignment count before quotienting.
+    ``assigned_support_classes`` is the number of bundle-labelled support
+    orbits under terminal-set-preserving automorphisms.  Component counts are
+    still exact source counts, not reduced counts.
+    """
+
     source_support_edges: int
     r: int
     l: int
@@ -517,6 +602,13 @@ class AssignedSupportFact:
 
 @dataclass(frozen=True)
 class AssignedSupportCensusResult:
+    """Result returned by :func:`assigned_support_census`.
+
+    ``records`` aggregate source assignment and assigned-support orbit counts
+    by the requested dimensions.  ``facts`` preserve exact source
+    ``(support_edges, R, L, C)`` cells.
+    """
+
     query: CountQuery
     group_by: tuple[str, ...]
     records: tuple[dict[str, int], ...]
@@ -547,6 +639,14 @@ class AssignedSupportCensusResult:
 
 @dataclass(frozen=True)
 class NetworkRelation:
+    """Named reduced-network equivalence relation.
+
+    ``name`` is the queryable relation name, ``definition`` is the precise
+    provisional definition identifier emitted in JSON, and ``description``
+    explains the semantics.  The only public relation is currently
+    ``local-sp``.
+    """
+
     name: str
     definition: str
     description: str
@@ -564,6 +664,13 @@ NETWORK_RELATIONS = {LOCAL_SP_RELATION.name: LOCAL_SP_RELATION}
 
 
 def validate_network_relation(relation: str | NetworkRelation = "local-sp") -> NetworkRelation:
+    """Resolve and validate a network relation name.
+
+    ``relation`` defaults to ``"local-sp"`` and may be that string or a
+    :class:`NetworkRelation`.  Returns the canonical relation object.  Raises
+    ``ValueError`` for unknown relation names.
+    """
+
     if isinstance(relation, NetworkRelation):
         relation = relation.name
     try:
@@ -574,6 +681,8 @@ def validate_network_relation(relation: str | NetworkRelation = "local-sp") -> N
 
 @dataclass(frozen=True)
 class NetworkFact:
+    """Reduced-network count for one exact reduced ``(R, L, C)`` cell."""
+
     r: int
     l: int
     c: int
@@ -585,6 +694,15 @@ class NetworkFact:
 
 @dataclass(frozen=True)
 class NetworkCensusResult:
+    """Result returned by :func:`network_census`.
+
+    Network facts and grouping dimensions use reduced component counts.  Source
+    support-edge information is intentionally absent from network grouping
+    because multiple source edge counts may reduce to the same network.
+    ``diagnostics`` records source-stage totals such as raw assignments and
+    assigned-support classes used to reach the reduced result.
+    """
+
     query: CountQuery
     relation: NetworkRelation
     group_by: tuple[str, ...]
@@ -665,6 +783,17 @@ def _group_assignment_facts(facts: tuple[AssignmentFact, ...], dims: tuple[str, 
 
 
 def assignment_census(query: CountQuery, group_by: tuple[str, ...] = ("support-edges",)) -> AssignmentCensusResult:
+    """Count raw source bundle assignments for one finite query.
+
+    This is the source placement stage after support relevance filtering and
+    bundle-inventory generation.  ``group_by`` defaults to ``support-edges`` and
+    accepts ``support-edges``, ``r``, ``l``, ``c``, ``lc``, ``rlc`` or
+    ``none``.  Component dimensions are exact source counts.  Returns an
+    :class:`AssignmentCensusResult`; raises ``ValueError`` for invalid grouping
+    dimensions or an unbounded query.  This count function does not apply
+    ``max_records`` because it returns aggregate facts, not catalogues.
+    """
+
     dims=_normalise_group_by(group_by,_GROUPING_DIMS,"assignment")
     facts=_assignment_facts(query)
     return AssignmentCensusResult(query,dims,_group_assignment_facts(facts,dims),facts)
@@ -710,6 +839,17 @@ def _assigned_support_distribution_for_support(graph: nx.Graph, terminals: tuple
 
 
 def assigned_support_census(query: CountQuery, group_by: tuple[str,...] = ("support-edges",)) -> AssignedSupportCensusResult:
+    """Count assigned-support isomorphism classes for one finite source query.
+
+    This stage quotients raw source assignments by automorphisms preserving the
+    unordered terminal pair.  ``group_by`` defaults to ``support-edges`` and
+    accepts ``support-edges``, ``r``, ``l``, ``c``, ``lc``, ``rlc`` or
+    ``none``; these are still source dimensions.  Returns an
+    :class:`AssignedSupportCensusResult`.  ``ValueError`` is raised for invalid
+    grouping dimensions or an unbounded query; aggregate counts have no
+    ``max_records`` guard.
+    """
+
     dims=_normalise_group_by(group_by,_GROUPING_DIMS,"assigned-support")
     raw_by_key={(f.source_support_edges,f.r,f.l,f.c):f.raw_assignments for f in _assignment_facts(query)}
     eff=query.effective_support_edge_range()
@@ -752,15 +892,30 @@ def _iter_query_edge_assignments(edges: tuple[tuple[int,int],...], query: CountQ
             return
         edge=edges[i]
         for b in options:
-            nr=r+b.r_count; nl=l+int(b.l_count); nc=c+int(b.c_count)
-            if query.accepts_components(nr,nl,nc):
-                current[edge]=b
-                yield from rec(i+1,nr,nl,nc,current)
+            nr = r + b.r_count
+            nl = l + int(b.l_count)
+            nc = c + int(b.c_count)
+            if query.accepts_components(nr, nl, nc):
+                current[edge] = b
+                yield from rec(i + 1, nr, nl, nc, current)
                 del current[edge]
-    yield from rec(0,0,0,0,{})
+    yield from rec(0, 0, 0, 0, {})
 
 
 def network_census(query: CountQuery, relation: str | NetworkRelation = "local-sp", group_by: tuple[str,...] = ("r","lc")) -> NetworkCensusResult:
+    """Count unique reduced networks for one finite source query.
+
+    ``relation`` defaults to ``"local-sp"`` and is currently the only valid
+    relation.  ``group_by`` defaults to ``("r", "lc")`` and accepts reduced
+    component dimensions ``r``, ``l``, ``c``, ``lc``, ``rlc`` or ``none``;
+    ``support-edges`` is intentionally invalid because reduced networks can be
+    reached from multiple source support sizes.  Returns a
+    :class:`NetworkCensusResult` with reduced facts and source-stage
+    diagnostics.  Raises ``ValueError`` for unknown relations, invalid grouping
+    dimensions, malformed assigned supports encountered during reduction, or an
+    unbounded query.  Aggregate counts have no ``max_records`` guard.
+    """
+
     rel=validate_network_relation(relation)
     # A finite support-edge range is enough for the source space: each edge takes
     # exactly one of seven simple primitive bundle labels.  Component budgets and
@@ -912,6 +1067,13 @@ class ReducedSignature:
 
 
 def primitive_factor(name: str) -> ReducedFactor:
+    """Construct a canonical primitive reduced factor.
+
+    ``name`` must be ``"R"``, ``"L"`` or ``"C"``.  Returns a
+    :class:`ReducedFactor` used by local-SP signatures and raises ``ValueError``
+    for any other primitive name.
+    """
+
     if name not in {"R", "L", "C"}:
         raise ValueError(f"unknown primitive factor {name!r}")
     return ReducedFactor("primitive", name)  # type: ignore[arg-type]
@@ -1105,7 +1267,17 @@ def canonical_reduced_signature(
     terminals: tuple[object, object],
     edge_assignments: dict[tuple[object, object], str | SimplePrimitiveBundle | ReducedFactor],
 ) -> ReducedSignature:
-    """Reduce one assigned two-terminal support and return its canonical signature."""
+    """Reduce one assigned two-terminal support to a local-SP signature.
+
+    ``graph`` must be a connected simple support graph, ``terminals`` must be
+    two distinct graph nodes, and ``edge_assignments`` must assign every support
+    edge to a bundle label, :class:`SimplePrimitiveBundle`, or
+    :class:`ReducedFactor`.  The function applies local parallel merging and
+    series suppression, canonicalizes terminal reversal/internal node naming,
+    and returns a :class:`ReducedSignature`.  It raises ``ValueError`` for
+    malformed supports, missing/extra/duplicate assignments, invalid bundle
+    labels, or terminal-irrelevant supports.
+    """
 
     reduced = _reduced_factor_multigraph(graph, terminals, edge_assignments)
     source, target = terminals
@@ -1228,6 +1400,13 @@ def generate_connected_unlabelled_simple_graphs(max_edges: int) -> list[list[nx.
 
 
 def automorphisms(graph: nx.Graph) -> list[dict[int, int]]:
+    """Return all automorphisms of a simple support graph.
+
+    This low-level helper is public only for reduction/enumeration experiments;
+    it performs no terminal filtering and returns mutable NetworkX-style
+    mapping dictionaries.
+    """
+
     return list(iso.GraphMatcher(graph, graph).isomorphisms_iter())
 
 
@@ -1327,6 +1506,8 @@ def edge_permutations_preserving_terminal_set(
 
 
 def permutation_cycle_lengths(permutation: tuple[int, ...]) -> tuple[int, ...]:
+    """Return sorted cycle lengths for an edge permutation tuple."""
+
     seen = [False] * len(permutation)
     lengths: list[int] = []
     for start in range(len(permutation)):
@@ -1730,6 +1911,7 @@ def _reduced_topology_census(
 
 # Provisional object enumeration and reduction-provenance API.
 import hashlib
+
 DEFAULT_ENUM_MAX_RECORDS = 10000
 
 
@@ -1738,7 +1920,9 @@ def _digest(prefix: str, payload: object, length: int = 16) -> str:
     return f"{prefix}-{hashlib.sha256(data).hexdigest()[:length]}"
 
 
-def _support_canonical_data(graph: nx.Graph, terminals: tuple[object, object]) -> tuple[tuple[int, int], tuple[tuple[int, int], ...]]:
+def _support_canonical_data(
+    graph: nx.Graph, terminals: tuple[object, object]
+) -> tuple[tuple[int, int], tuple[tuple[int, int], ...]]:
     nodes = list(graph.nodes())
     s, t = terminals
     internal = [n for n in nodes if n not in {s, t}]
@@ -1747,7 +1931,12 @@ def _support_canonical_data(graph: nx.Graph, terminals: tuple[object, object]) -
         for perm in permutations(internal):
             mapping = {a: 0, b: 1}
             mapping.update({node: i + 2 for i, node in enumerate(perm)})
-            edges = tuple(sorted((min(mapping[u], mapping[v]), max(mapping[u], mapping[v])) for u, v in graph.edges()))
+            edges = tuple(
+                sorted(
+                    (min(mapping[u], mapping[v]), max(mapping[u], mapping[v]))
+                    for u, v in graph.edges()
+                )
+            )
             data = ((0, 1), edges)
             if best is None or data < best:
                 best = data
@@ -1757,21 +1946,49 @@ def _support_canonical_data(graph: nx.Graph, terminals: tuple[object, object]) -
 
 @dataclass(frozen=True)
 class SupportRecord:
+    """Terminal-relevant support enumeration record.
+
+    ``support_id`` is a provisional digest of the canonical support
+    representation.  ``source_support_edges`` is the unreduced source edge
+    count.  ``terminals`` are canonical public terminal labels ``(0, 1)`` and
+    ``edge_list`` is the canonical simple edge list.  The dataclass is frozen,
+    but NetworkX implementation state is kept private; ``graph`` returns a
+    defensive copy and ``automorphisms`` returns read-only mapping proxies.
+    """
+
     support_id: str
     source_support_edges: int
     node_count: int
     terminals: tuple[int, int]
     edge_list: tuple[tuple[int, int], ...]
-    graph: nx.Graph
+    _graph: nx.Graph
     original_terminals: tuple[object, object]
-    automorphisms: tuple[dict[int, int], ...]
+    _automorphisms: tuple[Mapping[int, int], ...]
+
+    @property
+    def graph(self) -> nx.Graph:
+        """Return a defensive copy of the canonical support graph."""
+        return self._graph.copy()
+
+    @property
+    def automorphisms(self) -> tuple[Mapping[int, int], ...]:
+        """Terminal-preserving calculations use read-only automorphism maps."""
+        return self._automorphisms
 
     def to_json(self) -> dict[str, object]:
-        return {"support_id": self.support_id, "source_support_edges": self.source_support_edges, "node_count": self.node_count, "terminals": list(self.terminals), "edge_list": [list(e) for e in self.edge_list]}
+        return {
+            "support_id": self.support_id,
+            "source_support_edges": self.source_support_edges,
+            "node_count": self.node_count,
+            "terminals": list(self.terminals),
+            "edge_list": [list(e) for e in self.edge_list],
+        }
 
 
 @dataclass(frozen=True)
 class BundleTypeRecord:
+    """One of the seven public simple primitive bundle types."""
+
     bundle_type_id: str
     label: str
     r: int
@@ -1779,12 +1996,21 @@ class BundleTypeRecord:
     c: int
     lc: int
     rlc: int
+
     def to_json(self) -> dict[str, object]:
         return self.__dict__.copy()
 
 
 @dataclass(frozen=True)
 class BundleSetRecord:
+    """Exact source bundle-inventory record.
+
+    ``raw_placement_count`` is the number of distinct raw placements of the
+    inventory on one ordered support-edge list before support automorphisms.
+    ``bundle_set_id`` is a provisional digest and ``bundle_set`` is the
+    underlying frozen fact object.
+    """
+
     bundle_set_id: str
     source_support_edges: int
     multiplicities: tuple[int, ...]
@@ -1795,12 +2021,32 @@ class BundleSetRecord:
     rlc: int
     raw_placement_count: int
     bundle_set: BundleSet
+
     def to_json(self) -> dict[str, object]:
-        return {"bundle_set_id": self.bundle_set_id, "source_support_edges": self.source_support_edges, "multiplicities": dict(zip((b.label for b in SIMPLE_PRIMITIVE_BUNDLES), self.multiplicities)), "r": self.r, "l": self.l, "c": self.c, "lc": self.lc, "rlc": self.rlc, "raw_placement_count": self.raw_placement_count}
+        return {
+            "bundle_set_id": self.bundle_set_id,
+            "source_support_edges": self.source_support_edges,
+            "multiplicities": dict(
+                zip((b.label for b in SIMPLE_PRIMITIVE_BUNDLES), self.multiplicities)
+            ),
+            "r": self.r,
+            "l": self.l,
+            "c": self.c,
+            "lc": self.lc,
+            "rlc": self.rlc,
+            "raw_placement_count": self.raw_placement_count,
+        }
 
 
 @dataclass(frozen=True)
 class AssignmentRecord:
+    """Raw source assignment record before automorphism quotienting.
+
+    ``edge_assignments`` pairs canonical support edges with bundle labels.
+    Component fields are exact source counts; ``assignment_id`` is provisional
+    and derived from the current canonical representation.
+    """
+
     assignment_id: str
     support_id: str
     bundle_set_id: str
@@ -1811,12 +2057,35 @@ class AssignmentRecord:
     lc: int
     rlc: int
     edge_assignments: tuple[tuple[tuple[int, int], str], ...]
+
     def to_json(self) -> dict[str, object]:
-        return {"assignment_id": self.assignment_id, "support_id": self.support_id, "bundle_set_id": self.bundle_set_id, "source_support_edges": self.source_support_edges, "r": self.r, "l": self.l, "c": self.c, "lc": self.lc, "rlc": self.rlc, "edge_assignments": [[list(e), lab] for e, lab in self.edge_assignments]}
+        return {
+            "assignment_id": self.assignment_id,
+            "support_id": self.support_id,
+            "bundle_set_id": self.bundle_set_id,
+            "source_support_edges": self.source_support_edges,
+            "r": self.r,
+            "l": self.l,
+            "c": self.c,
+            "lc": self.lc,
+            "rlc": self.rlc,
+            "edge_assignments": [
+                [list(edge), label] for edge, label in self.edge_assignments
+            ],
+        }
 
 
 @dataclass(frozen=True)
 class AssignedSupportRecord:
+    """Canonical assigned-support orbit record.
+
+    ``canonical_edge_assignments`` is the orbit representative under
+    terminal-set-preserving support automorphisms.  ``orbit_size`` and
+    ``raw_assignment_count`` record how many raw assignments are represented.
+    ``assignment_ids`` is provenance back to source assignments and IDs remain
+    provisional.
+    """
+
     assigned_support_id: str
     support_id: str
     source_support_edges: int
@@ -1829,12 +2098,36 @@ class AssignedSupportRecord:
     orbit_size: int
     raw_assignment_count: int
     assignment_ids: tuple[str, ...]
+
     def to_json(self) -> dict[str, object]:
-        return {"assigned_support_id": self.assigned_support_id, "support_id": self.support_id, "source_support_edges": self.source_support_edges, "r": self.r, "l": self.l, "c": self.c, "lc": self.lc, "rlc": self.rlc, "canonical_edge_assignments": [[list(e), lab] for e, lab in self.canonical_edge_assignments], "orbit_size": self.orbit_size, "raw_assignment_count": self.raw_assignment_count}
+        return {
+            "assigned_support_id": self.assigned_support_id,
+            "support_id": self.support_id,
+            "source_support_edges": self.source_support_edges,
+            "r": self.r,
+            "l": self.l,
+            "c": self.c,
+            "lc": self.lc,
+            "rlc": self.rlc,
+            "canonical_edge_assignments": [
+                [list(edge), label] for edge, label in self.canonical_edge_assignments
+            ],
+            "orbit_size": self.orbit_size,
+            "raw_assignment_count": self.raw_assignment_count,
+        }
 
 
 @dataclass(frozen=True)
 class NetworkRecord:
+    """Reduced local-SP network enumeration record.
+
+    Component fields are reduced counts.  ``source_assignment_count`` and
+    ``assigned_support_count`` are provenance fibre sizes.  Source-support edge
+    bounds, ``assigned_support_ids``, ``support_ids`` and
+    ``source_component_tuples`` describe the source objects that reduce to this
+    network.  ``canonical_signature`` and ``network_id`` are provisional.
+    """
+
     network_id: str
     relation: str
     definition: str
@@ -1851,27 +2144,81 @@ class NetworkRecord:
     assigned_support_ids: tuple[str, ...]
     support_ids: tuple[str, ...]
     source_component_tuples: tuple[tuple[int, int, int], ...]
+
     def to_json(self) -> dict[str, object]:
-        return {k: v for k, v in self.__dict__.items() if k not in {"assigned_support_ids", "support_ids", "source_component_tuples"}}
+        return {
+            key: value
+            for key, value in self.__dict__.items()
+            if key
+            not in {
+                "assigned_support_ids",
+                "support_ids",
+                "source_component_tuples",
+            }
+        }
 
 
 def enum_supports(query: CountQuery) -> tuple[SupportRecord, ...]:
-    eff = query.effective_support_edge_range(); max_edges = eff.maximum or 0
-    if (eff.minimum or 1) > max_edges: return ()
+    """Enumerate terminal-relevant support records for a finite source query.
+
+    The query contributes only its effective support-edge range; component
+    bounds do not otherwise filter supports.  Returns
+    :class:`SupportRecord` objects.  Raises ``ValueError`` if the query has no
+    finite effective maximum.  Support enumeration has no ``max_records``
+    parameter because support counts are small for documented bounds.
+    """
+
+    eff = query.effective_support_edge_range()
+    max_edges = eff.maximum or 0
+    if (eff.minimum or 1) > max_edges:
+        return ()
     records = []
     for graph, terminals, autos in iter_two_terminal_supports(max_edges):
-        if not ((eff.minimum or 1) <= graph.number_of_edges() <= max_edges): continue
+        del autos
+        if not ((eff.minimum or 1) <= graph.number_of_edges() <= max_edges):
+            continue
         terms, edges = _support_canonical_data(graph, terminals)
         sid = _digest("support", (terms, edges))
         canonical_graph = nx.Graph()
         canonical_graph.add_nodes_from(range(len(graph.nodes())))
         canonical_graph.add_edges_from(edges)
-        canonical_autos = tuple(automorphisms(canonical_graph))
-        records.append(SupportRecord(sid, len(edges), len(graph.nodes()), terms, edges, canonical_graph, terms, canonical_autos))
-    return tuple(sorted(records, key=lambda r: (r.source_support_edges, r.node_count, r.edge_list, r.support_id)))
+        canonical_autos = tuple(
+            MappingProxyType(mapping) for mapping in automorphisms(canonical_graph)
+        )
+        records.append(
+            SupportRecord(
+                sid,
+                len(edges),
+                len(graph.nodes()),
+                terms,
+                edges,
+                canonical_graph.copy(),
+                terms,
+                canonical_autos,
+            )
+        )
+    return tuple(
+        sorted(
+            records,
+            key=lambda r: (
+                r.source_support_edges,
+                r.node_count,
+                r.edge_list,
+                r.support_id,
+            ),
+        )
+    )
 
 
 def enum_bundle_types(query: CountQuery | None = None) -> tuple[BundleTypeRecord, ...]:
+    """Enumerate the seven simple primitive bundle labels.
+
+    ``query`` is accepted for pipeline-shape consistency and ignored.  Returned
+    records use exact source component counts for each bundle type.  No
+    ``ValueError`` or ``max_records`` behaviour is associated with this fixed
+    catalogue.
+    """
+
     del query  # accepted for consistency with the provisional enumeration API
     return tuple(
         BundleTypeRecord(
@@ -1888,6 +2235,14 @@ def enum_bundle_types(query: CountQuery | None = None) -> tuple[BundleTypeRecord
 
 
 def enum_bundle_sets(query: CountQuery) -> tuple[BundleSetRecord, ...]:
+    """Enumerate exact bundle-set inventory records for ``query``.
+
+    This source stage precedes support placement and reduction.  Returns
+    :class:`BundleSetRecord` objects and raises ``ValueError`` for an unbounded
+    query.  There is no ``max_records`` guard because the inventory catalogue is
+    compact under documented query bounds.
+    """
+
     records = []
     for bundle_set in iter_bundle_sets(query):
         records.append(
@@ -1930,76 +2285,227 @@ def _enforce_limit(n: int, max_records: int, what: str) -> None:
 
 
 def enum_assignments(query: CountQuery, max_records: int = DEFAULT_ENUM_MAX_RECORDS) -> tuple[AssignmentRecord, ...]:
+    """Enumerate raw source assignments with an output-size guard.
+
+    ``query`` selects source supports and exact component budgets.  ``max_records``
+    defaults to ``10000``; a positive explicit value is required for larger
+    catalogues.  Records are raw placements before support automorphism
+    quotienting or reduction.  Raises ``ValueError`` for unbounded queries,
+    non-positive ``max_records``, or estimates exceeding ``max_records``.
+    """
+
     query.effective_support_edge_range()
-    est = assignment_census(query, group_by=("none",)).raw_assignments_total; _enforce_limit(est, max_records, "assignment enumeration")
-    supports = enum_supports(query); bs_records = enum_bundle_sets(query); bs_by_mult={b.multiplicities:b for b in bs_records}
-    out=[]
+    est = assignment_census(query, group_by=("none",)).raw_assignments_total
+    _enforce_limit(est, max_records, "assignment enumeration")
+    supports = enum_supports(query)
+    bs_records = enum_bundle_sets(query)
+    bs_by_mult = {b.multiplicities: b for b in bs_records}
+    out = []
     for sr in supports:
-        labels=[b.label for b in SIMPLE_PRIMITIVE_BUNDLES]
-        by_label={b.label:b for b in SIMPLE_PRIMITIVE_BUNDLES}
+        labels = [b.label for b in SIMPLE_PRIMITIVE_BUNDLES]
+        by_label = {b.label: b for b in SIMPLE_PRIMITIVE_BUNDLES}
         for combo in product(labels, repeat=sr.source_support_edges):
-            r=sum(by_label[x].r_count for x in combo); l=sum(int(by_label[x].l_count) for x in combo); c=sum(int(by_label[x].c_count) for x in combo)
-            if not query.accepts_components(r,l,c): continue
-            mult=tuple(combo.count(b.label) for b in SIMPLE_PRIMITIVE_BUNDLES); br=bs_by_mult[mult]
-            ea=tuple(zip(sr.edge_list, combo))
-            aid=_digest("assignment", (sr.support_id, ea))
-            out.append(AssignmentRecord(aid, sr.support_id, br.bundle_set_id, sr.source_support_edges, r,l,c,l+c,r+l+c, ea))
-    return tuple(sorted(out, key=lambda r:(r.source_support_edges,r.r,r.l,r.c,r.support_id,r.edge_assignments,r.assignment_id)))
+            r = sum(by_label[x].r_count for x in combo)
+            l = sum(int(by_label[x].l_count) for x in combo)
+            c = sum(int(by_label[x].c_count) for x in combo)
+            if not query.accepts_components(r, l, c):
+                continue
+            mult = tuple(combo.count(b.label) for b in SIMPLE_PRIMITIVE_BUNDLES)
+            br = bs_by_mult[mult]
+            ea = tuple(zip(sr.edge_list, combo))
+            aid = _digest("assignment", (sr.support_id, ea))
+            out.append(
+                AssignmentRecord(
+                    aid,
+                    sr.support_id,
+                    br.bundle_set_id,
+                    sr.source_support_edges,
+                    r,
+                    l,
+                    c,
+                    l + c,
+                    r + l + c,
+                    ea,
+                )
+            )
+    return tuple(
+        sorted(
+            out,
+            key=lambda r: (
+                r.source_support_edges,
+                r.r,
+                r.l,
+                r.c,
+                r.support_id,
+                r.edge_assignments,
+                r.assignment_id,
+            ),
+        )
+    )
 
 
-def _canon_assignment_under_perms(labels: tuple[str,...], edge_list: tuple[tuple[int,int],...], perms: list[tuple[int,...]]) -> tuple[str,...]:
-    reps=[]
+def _canon_assignment_under_perms(
+    labels: tuple[str, ...],
+    edge_list: tuple[tuple[int, int], ...],
+    perms: list[tuple[int, ...]],
+) -> tuple[str, ...]:
+    del edge_list
+    reps = []
     for p in perms:
-        new=[None]*len(labels)
-        for i,j in enumerate(p): new[j]=labels[i]
+        new = [None] * len(labels)
+        for i, j in enumerate(p):
+            new[j] = labels[i]
         reps.append(tuple(new))
     return min(reps)  # type: ignore[arg-type]
 
 
 def enum_assigned_supports(query: CountQuery, max_records: int = DEFAULT_ENUM_MAX_RECORDS) -> tuple[AssignedSupportRecord, ...]:
-    assignments=enum_assignments(query, max_records=max_records)
-    supports={s.support_id:s for s in enum_supports(query)}
-    buckets: DefaultDict[tuple[str, tuple[str,...]], list[AssignmentRecord]] = defaultdict(list)
+    """Enumerate assigned-support orbit records with an output-size guard.
+
+    ``max_records`` defaults to ``10000`` and applies first to raw assignments
+    through :func:`enum_assignments`, then to the assigned-support catalogue.
+    Component counts remain exact source counts.  Raises ``ValueError`` for
+    unbounded queries, non-positive ``max_records``, or catalogue sizes above
+    the guard.
+    """
+
+    assignments = enum_assignments(query, max_records=max_records)
+    supports = {s.support_id: s for s in enum_supports(query)}
+    buckets: DefaultDict[tuple[str, tuple[str, ...]], list[AssignmentRecord]] = defaultdict(list)
     for ar in assignments:
-        sr=supports[ar.support_id]
-        perms=edge_permutations_preserving_terminal_set(sr.graph, sr.original_terminals, sr.automorphisms)
-        labels=tuple(label for _e,label in ar.edge_assignments)
-        canon=_canon_assignment_under_perms(labels, sr.edge_list, perms)
+        sr = supports[ar.support_id]
+        perms = edge_permutations_preserving_terminal_set(
+            sr.graph, sr.original_terminals, sr.automorphisms
+        )
+        labels = tuple(label for _e, label in ar.edge_assignments)
+        canon = _canon_assignment_under_perms(labels, sr.edge_list, perms)
         buckets[(ar.support_id, canon)].append(ar)
-    out=[]
+    out = []
     for (sid, canon), ars in buckets.items():
-        sr=supports[sid]; sample=ars[0]
-        ce=tuple(zip(sr.edge_list, canon)); asid=_digest("assigned-support", (sid, ce))
-        out.append(AssignedSupportRecord(asid,sid,sr.source_support_edges,sample.r,sample.l,sample.c,sample.lc,sample.rlc,ce,len(ars),len(ars),tuple(sorted(a.assignment_id for a in ars))))
+        sr = supports[sid]
+        sample = ars[0]
+        ce = tuple(zip(sr.edge_list, canon))
+        asid = _digest("assigned-support", (sid, ce))
+        out.append(
+            AssignedSupportRecord(
+                asid,
+                sid,
+                sr.source_support_edges,
+                sample.r,
+                sample.l,
+                sample.c,
+                sample.lc,
+                sample.rlc,
+                ce,
+                len(ars),
+                len(ars),
+                tuple(sorted(a.assignment_id for a in ars)),
+            )
+        )
     _enforce_limit(len(out), max_records, "assigned-support enumeration")
-    return tuple(sorted(out, key=lambda r:(r.source_support_edges,r.r,r.l,r.c,r.support_id,r.canonical_edge_assignments,r.assigned_support_id)))
+    return tuple(
+        sorted(
+            out,
+            key=lambda r: (
+                r.source_support_edges,
+                r.r,
+                r.l,
+                r.c,
+                r.support_id,
+                r.canonical_edge_assignments,
+                r.assigned_support_id,
+            ),
+        )
+    )
 
 
 def enum_networks(query: CountQuery, relation: str | NetworkRelation = "local-sp", max_records: int = DEFAULT_ENUM_MAX_RECORDS) -> tuple[NetworkRecord, ...]:
-    rel=validate_network_relation(relation)
-    assigned=enum_assigned_supports(query, max_records=max_records)
-    supports={s.support_id:s for s in enum_supports(query)}
-    grouped: dict[str, dict[str, object]]={}
+    """Enumerate reduced network records with provenance and a size guard.
+
+    ``relation`` defaults to ``local-sp``.  ``max_records`` defaults to
+    ``10000`` and also guards upstream assignment/assigned-support catalogues.
+    Component fields in returned :class:`NetworkRecord` objects are reduced
+    counts; source provenance fields describe the source objects that reduced
+    to each network.  Raises ``ValueError`` for unknown relations, unbounded
+    queries, non-positive ``max_records``, or catalogue sizes above the guard.
+    """
+
+    rel = validate_network_relation(relation)
+    assigned = enum_assigned_supports(query, max_records=max_records)
+    supports = {s.support_id: s for s in enum_supports(query)}
+    grouped: dict[str, dict[str, object]] = {}
     for ar in assigned:
-        sr=supports[ar.support_id]
-        edge_assign={tuple(e): lab for e,lab in ar.canonical_edge_assignments}
-        sig=canonical_reduced_signature(sr.graph, sr.original_terminals, edge_assign)
-        sigs=sig.stable_string(); rr,rl,rc=reduced_signature_component_counts(sig)
-        if not query.accepts_components(rr,rl,rc): continue
-        nid=_digest("network", (rel.name, sigs))
-        g=grouped.setdefault(nid,{"sig":sigs,"r":rr,"l":rl,"c":rc,"assign":0,"assigned":0,"edges":[],"asid":[],"sid":set(),"src":set()})
-        g["assign"] = int(g["assign"]) + ar.raw_assignment_count; g["assigned"] = int(g["assigned"]) + 1
-        g["edges"].append(ar.source_support_edges); g["asid"].append(ar.assigned_support_id); g["sid"].add(ar.support_id); g["src"].add((ar.r,ar.l,ar.c))
-    out=[]
-    for nid,g in grouped.items():
-        r,l,c=int(g["r"]),int(g["l"]),int(g["c"]); edges=list(g["edges"])
-        out.append(NetworkRecord(nid,rel.name,rel.definition,r,l,c,l+c,r+l+c,str(g["sig"]),int(g["assign"]),int(g["assigned"]),min(edges),max(edges),tuple(sorted(g["asid"])),tuple(sorted(g["sid"])),tuple(sorted(g["src"]))))
+        sr = supports[ar.support_id]
+        edge_assign = {tuple(e): lab for e, lab in ar.canonical_edge_assignments}
+        sig = canonical_reduced_signature(sr.graph, sr.original_terminals, edge_assign)
+        sigs = sig.stable_string()
+        rr, rl, rc = reduced_signature_component_counts(sig)
+        if not query.accepts_components(rr, rl, rc):
+            continue
+        nid = _digest("network", (rel.name, sigs))
+        g = grouped.setdefault(
+            nid,
+            {
+                "sig": sigs,
+                "r": rr,
+                "l": rl,
+                "c": rc,
+                "assign": 0,
+                "assigned": 0,
+                "edges": [],
+                "asid": [],
+                "sid": set(),
+                "src": set(),
+            },
+        )
+        g["assign"] = int(g["assign"]) + ar.raw_assignment_count
+        g["assigned"] = int(g["assigned"]) + 1
+        g["edges"].append(ar.source_support_edges)  # type: ignore[union-attr]
+        g["asid"].append(ar.assigned_support_id)  # type: ignore[union-attr]
+        g["sid"].add(ar.support_id)  # type: ignore[union-attr]
+        g["src"].add((ar.r, ar.l, ar.c))  # type: ignore[union-attr]
+    out = []
+    for nid, g in grouped.items():
+        r = int(g["r"])
+        l = int(g["l"])
+        c = int(g["c"])
+        edges = list(g["edges"])  # type: ignore[arg-type]
+        out.append(
+            NetworkRecord(
+                nid,
+                rel.name,
+                rel.definition,
+                r,
+                l,
+                c,
+                l + c,
+                r + l + c,
+                str(g["sig"]),
+                int(g["assign"]),
+                int(g["assigned"]),
+                min(edges),
+                max(edges),
+                tuple(sorted(g["asid"])),  # type: ignore[arg-type]
+                tuple(sorted(g["sid"])),  # type: ignore[arg-type]
+                tuple(sorted(g["src"])),  # type: ignore[arg-type]
+            )
+        )
     _enforce_limit(len(out), max_records, "network enumeration")
-    return tuple(sorted(out, key=lambda r:(r.r,r.l+r.c,r.l,r.c,r.network_id)))
+    return tuple(sorted(out, key=lambda r: (r.r, r.l + r.c, r.l, r.c, r.network_id)))
 
 
 @dataclass(frozen=True)
 class ReductionCensusResult:
+    """Provenance census for assignment-to-network reductions.
+
+    ``pipeline_totals`` counts raw assignments, assigned-support classes, and
+    reduced networks.  ``fibre_distributions`` summarizes many-to-one map fibre
+    sizes.  ``source_edge_transitions`` and ``component_transitions`` distinguish
+    source support/component counts from reduced component counts.
+    ``collision_summary`` highlights networks reached from multiple sources,
+    and ``diagnostics`` contains conservation checks.
+    """
+
     query: CountQuery
     relation: NetworkRelation
     pipeline_totals: dict[str,int]
@@ -2013,25 +2519,165 @@ class ReductionCensusResult:
 
 
 def _dist(sizes: Iterable[int]) -> tuple[dict[str,int],...]:
-    c=Counter(sizes); return tuple({"fibre_size":k,"target_objects":v,"source_objects":k*v} for k,v in sorted(c.items()))
+    counts = Counter(sizes)
+    return tuple(
+        {
+            "fibre_size": fibre_size,
+            "target_objects": target_objects,
+            "source_objects": fibre_size * target_objects,
+        }
+        for fibre_size, target_objects in sorted(counts.items())
+    )
 
 
 def reduction_census(query: CountQuery, relation: str | NetworkRelation = "local-sp", max_records: int = DEFAULT_ENUM_MAX_RECORDS) -> ReductionCensusResult:
-    rel=validate_network_relation(relation)
-    assignments=enum_assignments(query,max_records=max_records)
-    assigned=enum_assigned_supports(query,max_records=max_records)
-    networks=enum_networks(query,rel,max_records=max_records)
-    as_by_id={a.assigned_support_id:a for a in assigned}
-    net_by_as={asid:n for n in networks for asid in n.assigned_support_ids}
-    edge_rows=Counter(); edge_nets=defaultdict(set); comp_rows=Counter(); comp_nets=defaultdict(set)
+    """Analyze provenance fibres from source assignments to reduced networks.
+
+    ``relation`` defaults to ``local-sp``.  ``max_records`` defaults to
+    ``10000`` and guards the upstream enumerations used by this analysis.
+    Returns :class:`ReductionCensusResult`; raises ``ValueError`` for unknown
+    relations, unbounded queries, non-positive ``max_records``, or catalogue
+    sizes above the guard.  Source transition fields use source semantics, while
+    reduced fields use local-SP reduced semantics.
+    """
+
+    rel = validate_network_relation(relation)
+    assignments = enum_assignments(query, max_records=max_records)
+    assigned = enum_assigned_supports(query, max_records=max_records)
+    networks = enum_networks(query, rel, max_records=max_records)
+    as_by_id = {a.assigned_support_id: a for a in assigned}
+    del as_by_id
+    net_by_as = {asid: n for n in networks for asid in n.assigned_support_ids}
+    edge_rows = Counter()
+    edge_nets = defaultdict(set)
+    comp_rows = Counter()
+    comp_nets = defaultdict(set)
     for asr in assigned:
-        n=net_by_as[asr.assigned_support_id]; key=(asr.source_support_edges,n.r,n.l,n.c); edge_rows[key]+=asr.raw_assignment_count; edge_nets[key].add(n.network_id)
-        ck=(asr.r,asr.l,asr.c,n.r,n.l,n.c); comp_rows[ck]+=asr.raw_assignment_count; comp_nets[ck].add(n.network_id)
-    source_edge_transitions=tuple({"source_support_edges":k[0],"reduced_r":k[1],"reduced_l":k[2],"reduced_c":k[3],"source_assignments":v,"assigned_supports":sum(1 for a in assigned if (a.source_support_edges, net_by_as[a.assigned_support_id].r, net_by_as[a.assigned_support_id].l, net_by_as[a.assigned_support_id].c)==k),"distinct_networks_reached":len(edge_nets[k])} for k,v in sorted(edge_rows.items()))
-    component_transitions=tuple({"source_r":k[0],"source_l":k[1],"source_c":k[2],"reduced_r":k[3],"reduced_l":k[4],"reduced_c":k[5],"source_assignments":v,"assigned_supports":sum(1 for a in assigned if (a.r,a.l,a.c,net_by_as[a.assigned_support_id].r,net_by_as[a.assigned_support_id].l,net_by_as[a.assigned_support_id].c)==k),"distinct_networks_reached":len(comp_nets[k])} for k,v in sorted(comp_rows.items()))
-    top=sorted(networks,key=lambda n:(-n.source_assignment_count,-n.assigned_support_count,n.network_id))[:5]
-    collisions={"multiple_raw_assignments":sum(1 for n in networks if n.source_assignment_count>1),"multiple_assigned_supports":sum(1 for n in networks if n.assigned_support_count>1),"multiple_source_supports":sum(1 for n in networks if len(n.support_ids)>1),"multiple_source_support_edge_counts":sum(1 for n in networks if n.min_source_support_edges != n.max_source_support_edges),"multiple_source_component_tuples":sum(1 for n in networks if len(n.source_component_tuples)>1),"top_collisions":[{"network_id":n.network_id,"source_assignment_count":n.source_assignment_count,"assigned_support_count":n.assigned_support_count} for n in top]}
-    pipe={"raw_assignments":len(assignments),"assigned_support_classes":len(assigned),"reduced_networks":len(networks)}
-    fibres={"assignments_to_assigned_supports":_dist(a.raw_assignment_count for a in assigned),"assigned_supports_to_networks":_dist(n.assigned_support_count for n in networks),"assignments_to_networks":_dist(n.source_assignment_count for n in networks)}
-    diag={"provisional_formats":True,"conservation_checks":{"raw_assignments":sum(a.raw_assignment_count for a in assigned)==len(assignments),"assigned_supports":sum(n.assigned_support_count for n in networks)==len(assigned),"network_ids_unique":len({n.network_id for n in networks})==len(networks)}}
-    return ReductionCensusResult(query,rel,pipe,fibres,source_edge_transitions,component_transitions,collisions,diag)
+        network = net_by_as[asr.assigned_support_id]
+        edge_key = (
+            asr.source_support_edges,
+            network.r,
+            network.l,
+            network.c,
+        )
+        edge_rows[edge_key] += asr.raw_assignment_count
+        edge_nets[edge_key].add(network.network_id)
+
+        component_key = (asr.r, asr.l, asr.c, network.r, network.l, network.c)
+        comp_rows[component_key] += asr.raw_assignment_count
+        comp_nets[component_key].add(network.network_id)
+
+    source_edge_transitions = tuple(
+        {
+            "source_support_edges": key[0],
+            "reduced_r": key[1],
+            "reduced_l": key[2],
+            "reduced_c": key[3],
+            "source_assignments": value,
+            "assigned_supports": sum(
+                1
+                for assigned_record in assigned
+                if (
+                    assigned_record.source_support_edges,
+                    net_by_as[assigned_record.assigned_support_id].r,
+                    net_by_as[assigned_record.assigned_support_id].l,
+                    net_by_as[assigned_record.assigned_support_id].c,
+                )
+                == key
+            ),
+            "distinct_networks_reached": len(edge_nets[key]),
+        }
+        for key, value in sorted(edge_rows.items())
+    )
+    component_transitions = tuple(
+        {
+            "source_r": key[0],
+            "source_l": key[1],
+            "source_c": key[2],
+            "reduced_r": key[3],
+            "reduced_l": key[4],
+            "reduced_c": key[5],
+            "source_assignments": value,
+            "assigned_supports": sum(
+                1
+                for assigned_record in assigned
+                if (
+                    assigned_record.r,
+                    assigned_record.l,
+                    assigned_record.c,
+                    net_by_as[assigned_record.assigned_support_id].r,
+                    net_by_as[assigned_record.assigned_support_id].l,
+                    net_by_as[assigned_record.assigned_support_id].c,
+                )
+                == key
+            ),
+            "distinct_networks_reached": len(comp_nets[key]),
+        }
+        for key, value in sorted(comp_rows.items())
+    )
+    top = sorted(
+        networks,
+        key=lambda n: (
+            -n.source_assignment_count,
+            -n.assigned_support_count,
+            n.network_id,
+        ),
+    )[:5]
+    collisions = {
+        "multiple_raw_assignments": sum(
+            1 for n in networks if n.source_assignment_count > 1
+        ),
+        "multiple_assigned_supports": sum(
+            1 for n in networks if n.assigned_support_count > 1
+        ),
+        "multiple_source_supports": sum(1 for n in networks if len(n.support_ids) > 1),
+        "multiple_source_support_edge_counts": sum(
+            1 for n in networks if n.min_source_support_edges != n.max_source_support_edges
+        ),
+        "multiple_source_component_tuples": sum(
+            1 for n in networks if len(n.source_component_tuples) > 1
+        ),
+        "top_collisions": [
+            {
+                "network_id": n.network_id,
+                "source_assignment_count": n.source_assignment_count,
+                "assigned_support_count": n.assigned_support_count,
+            }
+            for n in top
+        ],
+    }
+    pipe = {
+        "raw_assignments": len(assignments),
+        "assigned_support_classes": len(assigned),
+        "reduced_networks": len(networks),
+    }
+    fibres = {
+        "assignments_to_assigned_supports": _dist(
+            a.raw_assignment_count for a in assigned
+        ),
+        "assigned_supports_to_networks": _dist(
+            n.assigned_support_count for n in networks
+        ),
+        "assignments_to_networks": _dist(n.source_assignment_count for n in networks),
+    }
+    diag = {
+        "provisional_formats": True,
+        "conservation_checks": {
+            "raw_assignments": sum(a.raw_assignment_count for a in assigned)
+            == len(assignments),
+            "assigned_supports": sum(n.assigned_support_count for n in networks)
+            == len(assigned),
+            "network_ids_unique": len({n.network_id for n in networks})
+            == len(networks),
+        },
+    }
+    return ReductionCensusResult(
+        query,
+        rel,
+        pipe,
+        fibres,
+        source_edge_transitions,
+        component_transitions,
+        collisions,
+        diag,
+    )

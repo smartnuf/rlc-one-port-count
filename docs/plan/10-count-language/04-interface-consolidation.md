@@ -31,3 +31,16 @@ Status: done
   leaf usage, relation choices are argparse choices, and finite fixed
   support-edge source ranges are accepted consistently for network counting and
   enumeration as well as earlier source stages.
+
+## 2026-07 Python API documentation pass
+
+- Audited the provisional `rice.__all__` surface into query/configuration,
+  count, enumeration, reduction-helper, record/fact, relation, and constant
+  categories.
+- Added authored IDE/pydoc documentation for public callables and record/result
+  types, including source-versus-reduced component semantics, grouping names,
+  relation validation, and enumeration size guards.
+- Expanded `docs/python_api.md` into a runnable guide covering profiles, query
+  construction, grouping, relations, JSON conversion, record navigation,
+  failure cases, and the distinction between `support_census(max_edges=8)` and
+  the query-based object-language API.

@@ -1,139 +1,119 @@
-"""Exercise the small runnable examples documented in docs/python_api.md.
+"""Exercise runnable examples from docs/python_api.md."""
 
-These tests are deliberately cheap (tiny budgets/graphs) and exist to catch
-drift between the documented API examples and the actual behaviour of
-rice.__all__, not to duplicate the golden-count regression suite.
-"""
+import inspect
 
-import networkx as nx
+import pytest
 
+import rice
 from rice import (
-    ReducedFactor,
-    ReducedSignature,
-    SIMPLE_PRIMITIVE_BUNDLES,
-    SimplePrimitiveBundle,
-    SupportCensusResult,
-    canonical_reduced_signature,
-    factor_from_simple_primitive_bundle,
-    normalise_parallel_factor,
-    normalise_reduced_factor,
-    normalise_series_factor,
-    primitive_factor,
-    reduced_signature_component_counts,
-    support_census,
-)
-from rice.core import (
-    _BundleAssignmentCensusResult,
-    _BundleLabelingCensusResult,
-    _ReducedTopologyCensusResult,
-    _reduced_topology_census,
-    _simple_bundle_assignment_census,
-    _simple_bundle_labeling_census,
+    COUNT_PROFILES,
+    LOCAL_SP_RELATION,
+    ComponentConstraints,
+    CountQuery,
+    assignment_census,
+    enum_assigned_supports,
+    enum_assignments,
+    enum_networks,
+    network_census,
+    validate_network_relation,
 )
 
 
-def test_support_census_example_matches_documented_output():
-    result = support_census(max_edges=3)
+def test_minimal_count_example_from_docs():
+    result = network_census(CountQuery(profile="golden"))
 
-    assert isinstance(result, SupportCensusResult)
-    assert result.relevant_by_edges == {1: 1, 2: 1, 3: 2}
-    assert result.relevant_total == 4
-
-
-def test__simple_bundle_assignment_census_example_matches_documented_output():
-    result = _simple_bundle_assignment_census(max_r=1, max_reactive=1)
-
-    assert isinstance(result, _BundleAssignmentCensusResult)
-    assert result.leaf_assignments_total == 9
-    assert result.leaf_assignments_by_edges == {1: 5, 2: 4}
+    assert result.total == 313
+    assert result.records[0] == {"r": 0, "lc": 1, "networks": 2}
+    assert result.matrix() == ((0, 2, 2, 4), (1, 4, 12, 40), (0, 4, 34, 210))
 
 
-def test__simple_bundle_labeling_census_example_matches_documented_output():
-    result = _simple_bundle_labeling_census(max_r=1, max_reactive=1)
+def test_minimal_enumeration_example_from_docs():
+    query = CountQuery(component_constraints=ComponentConstraints(max_r=1, max_lc=1))
+    records = enum_networks(query, max_records=100)
 
-    assert isinstance(result, _BundleLabelingCensusResult)
-    assert result.canonical_labeling_orbits_total == 7
-    assert result.canonical_labeling_orbits_by_edges == {1: 5, 2: 2}
+    assert len(records) == 7
+    assert records[0].network_id.startswith("network-")
+    assert records[0].canonical_signature == "0-1:C"
 
 
-def test_simple_primitive_bundle_matches_type_of_bundle_entries():
-    assert all(isinstance(bundle, SimplePrimitiveBundle) for bundle in SIMPLE_PRIMITIVE_BUNDLES)
-    assert [bundle.label for bundle in SIMPLE_PRIMITIVE_BUNDLES] == [
-        "R",
-        "L",
-        "C",
-        "R||L",
-        "R||C",
-        "L||C",
-        "R||L||C",
+def test_support_record_exposes_defensive_graph_copy_and_read_only_automorphisms():
+    from rice import enum_supports
+
+    record = enum_supports(CountQuery(max_support_edges=1))[0]
+    graph_copy = record.graph
+    graph_copy.add_edge(100, 101)
+
+    assert record.graph.number_of_edges() == record.source_support_edges
+    with pytest.raises(TypeError):
+        record.automorphisms[0][0] = 99
+
+
+def test_profiles_and_defaults_examples_from_docs():
+    assert sorted(COUNT_PROFILES) == [
+        "golden",
+        "ladenheim-108-region",
+        "ladenheim-structural-region",
+        "main",
     ]
+    assert CountQuery(profile="main").effective_support_edge_range().to_json() == {
+        "min": 1,
+        "max": 8,
+    }
+    with pytest.raises(ValueError, match="finite maximum"):
+        network_census(CountQuery())
 
 
-def test_factor_construction_and_normalisation_example():
-    r = primitive_factor("R")
-    l = primitive_factor("L")
-
-    series = normalise_series_factor([r, l])
-    assert series.stable_string() == "L--R"
-
-    parallel_dup = normalise_parallel_factor([r, r])
-    assert parallel_dup.stable_string() == "R"
-
-    bundle_factor = factor_from_simple_primitive_bundle("R||L")
-    assert bundle_factor.stable_string() == "L||R"
-
-    messy = ReducedFactor("parallel", (ReducedFactor("parallel", (r, r)), l))
-    clean = normalise_reduced_factor(messy)
-
-    assert clean.stable_string() == "L||R"
-    assert clean == bundle_factor
-
-
-def test_normalise_reduced_factor_is_recursive():
-    r, l, c = primitive_factor("R"), primitive_factor("L"), primitive_factor("C")
-
-    deeply_nested = ReducedFactor(
-        "series",
-        (
-            ReducedFactor("series", (r, r)),
-            ReducedFactor("parallel", (ReducedFactor("parallel", (l, l)), c)),
-        ),
+def test_query_construction_and_exact_support_edge_examples_from_docs():
+    query = CountQuery(
+        component_constraints=ComponentConstraints(max_r=2, max_lc=3),
+        min_support_edges=2,
+        max_support_edges=4,
     )
-    result = normalise_reduced_factor(deeply_nested)
+    assert query.requested_support_edge_range().to_json() == {"min": 2, "max": 4}
+    assert query.effective_support_edge_range().to_json() == {"min": 2, "max": 4}
 
-    # Fully flattened/collapsed: R--R -> R and L||L -> L merge at every depth,
-    # leaving a two-factor series of R and (L||C).
-    assert result.kind == "series"
-    assert {operand.stable_string() for operand in result.operands} == {"R", "C||L"}
-
-
-def test_canonical_reduced_signature_example_is_deterministic():
-    graph = nx.Graph([(0, 1), (1, 2)])
-    assignments = {(0, 1): "R", (1, 2): "L"}
-
-    signature = canonical_reduced_signature(graph, (0, 2), assignments)
-    signature_again = canonical_reduced_signature(graph, (0, 2), assignments)
-    reversed_signature = canonical_reduced_signature(graph, (2, 0), assignments)
-
-    assert isinstance(signature, ReducedSignature)
-    assert signature.stable_string() == "0-1:L--R"
-    assert signature == signature_again
-    assert signature == reversed_signature
-    assert reduced_signature_component_counts(signature) == (1, 1, 0)
-
-
-def test__reduced_topology_census_example_matches_documented_output():
-    result = _reduced_topology_census(max_r=1, max_reactive=1)
-
-    assert isinstance(result, _ReducedTopologyCensusResult)
-    assert result.exact_table == ((0, 2), (1, 4))
-    assert result.total == 7
-    assert result.canonical_signatures == (
-        "0-1:C",
-        "0-1:C--R",
-        "0-1:C||R",
-        "0-1:L",
-        "0-1:L--R",
-        "0-1:L||R",
-        "0-1:R",
+    exact = CountQuery(
+        component_constraints=ComponentConstraints(max_r=1, max_lc=1),
+        support_edges=2,
     )
+    assert assignment_census(exact).raw_assignments_total == 4
+
+
+def test_grouping_relation_json_and_guard_examples_from_docs():
+    grouped = assignment_census(CountQuery(profile="golden"), group_by=("r", "lc"))
+    assert grouped.records[:3] == (
+        {"r": 0, "lc": 1, "distinct_bundle_sets": 2, "raw_assignments": 2},
+        {"r": 0, "lc": 2, "distinct_bundle_sets": 4, "raw_assignments": 5},
+        {"r": 0, "lc": 3, "distinct_bundle_sets": 6, "raw_assignments": 20},
+    )
+
+    total = network_census(CountQuery(profile="golden"), group_by=("none",))
+    assert total.records == ({"networks": 313},)
+    assert total.to_json()["object"] == "networks"
+    assert total.to_json()["totals"] == {"networks": 313}
+
+    relation = validate_network_relation("local-sp")
+    assert relation == LOCAL_SP_RELATION
+    assert relation.definition == "canonical-reduced-topology-local-series-parallel-v1"
+
+    tiny = CountQuery(component_constraints=ComponentConstraints(max_r=1, max_lc=1))
+    assert len(enum_assignments(tiny, max_records=20)) == 9
+
+    record = enum_assigned_supports(tiny, max_records=20)[0]
+    assert (record.source_support_edges, record.r, record.l, record.c) == (1, 0, 0, 1)
+    assert (record.orbit_size, record.raw_assignment_count) == (1, 1)
+
+    with pytest.raises(ValueError, match="grouping"):
+        network_census(CountQuery(profile="golden"), group_by=("support-edges",))
+    with pytest.raises(ValueError, match="max-records"):
+        enum_assignments(CountQuery(profile="golden"), max_records=1)
+
+
+def test_public_callables_and_classes_have_authored_documentation():
+    for name in rice.__all__:
+        obj = getattr(rice, name)
+        if inspect.isfunction(obj) or inspect.isclass(obj):
+            doc = inspect.getdoc(obj)
+            assert doc, name
+            assert not doc.startswith(f"{name}(")
+            assert len(doc.split()) >= 8, name
