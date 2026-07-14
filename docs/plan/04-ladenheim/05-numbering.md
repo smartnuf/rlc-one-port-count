@@ -4,6 +4,7 @@ Status: `todo`
 
 ## Goal
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 Map repository representatives and SP/bridge descriptors to historical numbering
 once the cited sources and reduction definitions are aligned.
 
@@ -17,4 +18,5 @@ once the cited sources and reduction definitions are aligned.
 ## Done means
 
 - Historical numbering is searchable from repository fixtures.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Descriptor, representative, and source references agree for every mapped item.

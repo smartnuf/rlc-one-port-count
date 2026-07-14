@@ -16,9 +16,11 @@ Ladenheim documentation should distinguish:
   series/parallel rejection;
 - the canonical 108-network catalogue, a subset of the 148 after forty further
   exclusions, whose members satisfy `R <= 3`, `L+C <= 2`, and `R+L+C <= 5`;
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - the later 62 realizability-set equivalence classes, distinct from the reported
   35 group-action orbits and 24 subfamilies.
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 Bibliographic source: A. Morelli and M. C. Smith, *Passive Network Synthesis: An
 Approach to Classification*, SIAM, 2019, including Chapter 3 Section 3.1,
 Chapter 5, the Chapter 6 classification discussion, and Theorem 7.4.

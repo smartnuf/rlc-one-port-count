@@ -9,6 +9,7 @@ Ensure there is one development contract, not several subtly different ones.
 ## Required contract
 
 - Linux/WSL/Codex: `make setup`, `make test`, `make check` may be used.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Windows PowerShell: `./scripts/setup.ps1`, `./scripts/test.ps1`, `./scripts/check.ps1` must be available and must not depend on Make.
 - All paths use `.venv` explicitly.
 - README and AGENTS.md must agree.
@@ -29,17 +30,20 @@ Ensure there is one development contract, not several subtly different ones.
   WSL, or activation, using `.venv\Scripts\python.exe` explicitly.
 - README and AGENTS.md document the native PowerShell commands and the same
   check ordering as `scripts/check.sh`: lint, tests, support census, bundle
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   assignment census, labeling census, legacy LC count, and legacy generic count.
 - Evidence: the native Windows PowerShell path successfully ran `setup.ps1`,
   `test.ps1`, `lint.ps1`, and the complete `check.ps1` validation sequence.
 
 - 2026-07-10: Hardened setup and cleanup scripts after PR review: Bash scripts
   avoid Bash-4-only helpers such as `mapfile`, setup probes require working
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   `venv` support before selecting Python, Windows setup accepts forward-compatible
   `py -3` launcher runtimes, and Windows cleanup skips directory reparse points
   before recursion. Added regression coverage for script parsing and selection
   behavior.
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - 2026-07-10: Removed generic-`X` support (`docs/plan/02-cleanup/03-generic-x.md`).
   `legacy-generic` is no longer a Make target and no longer appears in
   `scripts/check.sh` or `scripts/check.ps1`; both scripts and the Makefile
@@ -59,6 +63,7 @@ Ensure there is one development contract, not several subtly different ones.
   target and no longer appears in `scripts/check.sh` or `scripts/check.ps1`.
   The validation sequence is now, identically across the Make/Bash path and
   the native PowerShell path: (1) lint, (2) tests, (3) support census
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   (`rice count supports --max-support-edges 8`), (4) raw simple-bundle assignment census (`rice count assignments --profile main`), (5) canonical assigned-support census (`rice count assigned-supports --profile main`), (6) the small committed reduced-topology golden slice (`rice count networks --profile golden`), replacing the removed legacy LC count as the final stage. The historical note originally referred to staged make targets; the live validation path now uses object-language count commands. Ran `make test`, `make lint`, and `make check` (via
   `./scripts/check.sh`) successfully after the change, and `make
   supports`/`make bundles`/`make labelings`/`make reduced` individually.

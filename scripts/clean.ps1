@@ -45,6 +45,7 @@ function Test-IsReparsePoint {
         [System.IO.FileSystemInfo] $Item
     )
 
+# line-length: ignore-next-line -- legacy line pending wrap
     return (($Item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0)
 }
 
@@ -54,6 +55,7 @@ function Remove-PycacheDirectories {
         [string] $Directory
     )
 
+# line-length: ignore-next-line -- legacy line pending wrap
     foreach ($child in Get-ChildItem -LiteralPath $Directory -Force -Directory) {
         if ($child.Name -eq '.git' -or $child.Name -eq '.venv') {
             continue
@@ -79,12 +81,14 @@ Remove-GeneratedPath -RelativePath 'build'
 Remove-GeneratedPath -RelativePath 'dist'
 
 $repoRoot = Get-RepoRootPath
+# line-length: ignore-next-line -- legacy line pending wrap
 foreach ($eggInfo in @(Get-ChildItem -LiteralPath $repoRoot -Force -Filter '*.egg-info' -ErrorAction SilentlyContinue | Where-Object { -not (Test-IsReparsePoint -Item $_) })) {
     Remove-GeneratedFullPath -FullPath $eggInfo.FullName
 }
 
 $srcDir = Resolve-PathUnderRepo -RelativePath 'src'
 if (Test-Path -LiteralPath $srcDir -PathType Container) {
+# line-length: ignore-next-line -- legacy line pending wrap
     foreach ($eggInfo in @(Get-ChildItem -LiteralPath $srcDir -Force -Filter '*.egg-info' -ErrorAction SilentlyContinue | Where-Object { -not (Test-IsReparsePoint -Item $_) })) {
         Remove-GeneratedFullPath -FullPath $eggInfo.FullName
     }

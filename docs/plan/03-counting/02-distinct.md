@@ -14,8 +14,11 @@ Define exactly what is being counted before generating counts.
 - Are C elements indistinguishable from one another?
 - Is L/C type part of the graph colouring?
 - Are series and parallel reductions applied before counting?
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Are same-kind series/parallel combinations excluded as non-generic or reducible?
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Are open circuits, shorts, disconnected graphs, and dangling subgraphs excluded?
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Are networks equivalent under impedance identity, graph isomorphism, known transformations, or some staged combination of these?
 
 ## Working approach
@@ -27,8 +30,10 @@ Use the reduced-model staging from the normative model docs:
    reversal does not create a new topology.
 3. Reject terminal-irrelevant two-terminal support graphs as whole objects; do
    not prune dangling branches or pendant blobs into smaller accepted graphs.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 4. Assign simple primitive R/L/C bundles under the component budgets. Each bundle
    is a non-empty subset of `{R, L, C}` between the same two support nodes.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 5. Canonicalise assigned supports under internal node renaming and terminal-pair
    reversal.
 6. Apply the documented local series/parallel reduction rules: operands
@@ -54,22 +59,30 @@ solver for general electrical equivalence.
 
 - All five reduced-model stages are now implemented: connected unlabelled
   simple support graphs, unordered terminal-pair orbits, and
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   terminal-relevance filtering (`rice count supports`); raw simple primitive bundle assignment (`rice count assignments`); assigned-support labeling-orbit canonicalisation (`rice count assigned-supports`); local canonical reduced-signature machinery (`canonical_reduced_signature`); and an end-to-end reduced-topology census for the committed small golden slice (`rice count networks --profile golden`). The legacy
   `count_networks` path, which used multiset component-count bundles, has
   been removed in full (`docs/plan/02-cleanup/02-legacy.md`).
 - Phase-2 raw simple primitive bundle assignment is implemented in `rice.core`
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   and exposed through `rice count assignments`, using only `R`, `L`, `C`, `R||L`,
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   `R||C`, `L||C`, and `R||L||C`. The normal `R <= 3`, `L+C <= 5` interface derives `max_support_edges=8`
   and the leaf total is tested as `1,166,714`.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Assigned-support canonicalisation is implemented as `simple_bundle_labeling_census`
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   and exposed through `rice count assigned-supports`; for `R <= 3`, `L+C <= 5` it preserves
   `1,166,714` raw leaves and counts `830,094` canonical bundle-labeling orbits.
   Local series-span signature machinery is now implemented for individual
   assigned two-terminal networks with deterministic recursive factor
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   normalisation and graph-core canonicalisation. Small-slice census integration is implemented by `network_census` and `rice count networks --profile golden`, with phase-3 orbit witnesses merged by canonical reduced signatures for the `R <= 2`, `L+C <= 3` golden slice. Full `R <= 3`, `L+C <= 5` census execution and descriptor output remain unfinished, so the overall distinct-network task is still `prog` rather than `done`.
 
 ## Near-term next steps
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 1. Extend the reduced-signature census path from the committed small golden slice to the full standard slice after performance and output-size review.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 2. Keep the phase-2 raw leaf-assignment and phase-3 bundle-labeling-orbit totals
    as regression tests while adding signature merging.

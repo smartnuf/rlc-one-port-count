@@ -4,6 +4,7 @@ Status: `todo`
 
 ## Goal
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 Use a textual SP/bridge descriptor language as the stable catalogue notation for
 Ladenheim representatives and generated examples.
 
@@ -24,9 +25,11 @@ Ladenheim representatives and generated examples.
 
 - Descriptor fixtures can be parsed, rendered, round-tripped, and diffed.
 - The implementation provenance is recorded.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - The descriptor syntax covers the reproduced Ladenheim representatives or lists
   unsupported cases explicitly.
 
 ## PR2 note
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 Before `enum networks` depends on textual descriptors, assess the earlier `network-theory` and `pynntt` implementations, record provenance and compatibility, distinguish graph-based RICE interchange from human-readable SP/bridge syntax, support legacy SPB import where useful rather than copying a parser unchanged, and keep source descriptors distinct from reduced descriptors.

@@ -16,6 +16,7 @@ Understand what exists before removing legacy code or generic `X` support.
 
 ## Done means
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - There is a short review note listing what will be deleted and what will replace it.
 - The planned deletions are low-risk and test-backed.
 
@@ -47,10 +48,15 @@ through `src/rice/cli.py`:
 
 | Stage | Core API | CLI | Purpose |
 |---|---|---|---|
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | 1. Support-graph census | `support_census`, `SupportCensusResult`, `generate_connected_unlabelled_simple_graphs`, `automorphisms`, `is_two_terminal_relevant`, `terminal_pair_orbit_representatives`, `relevant_terminal_pair_orbit_representatives` | `rice supports` | Enumerate connected unlabelled simple support graphs, unordered terminal-pair orbits, and terminal-relevant two-terminal supports (`docs/support_graph_enumeration.md`). |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | 2. Simple primitive bundle assignment | `SIMPLE_PRIMITIVE_BUNDLES`, `SimplePrimitiveBundle`, `simple_bundle_assignment_count_by_edge_count`, `simple_bundle_assignment_census`, `BundleAssignmentCensusResult` | `rice bundles` | Assign only the seven simple primitive bundles (`R`, `L`, `C`, `R\|\|L`, `R\|\|C`, `L\|\|C`, `R\|\|L\|\|C`) to terminal-relevant support edges; raw leaves, no quotienting. |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | 3. Assigned-support labeling orbits | `simple_bundle_labeling_orbit_count`, `simple_bundle_labeling_census`, `BundleLabelingCensusResult`, `edge_permutations_preserving_terminal_set`, `permutation_cycle_lengths` | `rice labelings` | Quotient phase-2 assignments by support automorphisms that preserve the unordered terminal pair (including terminal reversal), via Burnside's lemma. |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | 4. Local reduction / canonical signatures | `ReducedFactor`, `ReducedSignature`, `primitive_factor`, `normalise_series_factor`, `normalise_parallel_factor`, `normalise_reduced_factor`, `factor_from_simple_primitive_bundle`, `canonical_reduced_signature`, `reduced_signature_component_counts` | (library only; used by `rice reduced`) | Local series/parallel reduction and canonical signatures for one assigned two-terminal network (`docs/model_decisions.md`, `docs/bundles_and_multiedges.md`). |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | 5. End-to-end reduced-topology census | `iter_reduced_topology_signatures`, `reduced_topology_census`, `ReducedTopologyCensusResult` | `rice reduced` | Full census over a budget slice: enumerate supports, assign budgeted bundles, canonicalise, deduplicate by signature. Default/golden slice `R<=2, L+C<=3` (`data/counts/small-r2-x3.json`, `docs/counts/small-r2-x3.md`). |
 
 Supporting exports and artefacts that belong to this surviving path: all of
@@ -79,26 +85,46 @@ legacy-removal task without first re-homing/renaming it. See section 3 for the
 detailed shared-infrastructure list; this table only flags the shared items,
 it does not repeat their full rationale.
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | Item | Where | Used by | Legacy-only or shared? | Replacement | Cleanup task |
 |---|---|---|---|---|---|
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `Mode` type alias | `src/rice/core.py:29` | `count_networks`, `fixed_assignments_by_total`, `CountResult.mode` | Legacy-only | none needed (reduced model has no mode concept) | 02-legacy |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `CountResult` dataclass | `src/rice/core.py:449-490` | `count_networks`, CLI no-subcommand/`count` output, `_count_json` | Legacy-only | `ReducedTopologyCensusResult` (already implemented) | 02-legacy |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `fixed_assignments_by_total` | `src/rice/core.py:671-728` | `count_networks` only | Legacy-only (has its own `mode` branching, including the generic DP; distinct from phase-2/3 helpers which take no `mode`) | `_fixed_simple_bundle_labelings_for_cycles` (already implemented, phase-3) | 02-legacy (and 03-generic-x for the `mode=="generic"` branch specifically, see section 4) |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `count_networks` | `src/rice/core.py:1113-1162` | CLI `count` subcommand and no-subcommand fallback; `tests/test_counts.py`; `docs/results.md` legacy tables | Legacy-only | `reduced_topology_census` (already implemented) | 02-legacy |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `rice count` subcommand | `src/rice/cli.py:51-54`, `393-573` fallthrough | end users, `Makefile` `legacy-count`/`legacy-generic`, `scripts/check.sh`/`.ps1` | Legacy-only CLI surface (dispatch logic in `main()` shared only in the sense that it is the same `if/elif` chain as the other subcommands — the branch itself is legacy-only) | `rice reduced` | 02-legacy |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | No-subcommand compatibility path | `src/rice/cli.py:173-176` (`_add_count_arguments` on the top-level parser), `393-573` fallthrough when `args.command` is `None` | `tests/test_cli.py::test_legacy_no_subcommand_count_interface_still_works`; README "legacy no-subcommand count form" section | Legacy-only | none (drop entirely, or keep as a deliberate compatibility shim — see section 6) | 02-legacy |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `_count_json` | `src/rice/cli.py:293-298` | `count`/no-subcommand JSON output only | Legacy-only | `_reduced_topology_census_json` (already implemented) | 02-legacy |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `_COUNT_OPTION_NAMES`, `_LEGACY_GLOBAL_OPTION_NAMES`, `_reject_legacy_globals_before_supports` | `src/rice/cli.py:28-29, 305-326` | guards against stray legacy globals before subcommands | Legacy-only guard logic, but it also protects the *modern* subcommands (`supports`/`bundles`/`labelings`/`reduced`) from silently swallowed legacy options | Mixed — see note below | 02-legacy, with care (see section 3) |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `CountResult`/`count_networks` markdown/JSON formatting in `main()` | `src/rice/cli.py:550-573` | count/no-subcommand path only | Legacy-only | reduced/labelings formatting blocks (already implemented) | 02-legacy |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `rice.__init__` exports `CountResult`, `count_networks` | `src/rice/__init__.py` | package consumers | Legacy-only | none (remove from `__all__` and the import) | 02-legacy / 04-public-api |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `tests/test_counts.py` (both tests) | whole file | legacy `lc`/`generic` golden tables | Legacy-only | already superseded by `test_reduced_census.py` for the golden-slice pattern | 02-legacy (delete or explicitly retitle as historical, see section 5) |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | CLI legacy tests in `tests/test_cli.py`: `test_count_subcommand_help_shows_count_options`, `test_legacy_no_subcommand_count_interface_still_works`, `test_count_subcommand_still_works`, `test_legacy_count_options_before_supports_are_rejected`, part of `test_abbreviated_long_options_are_rejected` (the `--mo generic` case) | `tests/test_cli.py` | legacy CLI surface | Legacy-only, **except** `test_legacy_count_options_before_supports_are_rejected` and the abbreviation case, which also exercise the shared `_reject_legacy_globals_before_supports` guard and `allow_abbrev=False` policy that the modern subcommands rely on | Keep guard-behaviour coverage; delete only the count-specific assertions | 02-legacy / 07-tests/04 |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `Makefile` targets `legacy-count`, `legacy-generic` | `Makefile:28-32` | `make check` | Legacy-only (both) | remove; `make check` keeps `supports`/`bundles`/`labelings` | 02-legacy (generic first per 03, then legacy per 02 — see section 7) |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `scripts/check.sh` / `scripts/check.ps1` legacy/generic invocation lines | `scripts/check.sh:16-17`, `scripts/check.ps1:14-15` | `make check` equivalents | Legacy-only (both lines) | remove both; keep the `supports`/`bundles`/`labelings`/(future `reduced`) lines | 02-legacy |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | README "Current legacy results" section, legacy no-subcommand examples, `legacy-generic` notes | `README.md:97-116, 244-283` | documentation | Legacy-only | replace with a pointer to `docs/results.md` reduced-model sections and `rice reduced` | 02-legacy / 04-public-api |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `docs/results.md` "Legacy result" section (`lc` and `generic` tables) | `docs/results.md:1-45` | documentation, regression reference | Legacy-only *content*, but the file as a whole is shared (support-census and reduced-topology sections must stay) | keep the file, delete only the legacy section, and add an explicit "historical reference" framing (see section 5) | 02-legacy |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `AGENTS.md` "Current legacy validation commands" section, "Legacy reference totals" | `AGENTS.md:162-193` | contributor instructions | Legacy-only | replace with the surviving `make check` command list once 02/03 land | 02-legacy / 04-public-api |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `docs/computation.md`, `docs/bundles_and_multiedges.md`, `docs/model_decisions.md` legacy-model sections ("Legacy bundle model", "Current legacy model", "Legacy computation currently implemented") | respective files | documentation contrasting old vs. new | Legacy-only *prose*, kept deliberately as contrast material for the reduced model — see section 5 for the "keep as historical explanation" recommendation | keep with light "historical" framing, do not delete outright | 02-legacy (framing only, not deletion) |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `docs/plan/01-dev-env/06-contract.md` progress note listing "legacy LC count, and legacy generic count" as part of the check-ordering contract | `docs/plan/01-dev-env/06-contract.md:32` | plan record | Legacy-only reference inside an otherwise-`done`, otherwise-accurate record | update wording once the targets are actually removed | 02-legacy (do not edit now — task is `done` and describes history accurately as of today) |
 
 No entire module or helper block was assumed deletable without checking for a
@@ -116,17 +142,29 @@ such correction was made in this task beyond what was already accurate.
 
 | Symbol | Legacy caller(s) | Reduced-model caller(s) | Note |
 |---|---|---|---|
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `generate_connected_unlabelled_simple_graphs` | `iter_two_terminal_supports` (used by `count_networks`) | `support_census`, `iter_two_terminal_supports` (used by `simple_bundle_labeling_census`, `iter_reduced_topology_signatures`) | Core graph generator; fully shared. |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `automorphisms` | `iter_two_terminal_supports` | `support_census`, `simple_bundle_labeling_orbit_count`, `iter_two_terminal_supports` | Fully shared. |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `graph_invariant`, `_add_unique` | via `generate_connected_unlabelled_simple_graphs` | via `generate_connected_unlabelled_simple_graphs` | Fully shared; internal to the same generator. |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `simple_path_edge_cover`, `is_two_terminal_relevant` | via `relevant_terminal_pair_orbit_representatives` | `support_census`, `_validate_assigned_support` (reduced-signature validation), test suite directly | Fully shared. Module docstring at `core.py:1-17` already correctly separates this from the "older `count_networks` entry point"; no misleading legacy label found here. |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `terminal_pair_orbit_representatives`, `relevant_terminal_pair_orbit_representatives` | `iter_two_terminal_supports` | `support_census` | Fully shared. |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `edge_permutations_preserving_terminal_set` | `count_networks` (via `iter_two_terminal_supports`'s consumer) | `simple_bundle_labeling_orbit_count` | Fully shared. Docstring is generic ("Return induced edge permutations…"), not legacy-flavoured. |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `permutation_cycle_lengths` | `count_networks` | `simple_bundle_labeling_orbit_count` | Fully shared, generic combinatorial helper. |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `iter_two_terminal_supports` | `count_networks` | `simple_bundle_labeling_census`, `iter_reduced_topology_signatures` | Fully shared; docstring says "for legacy counting" (`core.py:731`) but is in fact the shared support-iteration entry point for phases 2 and beyond. **This is the clearest instance of a misleading "legacy" label on shared code** — flagged as preserve + rename/redocument later, not touched in this task because the fix is not essential to the accuracy of this review (the code path and its real callers are unambiguous from the source). |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `support_census`, `SupportCensusResult` | not used by legacy path (legacy calls `iter_two_terminal_supports` directly, not `support_census`) | `rice supports`, `simple_bundle_assignment_census` | Not legacy at all despite living in the same module as `count_networks`; no misleading naming found. |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `_validate_assigned_support`, `_merge_parallel_edges`, `_suppress_one_series_node`, `_reduced_factor_multigraph` | not used by legacy path | `canonical_reduced_signature` | Reduced-model-only, not legacy, not shared — listed here only to confirm they have **no** legacy dependency and are fully safe from the legacy-removal task. |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `_reject_legacy_globals_before_supports` (CLI) | guards the no-subcommand path indirectly (it is invoked unconditionally in `main()`) | protects `supports`/`bundles`/`labelings`/`reduced` from silently-ignored stray `--mode`/`--max-r` etc. placed before the subcommand | Mixed: the function name says "legacy" but half its purpose is protecting the modern subcommands. Do not delete this function when removing `count`; only stop treating `_COUNT_OPTION_NAMES`/`--mode` as needing rejection once `--mode` itself is gone. Preserve the "options before a subcommand are rejected" behaviour and its test coverage. |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `RiceArgumentParser`, `allow_abbrev=False` policy | applies to every parser including `count` | applies to every parser including `supports`/`bundles`/`labelings`/`reduced` | Fully shared, no legacy content at all. |
 
 Recommendation for `iter_two_terminal_supports`: when 02-legacy is
@@ -150,17 +188,28 @@ excluded from this table.
 
 | Item | Where | Classification |
 |---|---|---|
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `Mode = Literal["lc", "generic"]` | `src/rice/core.py:29` | generic-X support (the `"generic"` value only; `"lc"` stays as part of the retained legacy mode until 02-legacy) |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `mode: Mode = "lc"` parameter, `mode not in {"lc", "generic"}` validation, `mode == "generic"` DP branch | `count_networks` (`core.py:1113-1162`), `fixed_assignments_by_total` (`core.py:684-701`) | generic-X support |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `CountResult.mode` field and its docstring line describing `"generic"` | `core.py:455-456, 468` | generic-X support (field itself is legacy+generic; the `"generic"` value specifically is in scope for 03) |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | CLI `--mode` argument, `choices=("lc", "generic")` | `src/rice/cli.py:201-206` (via `_add_count_arguments`) | generic-X support (the `"generic"` choice; `--mode` itself and the `"lc"` choice are legacy-scope, task 02) |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `reactive_label = "L+C" if mode == "lc" else "X"` output line | `src/rice/cli.py:558` | generic-X support (the `"X"` output label) |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `mode="generic"` legacy result table and prose | `docs/results.md:29-45` | generic-X support |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | Generic-X caveats in `AGENTS.md:184-193`, `README.md:108-116, 248-250`, `docs/computation.md` (implicitly, via shared legacy contrast prose — no generic-specific text found there beyond the general legacy contrast) | doc files | generic-X support (the specific generic-mode sentences; the general legacy-vs-reduced contrast sentences around them are task-02 scope) |
 | `Makefile:31-32` `legacy-generic` target | `Makefile` | generic-X support |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `scripts/check.sh:17`, `scripts/check.ps1:15` generic invocation line | scripts | generic-X support |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `tests/test_counts.py::test_generic_reactive_counts_match_reference_table` | test file | generic-X support |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | `tests/test_cli.py::test_abbreviated_long_options_are_rejected` first case (`["--mo", "generic", "supports"]`) | test file | generic-X support only incidentally — the case also exercises abbreviation rejection and the legacy-globals-before-subcommand guard, both of which are shared behaviour; replace the literal `"generic"` value with any other `--mode` value (or drop `--mode` from the case entirely) rather than deleting the whole test | keep the guard assertion, adjust the literal |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | Docstring phrase `'"generic"' treats all reactive elements as one type X` | `core.py:455-456`, `cli.py:205` | generic-X support |
 
 No occurrence of a variable literally named `x` (e.g. the `x` in
@@ -238,6 +287,7 @@ Evidence:
   release branches, or a publishing workflow (`.github/` contains no
   workflow files at all — none exist in the tree).
 - README and `AGENTS.md` both already describe `rice count`/the
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   no-subcommand form as "legacy" and "compatibility only", and `docs/results.md`
   / `README.md` already state that the generic-X figures "should not be
   treated as the final target count" — i.e. the project itself already frames
@@ -251,6 +301,7 @@ inspecting the tree alone. However, the repository provides no compatibility
 commitment of any kind (no version promise, no publish target, no documented
 consumer), so speculative preservation of `count_networks`/`--mode
 generic`/the no-subcommand form beyond a clear migration note (section 5) is
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 not warranted. A temporary warning/deprecation shim (e.g. a `DeprecationWarning`
 on `rice count`/no-subcommand invocation for one release before deletion)
 would be a reasonable, low-cost middle ground if the maintainer wants extra
@@ -261,8 +312,10 @@ this task.
 
 ### Safeguards already present
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Legacy `lc` output: `tests/test_counts.py::test_lc_counts_match_reference_table`
   pins the full `R<=3, L+C<=5` table, exactly-R=3 total, and grand total.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Generic output: `tests/test_counts.py::test_generic_reactive_counts_match_reference_table`
   pins the equivalent generic table/totals.
 - `rice count`: `tests/test_cli.py::test_count_subcommand_still_works`,
@@ -284,6 +337,7 @@ this task.
   bridge/core stability, malformed-input rejection) and
   `tests/test_reduced_census.py` (golden slice, determinism, no duplicates,
   API/CLI/committed-JSON agreement).
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Public exports and CLI help: `tests/test_cli.py::test_top_level_help_does_not_show_support_or_count_options_as_global`
   and the per-subcommand `--help` tests cover CLI help; **package export
   surface had no equivalent pinning test before this task** (see below).
@@ -324,6 +378,7 @@ granularity, and duplicating that would not add information.
   to use a different literal (e.g. `--mo lc`) so the abbreviation-rejection
   assertion survives; remove `"generic"` from `_COUNT_OPTION_NAMES`/CLI
   `choices` tests if any start asserting on the `choices` tuple contents
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   directly (none currently do — `test_count_subcommand_help_shows_count_options`
   only checks substrings are present, so it will keep passing once `--mode`
   itself still exists with only `"lc"`); shrink `LEGACY_ONLY_EXPORTS`/mode
@@ -360,6 +415,7 @@ make legacy-count
 make legacy-generic
 ```
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 ### Commands and APIs that must continue to pass unchanged, before and after cleanup
 
 ```bash
@@ -368,6 +424,7 @@ make legacy-generic
 .venv/bin/python -m rice labelings --max-r 3 --max-reactive 5
 .venv/bin/python -m rice reduced
 .venv/bin/python -m rice reduced --max-r 2 --max-reactive 3 --format json
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 python -c "from rice import support_census, simple_bundle_assignment_census, simple_bundle_labeling_census, reduced_topology_census, canonical_reduced_signature"
 ```
 
@@ -487,10 +544,13 @@ Environment: repository-local `.venv` created via `./scripts/setup.sh`
 (Python 3.13.12, networkx 3.6.1, pytest 9.1.1), per `AGENTS.md`.
 
 ```bash
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 ./scripts/setup.sh        # created .venv, installed rice + dev deps — succeeded
 ./scripts/test.sh         # .venv/bin/python -m pytest -q — 99 passed
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 ./scripts/check.sh        # lint (git diff --check + syntax compile) + test.sh +
                           # supports/bundles/labelings/legacy-lc/legacy-generic
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
                           # — all stages succeeded, all reference totals matched
 git diff --check          # no whitespace errors
 .venv/bin/python -m rice --help

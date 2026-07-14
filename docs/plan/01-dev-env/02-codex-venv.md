@@ -4,6 +4,7 @@ Status: `done`
 
 ## Goal
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 Stop Codex and humans from accidentally installing or testing with system Python.
 
 ## Requirements
@@ -15,12 +16,14 @@ Stop Codex and humans from accidentally installing or testing with system Python
 ## Done means
 
 - Codex has exact commands to run.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - The documented commands use `.venv/bin/python` on Linux/WSL and `.venv\Scripts\python.exe` on Windows.
 - There is no instruction to use bare `pip`.
 
 ## Progress notes
 
 - 2026-07-11: Codex setup and maintenance now prepare `.venv` and run only a
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   short import/version smoke test. Setup records a cache-local fingerprint under
   `.venv/`; maintenance compares that fingerprint and skips editable-install
   refreshes when Python/package inputs are unchanged.

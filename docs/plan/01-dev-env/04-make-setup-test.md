@@ -27,4 +27,5 @@ make test
 
 - `make setup` completes successfully.
 - `make test` runs tests through `.venv`.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Any remaining failures are genuine code/test failures, not environment failures.

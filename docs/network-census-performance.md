@@ -374,6 +374,7 @@ ranges are engineering estimates, not independently measured bounds:
 | Trusted evaluator, limited compilation | 2x to 5x | 4 to 12 hours |
 | Fully compiled reduction evaluator | 3x to 15x | 1.3 to 7.7 hours |
 | Compiled evaluator plus four workers | 8x to 30x | 38 minutes to 2.9 hours |
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | Compiled evaluator, orbit generation and effective parallelism | 10x to 40x | 29 minutes to 2.3 hours |
 
 The table should not be read as multiplicative guarantees. Several gains

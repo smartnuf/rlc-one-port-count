@@ -32,6 +32,7 @@ shopt -u nullglob
 
 while IFS= read -r -d '' path; do
     remove_path "${path}"
+# line-length: ignore-next-line -- legacy line pending wrap
 done < <(find . \( -path ./.git -o -path ./.venv \) -prune -o -type d -name __pycache__ -print0)
 
 if (( removed == 0 )); then

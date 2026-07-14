@@ -11,6 +11,7 @@ catalogues, and realizability-set classes.
 
 - Identify which catalogue members or transformations are claimed to generate
   broader families.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Record whether each generator claim is structural, electrical, or behavioural.
 - Link generator records to descriptors and historical numbering where known.
 

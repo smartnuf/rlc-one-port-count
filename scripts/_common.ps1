@@ -7,6 +7,7 @@ function Write-RepoRootError {
         [string] $ScriptName
     )
 
+# line-length: ignore-next-line -- legacy line pending wrap
     [Console]::Error.WriteLine("Error: this script must be run from the RICE repository root.")
     [Console]::Error.WriteLine("Expected invocation: .\scripts\$ScriptName")
 }
@@ -27,6 +28,7 @@ function Get-ProjectName {
         if ($trimmed.StartsWith('[')) {
             $inProject = $false
         }
+# line-length: ignore-next-line -- legacy line pending wrap
         if ($inProject -and $trimmed -match '^name\s*=\s*["'']([^"'']+)["'']\s*$') {
             return $Matches[1]
         }
@@ -97,11 +99,14 @@ function Require-VenvPython {
 
     $venvPython = Get-VenvPythonPath
     if (-not (Test-Path -LiteralPath $venvPython -PathType Leaf)) {
+# line-length: ignore-next-line -- legacy line pending wrap
         throw "Error: missing or unusable .venv\Scripts\python.exe. Run $SetupHint first."
     }
 
+# line-length: ignore-next-line -- legacy line pending wrap
     $pythonInfo = & $venvPython -c 'import sys; print("Using Python:", sys.executable); print("Python version:", sys.version.split()[0])'
     if ($LASTEXITCODE -ne 0) {
+# line-length: ignore-next-line -- legacy line pending wrap
         throw "Error: .venv\Scripts\python.exe exists but could not run. Run $SetupHint to recreate it."
     }
     foreach ($line in $pythonInfo) {
@@ -112,6 +117,7 @@ function Require-VenvPython {
 }
 
 function Get-RepoRootPath {
+# line-length: ignore-next-line -- legacy line pending wrap
     return ([System.IO.Path]::GetFullPath((Get-Location).Path).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar))
 }
 
@@ -126,9 +132,11 @@ function Resolve-PathUnderRepo {
     }
 
     $repoRoot = Get-RepoRootPath
+# line-length: ignore-next-line -- legacy line pending wrap
     $fullPath = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $RelativePath))
     $repoPrefix = $repoRoot + [System.IO.Path]::DirectorySeparatorChar
 
+# line-length: ignore-next-line -- legacy line pending wrap
     if ($fullPath -ne $repoRoot -and -not $fullPath.StartsWith($repoPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "Refusing path outside repository: $RelativePath"
     }

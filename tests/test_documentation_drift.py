@@ -39,11 +39,14 @@ def test_live_docs_do_not_reintroduce_removed_cli_syntax_or_stale_claims():
 
 
 def test_interface_consolidation_notes_do_not_claim_pr3_is_still_open():
+# line-length: ignore-next-line -- legacy line pending wrap
     text = Path("docs/plan/10-count-language/04-interface-consolidation.md").read_text()
     assert "Left PR3 work" not in text
     assert "was subsequently completed" in text
 
 
 def test_active_docs_link_core_normative_files():
+# line-length: ignore-next-line -- legacy line pending wrap
     assert "[`docs/model_decisions.md`](model_decisions.md)" in Path("docs/computation.md").read_text()
+# line-length: ignore-next-line -- legacy line pending wrap
     assert "[`docs/plan/05-slices/04-r3-x5.md`](plan/05-slices/04-r3-x5.md)" in Path("docs/results.md").read_text()

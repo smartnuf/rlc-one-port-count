@@ -8,6 +8,7 @@ Avoid overstating what rice proves.
 
 ## Open questions
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Does the descriptor language cover all generated planar one-port networks in the target scope?
 - Which generated networks require bridge or other non-series-parallel forms?
 - Which equivalences should be structural, electrical, or both?
@@ -22,7 +23,9 @@ Avoid overstating what rice proves.
 
 ## Progress notes
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Current docs explicitly warn that legacy counts are not final reduced-topology
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   counts and that the reduced model is not a full electrical-equivalence solver.
 - Open questions about genericity, descriptor coverage, structural versus
   electrical equivalence, and biquadratic sufficiency remain unresolved.

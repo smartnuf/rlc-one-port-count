@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "rice"
 version = "0.1.0"
+# line-length: ignore-next-line -- legacy line pending wrap
 description = "RICE — Resistor-Inductor-Capacitor Enumerator for small two-terminal RLC one-port topology classes."
 readme = "README.md"
 requires-python = ">=3.11"

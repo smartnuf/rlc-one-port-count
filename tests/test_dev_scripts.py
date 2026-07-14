@@ -26,6 +26,7 @@ _REQUIRES_POSIX_HOST_WITH_BASH = pytest.mark.skipif(
 # External commands scripts/setup.sh, scripts/_common.sh, and the fake
 # python stubs below call while running with RICE_SETUP_ONLY_PRINT_PYTHON=1
 # (before any pip install/run() calls).
+# line-length: ignore-next-line -- legacy line pending wrap
 _REQUIRED_SYSTEM_TOOLS = ("bash", "awk", "basename", "dirname", "mktemp", "rm", "mkdir")
 
 
@@ -33,7 +34,9 @@ _REQUIRED_SYSTEM_TOOLS = ("bash", "awk", "basename", "dirname", "mktemp", "rm", 
 def test_public_shell_scripts_parse_with_bash() -> None:
     scripts = sorted(SCRIPTS.glob("*.sh"))
     assert scripts
+# line-length: ignore-next-line -- legacy line pending wrap
     relative_scripts = [script.relative_to(REPO_ROOT).as_posix() for script in scripts]
+# line-length: ignore-next-line -- legacy line pending wrap
     subprocess.run(["bash", "-n", *relative_scripts], check=True, cwd=REPO_ROOT)
 
 
@@ -42,7 +45,9 @@ def test_public_shell_scripts_avoid_bash4_only_features() -> None:
     for script in sorted(SCRIPTS.glob("*.sh")):
         text = script.read_text(encoding="utf-8")
         for needle in forbidden:
+# line-length: ignore-next-line -- legacy line pending wrap
             assert needle not in text, f"{script.relative_to(REPO_ROOT)} uses {needle}"
+# line-length: ignore-next-line -- legacy line pending wrap
         assert ",," not in text, f"{script.relative_to(REPO_ROOT)} uses Bash 4 case conversion"
 
 
@@ -95,12 +100,15 @@ def _add_required_system_tool_symlinks(bindir: Path) -> None:
 def test_setup_sh_skips_python_without_working_venv(tmp_path: Path) -> None:
     bindir = tmp_path / "bin"
     bindir.mkdir()
+# line-length: ignore-next-line -- legacy line pending wrap
     _write_fake_python(bindir / "python3.14", version="3.14.0", venv_works=False)
+# line-length: ignore-next-line -- legacy line pending wrap
     _write_fake_python(bindir / "python3.13", version="3.13.0", venv_works=True)
     _add_required_system_tool_symlinks(bindir)
 
     env = os.environ.copy()
     # This isolated POSIX PATH and its symlinks are meaningful only when pytest
+# line-length: ignore-next-line -- legacy line pending wrap
     # itself runs on POSIX. Native Windows Python invoking the WSL Bash launcher
     # does not share WSL's filesystem paths or executable environment.
     # PATH is replaced, not prepended: if a real python3.14 (or any other
@@ -135,6 +143,7 @@ def test_powershell_clean_skips_reparse_points_before_recursing() -> None:
     text = (SCRIPTS / "clean.ps1").read_text(encoding="utf-8")
     reparse_check = "[System.IO.FileAttributes]::ReparsePoint"
     assert reparse_check in text
+# line-length: ignore-next-line -- legacy line pending wrap
     assert text.index("Test-IsReparsePoint -Item $child") < text.index("Remove-PycacheDirectories -Directory $child.FullName")
 
 

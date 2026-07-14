@@ -4,6 +4,7 @@ Status: `prog`
 
 ## Goal
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 Define the historical Ladenheim scope and the named reduction contracts that the
 repository will compare without replacing the implemented RICE local
 series/parallel model.
@@ -22,6 +23,7 @@ historical structural treatment, including graph 2-isomorphism and exclusion of
 trivially same-kind series/parallel-reducible candidates. This starting set
 includes eight networks with four resistors and one reactive element.
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 The canonical 108-network Ladenheim catalogue is a subset of the 148 after forty
 further exclusions. Its members satisfy `R <= 3`, `L+C <= 2`, and
 `R+L+C <= 5`. The forty exclusions comprise eight four-resistor/one-reactive
@@ -30,6 +32,7 @@ networks reducible by Zobel transformation, twenty five-element series-parallel
 networks reducible by Zobel transformation, and eight further O/O-dual and
 bridge cases excluded using the source's Cauer-Foster, regularity,
 realizability, and related Y-delta reasoning. The 62 classes are a later
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 realizability-set classification of the 108 catalogue members, not another graph
 signature count.
 
@@ -47,6 +50,7 @@ Chapter 5, the Chapter 6 classification discussion, and Theorem 7.4.
 ## Named reduction contracts
 
 - **RICE local series/parallel reduction**: the implemented relation used by
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   `canonical_reduced_signature` and `rice count networks --profile golden`. It normalises local
   primitive series spans and parallel bundles inside arbitrary two-terminal
   networks. Bridge and other non-series-parallel cores may remain.
@@ -61,6 +65,7 @@ Chapter 5, the Chapter 6 classification discussion, and Theorem 7.4.
   augmentation of the 2-isomorphism relation using the same admissibility
   contract.
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 The RICE local series/parallel partition and the 2-isomorphism partition are not
 assumed to refine each other. Their relationship is an empirical comparison
 result.
@@ -71,6 +76,7 @@ Use `star-delta` to mean both Y-to-delta and delta-to-Y directions where
 admissible. Before implementation, define whether the relation is structural or
 electrical, the component-value mapping, positivity requirements, whether the
 outputs must remain primitive R/L/C branches, the equality notion, closure and
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 canonicalisation, termination and duplicate suppression, and how to handle moves
 that leave the primitive RLC network class.
 

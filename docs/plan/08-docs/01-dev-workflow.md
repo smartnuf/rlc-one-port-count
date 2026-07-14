@@ -32,6 +32,8 @@ Make the development workflow easy to follow.
 ## Progress notes
 
 - 2026-07-11: Documented change-aware validation in README and AGENTS.md,
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   including lightweight documentation validation, full-validation escalation for
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   unknown/tooling changes, and the rule not to duplicate checks already included
   in `make check`.

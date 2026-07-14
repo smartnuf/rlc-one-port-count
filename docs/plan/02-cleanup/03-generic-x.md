@@ -1,3 +1,4 @@
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 # 02-cleanup / 03 — Remove generic `X` implementation, tests, validation commands, and active documentation
 
 Status: `done`
@@ -87,6 +88,7 @@ deletion sequence (section 8, step 1), not a discovery-only list.
       exercise disabled-abbreviation coverage.
 - [x] Add CLI regression coverage showing `rice count --mode generic` and
       `rice --mode generic` both fail cleanly without a traceback
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
       (`tests/test_cli.py::test_generic_mode_is_rejected_cleanly_without_traceback`).
 - [x] Do not change the expected top-level export set in
       `tests/test_public_exports.py`; generic mode was never a top-level

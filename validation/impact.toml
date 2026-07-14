@@ -23,7 +23,7 @@ patterns = [
 
 [[rules]]
 profile = "full"
-reason = "packaging, dependency, environment, build, script, CI, or validation machinery"
+reason = "dependency, environment, build, script, CI, or validation machinery"
 patterns = [
   "pyproject.toml",
   "requirements*.txt",

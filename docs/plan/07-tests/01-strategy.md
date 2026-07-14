@@ -24,6 +24,7 @@ Build confidence while the enumeration machinery evolves.
 
 ## Progress notes
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Fast tests currently cover the phase-1 support census, terminal-pair reversal,
   dangling branch rejection, pendant blob rejection, and positive terminal
   relevance examples.
@@ -35,6 +36,7 @@ Build confidence while the enumeration machinery evolves.
   `docs/plan/02-cleanup/03-generic-x.md`). Its historical golden tables are
   no longer live regression tests; they are recorded, clearly labelled as
   historical, in `docs/results.md`.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - 2026-07-10: Assigned-support canonicalisation (`tests/test_bundle_labelings.py`),
   local series/parallel reduced-signature normalisation
   (`tests/test_reduced_signatures.py`), and small-slice end-to-end census

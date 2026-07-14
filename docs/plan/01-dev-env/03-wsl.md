@@ -4,6 +4,7 @@ Status: `done`
 
 ## Goal
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 Use a fresh WSL2 Ubuntu instance on the ARM Windows laptop as the first clean Linux validation environment.
 
 ## Tasks

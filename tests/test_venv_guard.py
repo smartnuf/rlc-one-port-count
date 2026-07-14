@@ -7,6 +7,7 @@ from conftest import (
 )
 
 
+# line-length: ignore-next-line -- legacy line pending wrap
 def test_repository_venv_python_prefers_windows_layout_on_windows(tmp_path: Path):
     windows_python = tmp_path / ".venv" / "Scripts" / "python.exe"
     posix_python = tmp_path / ".venv" / "bin" / "python"
@@ -15,6 +16,7 @@ def test_repository_venv_python_prefers_windows_layout_on_windows(tmp_path: Path
     windows_python.write_text("", encoding="utf-8")
     posix_python.write_text("", encoding="utf-8")
 
+# line-length: ignore-next-line -- legacy line pending wrap
     assert _repository_venv_python(tmp_path, platform="win32") == windows_python
 
 
@@ -29,6 +31,7 @@ def test_repository_venv_python_prefers_posix_layout_on_posix(tmp_path: Path):
     assert _repository_venv_python(tmp_path, platform="linux") == posix_python
 
 
+# line-length: ignore-next-line -- legacy line pending wrap
 def test_repository_venv_prefix_matches_resolved_venv_directory(tmp_path: Path):
     venv_dir = tmp_path / ".venv"
     venv_dir.mkdir()
@@ -38,5 +41,7 @@ def test_repository_venv_prefix_matches_resolved_venv_directory(tmp_path: Path):
 
 
 def test_pytest_command_hint_is_platform_specific():
+# line-length: ignore-next-line -- legacy line pending wrap
     assert _pytest_command_hint(platform="win32") == r".\.venv\Scripts\python.exe -m pytest -q"
+# line-length: ignore-next-line -- legacy line pending wrap
     assert _pytest_command_hint(platform="linux") == ".venv/bin/python -m pytest -q"

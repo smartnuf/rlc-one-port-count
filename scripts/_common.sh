@@ -39,11 +39,14 @@ require_repo_root() {
 
 require_venv_python() {
     if [[ ! -x .venv/bin/python ]]; then
+# line-length: ignore-next-line -- legacy line pending wrap
         echo "Error: missing or unusable .venv/bin/python. Run ./scripts/setup.sh first." >&2
         exit 1
     fi
 
+# line-length: ignore-next-line -- legacy line pending wrap
     if ! .venv/bin/python -c 'import sys; print("Using Python:", sys.executable); print("Python version:", sys.version.split()[0])'; then
+# line-length: ignore-next-line -- legacy line pending wrap
         echo "Error: .venv/bin/python exists but could not run. Run ./scripts/setup.sh to recreate it." >&2
         exit 1
     fi

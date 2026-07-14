@@ -8,6 +8,7 @@ from scripts.check_line_lengths import (
     check_lines,
     check_paths,
     is_included_path,
+    tracked_files,
 )
 
 
@@ -155,3 +156,8 @@ def test_changed_files_between_ignores_untracked_worktree_files(
     (tmp_path / "selection.txt").write_text("x" * 100, encoding="utf-8")
 
     assert changed_files_between(base, head, tmp_path) == ["tracked.txt"]
+
+
+def test_tracked_included_repository_files_have_no_diagnostics() -> None:
+    result = check_paths(tracked_files())
+    assert result.diagnostics == ()

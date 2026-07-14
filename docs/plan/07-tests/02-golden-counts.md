@@ -23,6 +23,7 @@ Use stable generated counts to detect accidental changes.
 ## Progress notes
 
 - Golden tests now exist for the phase-1 support-census table through
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   `max_edges=8` (the Python helper name; CLI examples use `--max-support-edges`), the phase-2 raw simple-bundle assignment table and
   `1,166,714` leaf total, and the phase-3 canonical bundle-labeling table with
   total `830,094`. The legacy multiset-bundle counter (both its `lc` and
@@ -31,6 +32,7 @@ Use stable generated counts to detect accidental changes.
   `docs/plan/02-cleanup/03-generic-x.md`); its historical totals are recorded
   only as a labelled historical citation in `docs/results.md`, not as a live
   golden test.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - The reduced-model `R <= 2`, `L+C <= 3` golden output is now stored in `data/counts/small-r2-x3.json` and tested for exact equality against CLI JSON so the documented regeneration command can be diffed without post-processing. The regeneration command is `.venv/bin/python -m rice count networks --profile golden --format json`; no no-argument network count is implied. Ladenheim golden outputs have not yet been generated.
 
 ## Near-term next steps

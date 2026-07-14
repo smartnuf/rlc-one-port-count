@@ -32,6 +32,7 @@ as historical background.
 ## Simple primitive bundles
 
 The reduced model uses only simple primitive bundles. Phase 2 implements these
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 bundles for the raw assignment census exposed as `rice count assignments`. A bundle is a
 non-empty subset of `{R, L, C}` between the same two support nodes.
 
@@ -114,6 +115,7 @@ are part of the staged reduced-signature model; local series-span reduction
 and canonical reduced signatures are implemented (see `rice count networks` and
 `docs/model_decisions.md`).
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 A span is a maximal local chain of two-terminal factors separated by internal nodes
 of incidence 2 in the current reduced graph.
 
@@ -134,6 +136,7 @@ second terminal path.
 
 ## Series order is not counted
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 When local series spans are implemented, the reduced model should count these as
 the same span:
 
@@ -223,10 +226,13 @@ Support graphs provide the structural skeleton for the staged reduced model:
 
 The reduced-model implementation is staged:
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Phase 1 support census is implemented as `rice count supports`: it performs steps 1
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   through 3 and reports basic support graphs, unordered two-terminal labellings,
   and terminal-relevant two-terminal supports.
 - Phase 2 raw simple primitive bundle-assignment census is implemented as
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   `rice count assignments`: it assigns the seven simple primitive bundles above to
   terminal-relevant supports under the component budgets and reports raw leaf
   assignments before assigned-support isomorphism or signature merging.
@@ -247,20 +253,25 @@ model, has been removed in full (`docs/plan/02-cleanup/02-legacy.md`).
 
 `rice count bundle-types` reports the fixed seven simple primitive bundle types
 with exact `(R,L,C)` weights. `reactive_count` in the Python API remains
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 `L+C`, but exact `l_count` and `c_count` are now exposed from the same validated
 bundle-weight source of truth.
 
 `rice count bundle-sets` counts multisets of these seven bundle types. A bundle
 set's cardinality is the number of source support edges it can fill. Its raw
 placement count on distinguishable edges is the multinomial coefficient of its
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 multiplicities. This is deliberately separate from `rice count assignments`, which counts
 ordered raw assignments per relevant support shape.
 
 ## Assignment and assigned-support count targets
 
 The object-language `assignments` target uses bundle-set inventories and their
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 multinomial raw-placement counts to count distinguishable source-edge placements
 on terminal-relevant supports. `assigned-supports` then quotients those raw
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 placements only by terminal-set-preserving support automorphisms. These names are
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 preferred in new documentation; the older terms `bundles` and `labelings` remain
 compatibility command names for the staged pipeline.

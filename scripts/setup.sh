@@ -15,10 +15,12 @@ python_candidate_is_usable() {
         "${PWD}/.venv/"*) return 1 ;;
     esac
 
+# line-length: ignore-next-line -- legacy line pending wrap
     if ! "${candidate_path}" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' >/dev/null 2>&1; then
         return 1
     fi
 
+# line-length: ignore-next-line -- legacy line pending wrap
     temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/rice-venv-check.XXXXXX")" || return 1
     status=0
     if ! "${candidate_path}" -m venv "${temp_dir}/venv" >/dev/null 2>&1; then
@@ -63,11 +65,13 @@ echo "Setting up RICE development environment"
 
 PYTHON_BIN="$(find_base_python || true)"
 if [[ -z "${PYTHON_BIN}" ]]; then
+# line-length: ignore-next-line -- legacy line pending wrap
     echo "Error: Python 3.11 or newer with working venv support is required, but no suitable interpreter was found." >&2
     exit 1
 fi
 
 echo "Selected base Python:"
+# line-length: ignore-next-line -- legacy line pending wrap
 "${PYTHON_BIN}" -c 'import sys; print("  executable:", sys.executable); print("  version:", sys.version.split()[0])'
 
 if [[ "${RICE_SETUP_ONLY_PRINT_PYTHON:-}" == "1" ]]; then
@@ -75,6 +79,7 @@ if [[ "${RICE_SETUP_ONLY_PRINT_PYTHON:-}" == "1" ]]; then
 fi
 
 if ! run "${PYTHON_BIN}" -m venv .venv; then
+# line-length: ignore-next-line -- legacy line pending wrap
     echo "Error: selected Python failed to create .venv even though the capability probe succeeded: ${PYTHON_BIN}" >&2
     exit 1
 fi
@@ -83,6 +88,7 @@ run .venv/bin/python -m pip install -e ".[dev]"
 
 echo
 echo "Virtual environment Python:"
+# line-length: ignore-next-line -- legacy line pending wrap
 .venv/bin/python -c 'import sys; print("  executable:", sys.executable); print("  version:", sys.version.split()[0])'
 
 echo

@@ -4,6 +4,7 @@ Status: `done`
 
 ## Goal
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 Ensure removing legacy implementation and generic `X` support does not silently break intended behaviour.
 
 ## Tasks

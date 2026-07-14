@@ -7,6 +7,7 @@ Status: done
 - Removed staged compatibility commands `rice supports`, `rice bundles`, `rice
   labelings`, and `rice reduced`; `rice count <object>` is the sole user-facing
   counting grammar.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Removed staged public API exports and result types from `rice.__all__`; shared
   support enumeration, Burnside arithmetic and local-SP reduction machinery are
   retained internally for object-language counts and focused reduction helpers.
@@ -15,11 +16,13 @@ Status: done
   schema.
 - Declared the CLI, Python API and serialisations provisional in user-facing
   documentation.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Later PR3 work (`rice enum ...`, reduction provenance and fibre analysis) was subsequently completed; see [`03-enum-reductions.md`](03-enum-reductions.md).
 
 
 ## 2026-07 CLI language review
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Top-level, group-level, and leaf help are now successful discoverability paths:
   `rice`, `rice -h`, `rice --help`, `rice help count`, and
   `rice help count supports`.

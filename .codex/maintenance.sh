@@ -38,4 +38,5 @@ print("networkx", networkx.__version__)
 print("rice", rice.__file__)
 PY
 
+# line-length: ignore-next-line -- legacy line pending wrap
 echo "Codex maintenance complete. Environment prepared; run task validation separately."

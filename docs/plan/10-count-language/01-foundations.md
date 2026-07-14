@@ -30,11 +30,13 @@ census results, JSON report metadata, and Python API exports.
   counts. Effective source support-edge caps use the tightest total-component
   upper bound implied by all supplied component constraints.
 - A supports or bundle-sets query must have a finite effective source-edge cap
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   from an exact/ranged edge option, a finite component region, or a named finite
   profile.
 - `BundleSet` validates that public API callers provide exactly one
   non-negative multiplicity for each simple primitive bundle type before any
   component counts, placement counts, or JSON records are derived.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - The staged compatibility commands were later removed; the live grammar is `rice count <object>` and `rice enum <object>`.
 
 ## Validation

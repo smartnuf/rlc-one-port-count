@@ -8,6 +8,7 @@ Ensure duplicate rejection and descriptor production are trustworthy.
 
 ## Tasks
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Test canonicalisation under internal node renaming and terminal-pair reversal.
 - Test simple primitive bundle-label preservation.
 - Test series/parallel normalisation where applicable.
@@ -16,6 +17,7 @@ Ensure duplicate rejection and descriptor production are trustworthy.
 
 ## Done means
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Equivalent networks collapse to the same canonical representative where intended.
 - Non-equivalent networks do not collapse accidentally.
 - Descriptor output is deterministic.
@@ -23,6 +25,7 @@ Ensure duplicate rejection and descriptor production are trustworthy.
 
 ## Progress notes
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Added focused phase-3 assigned-support canonicalisation tests covering single-edge supports, terminal-path reversal, asymmetric terminal-labelled supports, exclusion of automorphisms that do not preserve the terminal set, explicit terminal-swapping automorphisms, budget accounting over edge cycles, and brute-force cross-checks for small supports.
 - Added focused local series/parallel reduction tests for primitive duplicate
   merging, compound duplicate preservation, terminal reversal, internal node
@@ -38,4 +41,5 @@ Ensure duplicate rejection and descriptor production are trustworthy.
   and API/CLI/committed-JSON agreement. Extending that integration test
   coverage to the full standard `R <= 3`, `L+C <= 5` slice, and
   descriptor-output tests, remain future work
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   (`docs/plan/05-slices/04-r3-x5.md`, `docs/plan/04-ladenheim/06-descriptors.md`).

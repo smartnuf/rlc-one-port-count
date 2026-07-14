@@ -15,8 +15,10 @@ R <= 3
 L + C <= 5
 ```
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 That means up to three resistors and up to five reactive elements in total, where each reactive element is either an inductor or a capacitor.
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 This is not a request to count separate 3-element and 5-element networks. The `3` and `5` are independent upper bounds on element classes.
 
 ## Count grid
@@ -28,10 +30,12 @@ R count:      0, 1, 2, 3
 L+C count:    0, 1, 2, 3, 4, 5
 ```
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 Before including degenerate cases in final tables, decide whether entries with no resistors, no reactive elements, or very small total element counts are useful or should be reported separately.
 
 ## Reactive assignments
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 For each reactive count `N = L+C`, counts may need to be split by `(L, C)` composition:
 
 ```text
@@ -63,6 +67,7 @@ N = 5: (5,0), (4,1), (3,2), (2,3), (1,4), (0,5)
 - The support-census command validates support-edge counts through
   `max_edges=8`, which is the support bound for the current full scope.
 - The phase-2 `rice bundles` census now uses `--max-r` and `--max-reactive`
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   as the normal interface, derives the natural support bound from those budgets,
   and tests the default `R <= 3`, `L+C <= 5` raw assignment-leaf total.
 

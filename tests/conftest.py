@@ -11,6 +11,7 @@ def _normalised_path(path: Path) -> str:
     return os.path.normcase(str(path.resolve()))
 
 
+# line-length: ignore-next-line -- legacy line pending wrap
 def _repository_venv_python(repo_root: Path, platform: str | None = None) -> Path | None:
     """Return the repository venv interpreter path when the venv exists."""
 
@@ -34,6 +35,7 @@ def _repository_venv_python(repo_root: Path, platform: str | None = None) -> Pat
 
 def _is_repository_venv_prefix(current_prefix: str, repo_root: Path) -> bool:
     expected_prefix = repo_root / ".venv"
+# line-length: ignore-next-line -- legacy line pending wrap
     return _normalised_path(Path(current_prefix)) == _normalised_path(expected_prefix)
 
 
@@ -49,7 +51,9 @@ def pytest_sessionstart(session):  # type: ignore[no-untyped-def]
 
     Codex Cloud setup/maintenance scripts install project dependencies into the
     repository-local `.venv`. If a later task runs plain `python -m pytest` or
+# line-length: ignore-next-line -- legacy line pending wrap
     `pytest`, pytest may use the system interpreter. Because pyproject.toml adds
+# line-length: ignore-next-line -- legacy line pending wrap
     `src` to pytest's import path, that wrong interpreter can import the project
     source but then fail with misleading missing-dependency errors such as
     `ModuleNotFoundError: No module named 'networkx'`.

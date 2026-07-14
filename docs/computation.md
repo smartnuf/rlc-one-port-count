@@ -6,6 +6,7 @@ implementation.
 
 ## Historical: legacy computation (removed)
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 The legacy counter, now removed in full ([`docs/plan/02-cleanup/02-legacy.md`](plan/02-cleanup/02-legacy.md)),
 counted isomorphism classes of connected undirected two-terminal multigraphs
 by:
@@ -53,6 +54,7 @@ Implemented as `rice count supports` / `support_census`, a support-only census:
 
 For `max_support_edges = 8`, expected counts are:
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 | Support edges | Basic connected unlabelled graphs | Unordered two-terminal labelings | Terminal-relevant two-terminal graphs |
 |---:|---:|---:|---:|
 | 1 | 1 | 1 | 1 |
@@ -93,8 +95,10 @@ L||C
 R||L||C
 ```
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 For `R <= 3, L+C <= 5`, run `.venv/bin/python -m rice count assignments --profile main`. The command derives `max_support_edges = max_r + max_lc`; use `--max-support-edges` or `--support-edges` for explicit finite source support-edge ranges. Zero/zero budgets are a valid empty bundle or assigned-support census with no support-edge rows; negative budgets are invalid. The raw assignment leaf bound before isomorphism or reduced-signature merging is **1,166,714**.
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 This is small enough to permit straightforward enumeration for the first reduced
 implementation.
 
@@ -105,6 +109,7 @@ assignment counts, implemented as `canonical_reduced_signature` for one
 assigned network and, for full enumeration and merging across a budget slice,
 `rice count networks` / `network_census` — currently computed and
 committed for the small golden slice `R <= 2`, `L+C <= 3`
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 ([`docs/plan/05-slices/04-r3-x5.md`](plan/05-slices/04-r3-x5.md) tracks running the full `R <= 3`,
 `L+C <= 5` scope through the same enumeration).
 
@@ -140,10 +145,12 @@ particular, do not collapse networks via:
 ## Enumeration and provenance implementation
 
 The `rice enum` commands materialize the same exact object stages used by the
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 count commands. Supports are canonically relabelled before IDs and edge ordering
 are assigned. Assignment records place simple primitive bundle labels on that
 canonical edge order. Assigned-support records then choose deterministic orbit
 representatives using the terminal-set-preserving support automorphism action.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 Network records group assigned-support representatives by the local-SP canonical
 reduced signature and retain aggregate provenance counts rather than embedding
 all sources.

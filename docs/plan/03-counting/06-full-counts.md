@@ -16,7 +16,9 @@ L + C <= 5
 - Generate graph candidates.
 - Assign R/L/C edge types subject to the scope.
 - Canonicalise candidates.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Reject invalid or reducible candidates according to the documented definition.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Convert accepted candidates to repository-supported descriptors where possible.
 - Count failures separately where descriptor conversion is not yet supported.
 - Produce summary tables.

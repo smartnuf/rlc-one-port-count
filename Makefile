@@ -1,5 +1,6 @@
 VENV_PYTHON := .venv/bin/python
 
+# line-length: ignore-next-line -- legacy line pending wrap
 .PHONY: setup test lint check validate-changed count-supports count-bundle-types count-bundle-sets count-assignments count-assigned-supports count-networks clean install
 
 setup:

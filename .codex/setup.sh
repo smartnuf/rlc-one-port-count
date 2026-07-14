@@ -22,6 +22,7 @@ echo "Using base Python: $($PYTHON_BIN --version)"
 "$PYTHON_BIN" - <<'PY'
 import sys
 if sys.version_info < (3, 11):
+# line-length: ignore-next-line -- legacy line pending wrap
     raise SystemExit(f"Python 3.11+ is required; found {sys.version.split()[0]}")
 PY
 
@@ -59,4 +60,5 @@ PY
 
 .venv/bin/python .codex/env_fingerprint.py > .venv/rice-env.fingerprint
 
+# line-length: ignore-next-line -- legacy line pending wrap
 echo "Codex setup complete. Use .venv/bin/python or make test/check for task commands."

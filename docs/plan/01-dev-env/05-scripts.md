@@ -32,7 +32,9 @@ scripts/
 
 ## Done means
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Windows users can run `./scripts/setup.ps1` and `./scripts/test.ps1` without installing Make.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - Linux/WSL users can run `./scripts/setup.sh` and `./scripts/test.sh` without Make.
 - Make targets can delegate to these scripts where practical.
 
@@ -49,6 +51,7 @@ scripts/
   helper for root validation, venv lookup, checked command invocation, and safe
   cleanup path resolution.
 - The PowerShell scripts were parsed with the native PowerShell parser, checked
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   from the wrong directory, and executed from a clean native Windows setup path:
   `clean.ps1`, `setup.ps1`, `test.ps1`, `lint.ps1`, and `check.ps1`.
 - Repeated `setup.ps1` and repeated `clean.ps1` were verified, followed by
@@ -56,6 +59,7 @@ scripts/
 
 - 2026-07-10: Hardened setup and cleanup scripts after PR review: Bash scripts
   avoid Bash-4-only helpers such as `mapfile`, setup probes require working
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   `venv` support before selecting Python, Windows setup accepts forward-compatible
   `py -3` launcher runtimes, and Windows cleanup skips directory reparse points
   before recursion. Added regression coverage for script parsing and selection

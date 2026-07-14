@@ -4,6 +4,7 @@ Status: `prog`
 
 ## Goal
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 Capture literature-derived planning conclusions without presenting them as final,
 cited project documentation.
 
@@ -13,6 +14,7 @@ cited project documentation.
   objects, while counting reports accepted objects under a stated contract.
 - Keep explicit cataloguing separate from reduced-topology distinctness: a
   catalogue may retain representatives, metadata, descriptors, and provenance,
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
   while reduced-topology distinctness defines which candidates collapse together.
 - Keep the implemented RICE local series/parallel relation separate from the
   planned colour-preserving two-terminal 2-isomorphism relation.
@@ -35,12 +37,14 @@ The plan must frame the following as investigations, not established facts:
 
 ## Ladenheim layers
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 Use the following distinctions when promoting historical claims into public docs:
 
 - 148 structural primitive RLC networks in the scope `R+L+C <= 5`, `L+C <= 2`,
   including eight four-resistor/one-reactive networks;
 - 108 canonical catalogue members, a subset of the 148 after forty further
   exclusions, whose members satisfy `R <= 3`, `L+C <= 2`, and `R+L+C <= 5`;
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - 62 realizability-set equivalence classes of the 108 members, distinct from the
   reported 35 group-action orbits and 24 subfamilies.
 

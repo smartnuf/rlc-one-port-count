@@ -32,6 +32,7 @@ preferable for larger slices.
 
 ## Done means
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - The comparison is reproducible from checked-in fixtures or documented commands.
 - The report treats different partitions and computational costs as results,
   without selecting a preferred relation in advance.

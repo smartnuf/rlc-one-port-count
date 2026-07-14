@@ -16,6 +16,7 @@ removed legacy no-object count. Normal trailing `--help` remains supported, and
 Misspelled verbs or objects remain errors.
 
 Implemented count objects are `supports`, `bundle-types`, `bundle-sets`,
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 `assignments`, `assigned-supports`, `networks`, and `reductions`. The command language, Python
 API, JSON fields and report formatting are provisional until a versioned public
 interface is declared.
@@ -23,6 +24,7 @@ interface is declared.
 Pipeline order:
 
 ```text
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 supports -> bundle-types -> bundle-sets -> assignments -> assigned-supports -> networks
 ```
 
@@ -32,6 +34,7 @@ Object meanings:
 - `bundle-types`: the seven simple primitive bundle labels.
 - `bundle-sets`: exact bundle inventories satisfying a query.
 - `assignments`: raw placements of inventories on relevant supports.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - `assigned-supports`: assignment classes modulo terminal-set-preserving support
   automorphisms.
 - `networks`: final unique reduced objects under the named network relation.
@@ -42,10 +45,13 @@ Object meanings:
 
 Exact facts are the fundamental representation. JSON results use `object`,
 `query`, `group_by`, `records`, `facts`, `totals`, relation metadata and
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 `diagnostics` where meaningful. The `format_version` field is an internal schema
 discriminator and is not a stability promise.
 
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 Network source-query diagnostics (`raw_assignments`, `assigned_support_classes`)
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 are distinct from final reduced-network facts. Network count output intentionally
 does not expose a full signature catalogue. Use `rice enum networks` for the
 guarded provisional network catalogue and `rice count reductions` for
@@ -62,6 +68,7 @@ rice enum <object> [options]
 The implemented enumeration objects are `supports`, `bundle-types`,
 `bundle-sets`, `assignments`, `assigned-supports`, and `networks`. Enumeration
 uses the same profiles and component/support-edge option names as `count`, and
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 supports `--format auto|table|markdown|json`. `--format auto` writes human-readable tables on an interactive terminal and deterministic JSON when redirected. Explicit `markdown` and `json` are deterministic; `table` is the documented human-readable table form. Output formats, IDs, and the reduced signature serialization are provisional.
 
 Enumeration records are exact source objects unless otherwise stated:
@@ -71,6 +78,7 @@ Enumeration records are exact source objects unless otherwise stated:
   terminal-relevance rejection. Support IDs are derived from a canonical
   relabelling with terminals `0` and `1`, so they are invariant under internal
   node names and terminal reversal.
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 - `enum bundle-types` lists the seven `SIMPLE_PRIMITIVE_BUNDLES` in model order.
 - `enum bundle-sets` lists exact validated bundle inventories and their raw
   placement counts.
@@ -100,6 +108,7 @@ assignments -> assigned supports -> local-SP networks
 
 and reports pipeline totals, fibre-size distributions, source-support-edge
 transitions, exact source-to-reduced component transitions, and collision
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 summaries. In fibre tables, `target_objects` counts how many target objects have
 a given fibre size, while `source_objects` is the conserved source total for
 those fibres. Source-edge transition `distinct_networks_reached` values are
@@ -127,6 +136,7 @@ the component budget.
 
 Valid grouping dimensions for source counts are `support-edges`, `r`, `l`, `c`,
 `lc`, `rlc`, and `none`. Network counts group by reduced component dimensions
+<!-- line-length: ignore-next-line -- legacy line pending wrap -->
 `r`, `l`, `c`, `lc`, `rlc`, or `none`; `support-edges` is not a network grouping
 dimension because reduced networks can be reached from multiple source edge
 counts.
