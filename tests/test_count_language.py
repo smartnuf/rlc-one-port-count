@@ -286,7 +286,7 @@ def test_pr2_grouped_json_keys_totals_and_markdown_alignment(capsys):
     assert assignment_census(query, group_by=("none",)).relevant_supports_total == expected
 
     for target, group_by in (("assignments", "none"), ("assignments", "r,lc"), ("assigned-supports", "none"), ("assigned-supports", "r,lc")):
-        assert main(["count", target, "--max-rlc", "1", "--group-by", group_by, "--format", "table"]) == 0
+        assert main(["count", target, "--max-rlc", "1", "--group-by", group_by, "--format", "markdown"]) == 0
         rows = _markdown_rows(capsys.readouterr().out)
         header_width = len(rows[0])
         assert len(rows[-1]) == header_width

@@ -179,6 +179,21 @@ changed subcommand help, for example:
 
 Whenever CLI syntax changes, update README, docs examples, CLI help text, default descriptions, Python API docstrings/guide examples, glossary links, and drift/example tests in the same change. Keep examples explicit about option placement: subcommand options go after the subcommand name; a subcommand (`count <object>` or `enum <object>`) is always required, and there is no no-subcommand count form.
 
+Do not alias new CLI or API features to existing behaviours unless the relevant
+public documentation explicitly defines them as synonyms; each public name
+should have its own tested contract or be rejected until such a contract exists.
+
+When adding or changing an output-format choice, treat each documented format
+value as a separate behavioural contract. Do not alias distinct public format
+names unless the documentation explicitly defines them as synonyms. Add
+regression tests that invoke every affected command with each explicit format
+and assert format-defining structure, not merely successful execution or shared
+headings. For `auto`, test interactive and redirected stdout separately, and
+verify that explicit formats override TTY detection. When `table` and
+`markdown` are both supported, terminal tables must not contain Markdown
+delimiter rows, while Markdown output must contain valid Markdown table
+delimiters.
+
 ## Codex cloud expectations
 
 A Codex Cloud environment should run the repository scripts:

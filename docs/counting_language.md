@@ -62,7 +62,12 @@ rice enum <object> [options]
 The implemented enumeration objects are `supports`, `bundle-types`,
 `bundle-sets`, `assignments`, `assigned-supports`, and `networks`. Enumeration
 uses the same profiles and component/support-edge option names as `count`, and
-supports `--format auto|table|markdown|json`. `--format auto` writes human-readable tables on an interactive terminal and deterministic JSON when redirected. Explicit `markdown` and `json` are deterministic; `table` is the documented human-readable table form. Output formats, IDs, and the reduced signature serialization are provisional.
+supports `--format auto|table|markdown|json`. `--format auto` writes aligned
+plain-text tables on an interactive terminal and deterministic JSON when
+redirected. Explicit `table` always selects aligned plain text, even when
+redirected; `markdown` emits pipe tables with Markdown delimiter rows, and
+`json` is deterministic. Output formats, IDs, and the reduced signature
+serialization are provisional.
 
 Enumeration records are exact source objects unless otherwise stated:
 

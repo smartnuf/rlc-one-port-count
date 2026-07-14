@@ -207,11 +207,42 @@ def _bundle_types_json() -> dict[str, Any]:
     return {"format_version": 1, "object": "bundle-types", "records": records, "totals": {"bundle_types": len(records)}}
 
 
+def _markdown_cell(value: str) -> str:
+    """Escape Markdown table separator characters in a cell."""
+    return value.replace("|", "\\|")
+
+
+def _print_table(headers: list[str], rows: list[list[object]], output_format: str) -> None:
+    """Print rows as either aligned terminal text or a Markdown table."""
+    text_rows = [[str(value) for value in row] for row in rows]
+    if output_format == "markdown":
+        markdown_headers = [_markdown_cell(header) for header in headers]
+        print("| " + " | ".join(markdown_headers) + " |")
+        print("|" + "---:|" * len(headers))
+        for row in text_rows:
+            markdown_row = [_markdown_cell(cell) for cell in row]
+            print("| " + " | ".join(markdown_row) + " |")
+        return
+
+    widths = [len(header) for header in headers]
+    for row in text_rows:
+        for index, value in enumerate(row):
+            widths[index] = max(widths[index], len(value))
+    print("  ".join(header.ljust(widths[index]) for index, header in enumerate(headers)))
+    print("  ".join("-" * width for width in widths))
+    for values, text_values in zip(rows, text_rows):
+        cells = [
+            text.rjust(widths[index]) if isinstance(value, int) else text.ljust(widths[index])
+            for index, (value, text) in enumerate(zip(values, text_values))
+        ]
+        print("  ".join(cells))
+
+
 
 def _enum_payload(object_name: str, query: CountQuery | None, records: list[dict[str, Any]], relation: str | None = None, definition: str | None = None) -> dict[str, Any]:
     return {"format_version": 1, "operation": "enum", "object": object_name, "query": query.to_json() if query else {}, "relation": relation, "definition": definition, "records": records, "totals": {"records": len(records)}, "diagnostics": {"provisional_formats": True}}
 
-def _print_enum_markdown(title: str, payload: dict[str, Any]) -> None:
+def _print_enum_table(title: str, payload: dict[str, Any], output_format: str) -> None:
     print(f"{title} (provisional enumeration format)")
     if payload.get("relation"):
         print(f"Relation: {payload['relation']} ({payload.get('definition')})")
@@ -221,10 +252,7 @@ def _print_enum_markdown(title: str, payload: dict[str, Any]) -> None:
     if not records:
         print("No records."); return
     keys = list(records[0].keys())
-    print("| " + " | ".join(keys) + " |")
-    print("|" + "---|" * len(keys))
-    for row in records:
-        print("| " + " | ".join(str(row.get(k, "")) for k in keys) + " |")
+    _print_table(keys, [[row.get(key, "") for key in keys] for row in records], output_format)
 
 
 def _normalize_help_argv(argv: list[str]) -> list[str]:
@@ -240,7 +268,7 @@ def _normalize_help_argv(argv: list[str]) -> list[str]:
 def _resolve_output_format(value: str) -> str:
     if value == "auto":
         return "table" if sys.stdout.isatty() else "json"
-    return "markdown" if value == "table" else value
+    return value
 
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
@@ -282,7 +310,7 @@ def main(argv: list[str] | None = None) -> int:
             active_parser.error(str(exc))
         payload=_enum_payload(args.object, query, recs, rel, definition)
         if output_format == "json": print(json.dumps(payload, indent=2, sort_keys=True))
-        else: _print_enum_markdown(f"Enum {args.object}", payload)
+        else: _print_enum_table(f"Enum {args.object}", payload, output_format)
         return 0
 
     if args.verb == "count":
@@ -293,11 +321,9 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(payload, indent=2, sort_keys=True))
             else:
                 print("Simple primitive bundle types")
-                print("| Label | R count | L count | C count | L+C count | Total components |")
-                print("|---|---:|---:|---:|---:|---:|")
-                for row in payload["records"]:
-                    print(f"| {row['label']} | {row['r']} | {row['l']} | {row['c']} | {row['lc']} | {row['rlc']} |")
-                print(f"| Total | {payload['totals']['bundle_types']} |  |  |  |  |")
+                rows = [[row["label"], row["r"], row["l"], row["c"], row["lc"], row["rlc"]] for row in payload["records"]]
+                rows.append(["Total", payload["totals"]["bundle_types"], "", "", "", ""])
+                _print_table(["Label", "R count", "L count", "C count", "L+C count", "Total components"], rows, output_format)
             return 0
         query = _query_from_count_args(active_parser, args)
         if args.object == "supports":
@@ -316,15 +342,15 @@ def main(argv: list[str] | None = None) -> int:
                 if args.support_kind in {"basic", "all"}: headers.append("Basic supports")
                 if args.support_kind in {"terminal", "all"}: headers.append("Terminal supports")
                 if args.support_kind in {"relevant", "all"}: headers.append("Relevant supports")
-                print("| " + " | ".join(headers) + " |")
-                print("|" + "---:|" * len(headers))
                 payload = _support_count_json(result, query, args.support_kind)
+                rows = []
                 for row in payload["records"]:
                     vals = [row.get("support_edges"), row.get("basic"), row.get("terminal"), row.get("relevant")]
                     vals = [v for v in vals if v is not None]
-                    print("| " + " | ".join(str(v) for v in vals) + " |")
+                    rows.append(vals)
                 totals = payload["totals"]
-                print("| Total | " + " | ".join(str(totals[k]) for k in ("basic", "terminal", "relevant") if k in totals) + " |")
+                rows.append(["Total", *(totals[k] for k in ("basic", "terminal", "relevant") if k in totals)])
+                _print_table(headers, rows, output_format)
             return 0
         if args.object == "bundle-sets":
             group_by = tuple(part.strip() for part in args.group_by.split(","))
@@ -338,18 +364,14 @@ def main(argv: list[str] | None = None) -> int:
                 print("Bundle-set census")
                 dims = result.group_by
                 if dims == ("support-edges",):
-                    print("| Support edges / bundle count | Distinct bundle sets | Raw placements represented |")
-                    print("|---:|---:|---:|")
-                    for row in result.records:
-                        print(f"| {row['support-edges']} | {row['distinct_bundle_sets']} | {row['raw_placements']} |")
+                    headers = ["Support edges / bundle count", "Distinct bundle sets", "Raw placements represented"]
+                    rows = [[row["support-edges"], row["distinct_bundle_sets"], row["raw_placements"]] for row in result.records]
                 else:
                     headers = list(dims) + ["Distinct bundle sets", "Raw placements represented"]
-                    print("| " + " | ".join(headers) + " |")
-                    print("|" + "---:|" * len(headers))
-                    for row in result.records:
-                        values = [*(row[dim] for dim in dims), row["distinct_bundle_sets"], row["raw_placements"]]
-                        print("| " + " | ".join(str(value) for value in values) + " |")
-                print(f"| Total | {result.distinct_bundle_sets_total} | {result.raw_placements_total} |")
+                    rows = [[*(row[dim] for dim in dims), row["distinct_bundle_sets"], row["raw_placements"]] for row in result.records]
+                total_prefix = ["Total", *("" for _ in dims[1:])] if dims else []
+                rows.append([*total_prefix, result.distinct_bundle_sets_total, result.raw_placements_total])
+                _print_table(headers, rows, output_format)
             return 0
         if args.object == "assignments":
             group_by = tuple(part.strip() for part in args.group_by.split(","))
@@ -363,20 +385,15 @@ def main(argv: list[str] | None = None) -> int:
                 print("Assignment census")
                 print("Assignments are raw placements on terminal-relevant source supports; no support-symmetry quotient or local reduction is applied.")
                 if result.group_by == ("support-edges",):
-                    print("| Support edges | Relevant supports | Distinct bundle sets | Assignments per support | Raw assignments |")
-                    print("|---:|---:|---:|---:|---:|")
-                    for row in result.records:
-                        print(f"| {row['support-edges']} | {row['relevant_supports']} | {row['distinct_bundle_sets']} | {row['assignments_per_support']} | {row['raw_assignments']} |")
-                    print(f"| Total | — | {result.distinct_bundle_sets_total} | — | {result.raw_assignments_total} |")
+                    headers = ["Support edges", "Relevant supports", "Distinct bundle sets", "Assignments per support", "Raw assignments"]
+                    rows = [[row["support-edges"], row["relevant_supports"], row["distinct_bundle_sets"], row["assignments_per_support"], row["raw_assignments"]] for row in result.records]
+                    rows.append(["Total", "—", result.distinct_bundle_sets_total, "—", result.raw_assignments_total])
                 else:
                     headers = list(result.group_by) + ["Distinct bundle sets", "Raw assignments"]
-                    print("| " + " | ".join(headers) + " |")
-                    print("|" + "---:|" * len(headers))
-                    for row in result.records:
-                        values = [*(row[dim] for dim in result.group_by), row["distinct_bundle_sets"], row["raw_assignments"]]
-                        print("| " + " | ".join(str(v) for v in values) + " |")
+                    rows = [[*(row[dim] for dim in result.group_by), row["distinct_bundle_sets"], row["raw_assignments"]] for row in result.records]
                     total_values = (["Total", *("—" for _ in result.group_by[1:])] if result.group_by else []) + [result.distinct_bundle_sets_total, result.raw_assignments_total]
-                    print("| " + " | ".join(str(v) for v in total_values) + " |")
+                    rows.append(total_values)
+                _print_table(headers, rows, output_format)
             return 0
         if args.object == "assigned-supports":
             group_by = tuple(part.strip() for part in args.group_by.split(","))
@@ -390,20 +407,15 @@ def main(argv: list[str] | None = None) -> int:
                 print("Assigned-support census")
                 print("Assigned-support classes quotient assignments by terminal-set-preserving support automorphisms; no local network reduction is applied.")
                 if result.group_by == ("support-edges",):
-                    print("| Support edges | Relevant supports | Raw assignments | Assigned-support classes |")
-                    print("|---:|---:|---:|---:|")
-                    for row in result.records:
-                        print(f"| {row['support-edges']} | {row['relevant_supports']} | {row['raw_assignments']} | {row['assigned_support_classes']} |")
-                    print(f"| Total | — | {result.raw_assignments_total} | {result.assigned_support_classes_total} |")
+                    headers = ["Support edges", "Relevant supports", "Raw assignments", "Assigned-support classes"]
+                    rows = [[row["support-edges"], row["relevant_supports"], row["raw_assignments"], row["assigned_support_classes"]] for row in result.records]
+                    rows.append(["Total", "—", result.raw_assignments_total, result.assigned_support_classes_total])
                 else:
                     headers=list(result.group_by)+["Raw assignments","Assigned-support classes"]
-                    print("| "+" | ".join(headers)+" |")
-                    print("|"+"---:|"*len(headers))
-                    for row in result.records:
-                        values=[*(row[dim] for dim in result.group_by), row["raw_assignments"], row["assigned_support_classes"]]
-                        print("| "+" | ".join(str(v) for v in values)+" |")
+                    rows = [[*(row[dim] for dim in result.group_by), row["raw_assignments"], row["assigned_support_classes"]] for row in result.records]
                     total_values = (["Total", *("—" for _ in result.group_by[1:])] if result.group_by else []) + [result.raw_assignments_total, result.assigned_support_classes_total]
-                    print("| " + " | ".join(str(v) for v in total_values) + " |")
+                    rows.append(total_values)
+                _print_table(headers, rows, output_format)
             return 0
         if args.object == "reductions":
             try:
@@ -417,9 +429,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Relation: {result.relation.name} ({result.relation.definition})")
                 print("This analyses many-to-one source mappings; it is not rational immittance equivalence and not a new network relation.")
                 print("Distinct networks reached in transition rows are provenance facts and are not additive across rows.")
-                print("| Stage | Objects |")
-                print("|---|---:|")
-                for k,v in result.pipeline_totals.items(): print(f"| {k} | {v} |")
+                _print_table(["Stage", "Objects"], [[k, v] for k, v in result.pipeline_totals.items()], output_format)
             return 0
         if args.object == "networks":
             group_by = tuple(part.strip() for part in args.group_by.split(","))
@@ -436,14 +446,14 @@ def main(argv: list[str] | None = None) -> int:
                 print("This is not full rational-immittance equivalence.")
                 print()
                 if result.group_by == ("r", "lc"):
-                    print(result.as_markdown_table())
+                    matrix = result.matrix()
+                    headers = ["R \\ L+C", *(str(x) for x in range(len(matrix[0]) if matrix else 0)), "Row total"]
+                    rows = [[r, *row, sum(row)] for r, row in enumerate(matrix)]
+                    _print_table(headers, rows, output_format)
                 else:
                     headers=list(result.group_by)+["Networks"]
-                    print("| "+" | ".join(headers)+" |")
-                    print("|"+"---:|"*len(headers))
-                    for row in result.records:
-                        values=[*(row[dim] for dim in result.group_by), row["networks"]]
-                        print("| "+" | ".join(str(v) for v in values)+" |")
+                    rows = [[*(row[dim] for dim in result.group_by), row["networks"]] for row in result.records]
+                    _print_table(headers, rows, output_format)
                 print()
                 print(f"Unique network total: {result.total}")
                 print("Diagnostics: " + f"raw assignments={result.diagnostics['raw_assignments']}; assigned-support classes={result.diagnostics['assigned_support_classes']}; unique reduced networks={result.diagnostics['unique_reduced_networks']}")

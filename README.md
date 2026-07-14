@@ -103,9 +103,9 @@ legacy no-object count.
 
 Output defaults to `--format auto`: an interactive terminal gets a readable
 table, while redirected output is deterministic JSON. Explicit formats are
-`auto`, `table`, `markdown`, and `json`; `table` currently uses the same stable
-plain Markdown table layout as `markdown`. Wide enumeration records should be
-saved as JSON rather than a terminal table.
+`auto`, `table`, `markdown`, and `json`; `table` uses aligned plain text for a
+terminal, while `markdown` emits pipe tables with Markdown delimiter rows. Wide
+enumeration records should be saved as JSON rather than a terminal table.
 
 ## Validation
 
