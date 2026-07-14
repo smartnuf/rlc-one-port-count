@@ -244,7 +244,7 @@ def test_workflow_selection_report_uses_runner_temp() -> None:
     assert "cat selection.txt" not in workflow
 
 
-def test_lint_wrappers_use_changed_line_length_checker() -> None:
+def test_lint_wrappers_use_full_tree_line_length_checker() -> None:
     lint_sh = (REPO_ROOT / "scripts" / "lint.sh").read_text(
         encoding="utf-8"
     )
@@ -252,7 +252,7 @@ def test_lint_wrappers_use_changed_line_length_checker() -> None:
         encoding="utf-8"
     )
 
-    assert "scripts/check_line_lengths.py --changed" in lint_sh
-    assert "'--changed'" in lint_ps1
+    assert "scripts/check_line_lengths.py --changed" not in lint_sh
+    assert "'--changed'" not in lint_ps1
     assert "scripts/check_line_lengths.py" in lint_sh
     assert "scripts/check_line_lengths.py" in lint_ps1
